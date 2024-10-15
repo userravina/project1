@@ -157,7 +157,7 @@ class OnboardingCard extends StatelessWidget {
   const OnboardingCard({
     super.key,
     required this.title,
-    required this.description,
+    required this.description, 
     required this.onNext,
     required this.isLast,
   });
