@@ -19,97 +19,169 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
 
-
-  // Amenities and New Amenities Page Logic
-  final List<String> customAmenities = [
-    Strings.wiFi,
-    Strings.airConditioner,
-    Strings.fireAlarm,
-    Strings.homeTheater,
-    Strings.masterSuiteBalcony
-  ];
-
-  RxList<bool> selectedAmenities = <bool>[].obs;
-
-  TextEditingController amenitiesName = TextEditingController();
-  List<TextEditingController> textControllers = [];
-  var addAmenities = <String>[].obs;
-  List<String> allAmenities = [];
-
-  void createAllAmenities() {
-    allAmenities = [...customAmenities, ...addAmenities];
-    print("conbined list${allAmenities}");
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    selectedAmenities.addAll(List.generate(customAmenities.length, (_) => false));
-    createAllAmenities();
-    print("rrrrrrrrr${selectedAmenities}");
-  }
-
-  void addAmenity(String amenityName) {
-    addAmenities.add(amenityName);
-    selectedAmenities.add(true);
-    textControllers.add(TextEditingController());
-    createAllAmenities();
-    update();
-  }
-
-  void removeAmenity(int index) {
-    if (index < addAmenities.length) {
-      if (index < textControllers.length) {
-        textControllers[index].dispose();
-        textControllers.removeAt(index);
-      }
-      addAmenities.removeAt(index);
-      createAllAmenities();
-    }
-
-    // Remove from selectedAmenities accordingly
-    int selectedIndex = customAmenities.length + index;
-    if (selectedIndex < selectedAmenities.length) {
-      selectedAmenities.removeAt(selectedIndex);
-    }
-  }
-
-  void toggleAmenity(int index) {
-
-    if (index >= 0 && index < selectedAmenities.length) {
-      selectedAmenities[index] = !selectedAmenities[index];
-      print("Toggled amenity at index $index: ${selectedAmenities[index]}");
-    }
-    update();
-  }
-
-  import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'dart:io';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile_app/generated/assets.dart';
-import 'package:travellery_mobile_app/utils/app_color.dart';
-import 'package:travellery_mobile_app/utils/app_routes.dart';
-import 'package:travellery_mobile_app/utils/app_strings.dart';
-import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/add_properties_pages/controller/addProperties_controller.dart';
-import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/add_properties_pages/custom_view.dart';
-import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/common_widget/amenitiy_and_house_rules.dart';
-import '../../../../../utils/font_manager.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_colors.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_radius.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
 
-class AmenitiesPage extends StatefulWidget {
-  final VoidCallback onNext;
-  final VoidCallback onBack;
 
-  const AmenitiesPage({
+class PhotoUploadContainer extends StatelessWidget {
+  final int index;
+  final String? imagePath;
+  final ValueChanged<String?> onImageSelected;
+  final bool isSingleSelect;
+
+  const PhotoUploadContainer({
     super.key,
-    required this.onNext,
-    required this.onBack,
+    required this.index,
+    this.imagePath,
+    required this.onImageSelected,
+    this.isSingleSelect = false,
   });
 
   @override
-  State<AmenitiesPage> createState() => _AmenitiesPageState();
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          height: 130,
+          width: 150.w,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+            image: imagePath != null
+                ? DecorationImage(
+              image: FileImage(File(imagePath!)),
+              fit: BoxFit.fill,
+            )
+                : DecorationImage(
+              image: AssetImage(Assets.imagesImageRectangle),
+              fit: BoxFit.fill,
+            ),
+          ),
+          child: imagePath != null
+              ? SizedBox.shrink()
+              : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                Assets.imagesUploadImage,
+                height: 30,
+                width: 30,
+              ),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: Strings.photoChooseDiscription,
+                      style: FontManager.regular(10,
+                          color: AppColors.greyText),
+                    ),
+                    TextSpan(
+                      mouseCursor: SystemMouseCursors.click,
+                      style: FontManager.regular(10,
+                          color: AppColors.buttonColor),
+                      text: Strings.chooseFile,
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          FilePickerResult? result = await FilePicker.platform.pickFiles(
+                            type: FileType.image,
+                            allowMultiple: !isSingleSelect,
+                          );
+
+                          if (result != null) {
+                            if (isSingleSelect) {
+
+                              String filePath = result.files.single.path!;
+                              print("${Strings.fileExpection} $filePath for index $index");
+                              onImageSelected(filePath);
+                            } else {
+                              List<String> paths = result.paths
+                                  .where((path) => path != null)
+                                  .map((path) => path!)
+                                  .toList();
+                              print("${Strings.fileExpection} Selected paths for index $index: $paths");
+
+                              onImageSelected(paths.join(","));
+                            }
+                          } else {
+                            print(Strings.noFileSelectedExpection);
+                          }
+                        },
+                    ),
+                    TextSpan(
+                      style: FontManager.regular(10,
+                          color: AppColors.greyText),
+                      text: Strings.to,
+                    ),
+                    TextSpan(
+                      style: FontManager.regular(10,
+                          color: AppColors.greyText),
+                      text: Strings.upload,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        isSingleSelect == true && imagePath != null
+            ? Padding(
+          padding: EdgeInsets.only(top: 2.h, right: 2.w),
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Container(
+              height: 25,
+              width: 25,
+              decoration: BoxDecoration(
+                color: AppColors.black.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Image.asset(
+                  Assets.imagesEditCoverImage,
+                  height: 12,
+                  width: 12,
+                ),
+              ),
+            ),
+          ),
+        )
+            : SizedBox.shrink(),
+      ],
+    );
+  }
+}
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/add_properties_screen/steps/custom_add_properties_pages/custom_add_properties_pages.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_colors.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+import '../../common_widget/custom_photo_upload_image.dart';
+import '../../controller/add_properties_controller.dart';
+
+class PhotoPage extends StatefulWidget {
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+
+  const PhotoPage({super.key, required this.onNext, required this.onBack});
+
+  @override
+  State<PhotoPage> createState() => _PhotoPageState();
 }
 
-class _AmenitiesPageState extends State<AmenitiesPage> {
+class _PhotoPageState extends State<PhotoPage> {
   final AddPropertiesController controller =
       Get.find<AddPropertiesController>();
 
@@ -119,327 +191,118 @@ class _AmenitiesPageState extends State<AmenitiesPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 2.5.h),
-          GestureDetector(
-            onTap: () {
-              Get.toNamed(Routes.newamenities);
-            },
-            child: Container(
-              height: 6.h,
-              width: 100.w,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.buttonColor),
-              ),
-              child: Center(
-                child: Text(
-                  Strings.addAmenities,
-                  style:
-                      FontManager.medium(18.sp, color: AppColors.buttonColor),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 3.5.h),
-          Obx(
-            () {
-              return Column(
-                children: [
-                  AmenityAndHouseRulesContainer(
-                    imageAsset: Assets.imagesSingleBed,
-                    title: Strings.wiFi,
-                    isSelected: controller.selectedAmenities[0],
-                    onSelect: () => controller.toggleAmenity(0),
-                    // isNewAdded: false,
-                  ),
-                  SizedBox(height: 2.h),
-                  AmenityAndHouseRulesContainer(
-                    imageAsset: Assets.imagesSingleBed,
-                    title: Strings.airConditioner,
-                    isSelected: controller.selectedAmenities[1],
-                    onSelect: () => controller.toggleAmenity(1),
-                    // isNewAdded: false,
-                  ),
-                  SizedBox(height: 2.h),
-                  AmenityAndHouseRulesContainer(
-                    imageAsset: Assets.imagesSingleBed,
-                    title: Strings.fireAlarm,
-                    isSelected: controller.selectedAmenities[2],
-                    onSelect: () => controller.toggleAmenity(2),
-                    // isNewAdded: false,
-                  ),
-                  SizedBox(height: 5.3.h),
-                ],
-              );
-            },
-          ),
+          SizedBox(height: 1.5.h),
           Text(
-            Strings.newAmenities,
-            style: FontManager.medium(18, color: AppColors.black),
+            Strings.coverPhoto,
+            style: FontManager.regular(14, color: AppColors.textAddProreties),
+          ),
+          SizedBox(height: 10),
+          PhotoUploadContainer(
+            index: 0,
+            imagePath: controller.coverImagePaths.isNotEmpty
+                ? controller.coverImagePaths[0]
+                : null,
+            onImageSelected: (path) {
+              setState(() {
+                if (path != null) {
+                  controller.coverImagePaths.value = [path];
+                }
+              });
+            },
+            isSingleSelect: true,
+          ),
+          const SizedBox(height: 30),
+          Text(
+            Strings.homestayPhotos,
+            style: FontManager.regular(14, color: AppColors.textAddProreties),
           ),
           SizedBox(height: 2.h),
-          Obx(
-            () => AmenityAndHouseRulesContainer(
-              imageAsset: Assets.imagesSingleBed,
-              title: Strings.homeTheater,
-              isSelected: controller.selectedAmenities[3],
-              onSelect: () => controller.toggleAmenity(3),
-              // isNewAdded: false,
-            ),
-          ),
-          SizedBox(height: 1.2.h),
-          Obx(
-            () => AmenityAndHouseRulesContainer(
-              imageAsset: Assets.imagesSingleBed,
-              title: Strings.masterSuiteBalcony,
-              isSelected: controller.selectedAmenities[4],
-              onSelect: () => controller.toggleAmenity(4),
-              // isNewAdded: false,
-            ),
-          ),
-          Obx(() {
-            return ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.addAmenities.length,
-              itemBuilder: (context, index) {
-                final amenityIndex;
-                amenityIndex = index + controller.customAmenities.length;
-                print("%%%%%%%%%%${amenityIndex}%%%%%%%%%%%%%");
-                return Column(
-                  children: [
-                    const SizedBox(height: 2),
-                    Obx(
-                          () => AmenityAndHouseRulesContainer(
-                        imageAsset: Assets.imagesSingleBed,
-                        title: controller.addAmenities[index],
-                        isSelected: controller.selectedAmenities[amenityIndex],
-                        onSelect: () => controller.toggleAmenity(amenityIndex),
-                        // isNewAdded: true,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            );
-          }),
-          SizedBox(height: 2.h),
+          photoUploadRows(),
+          SizedBox(height: 7.h),
         ],
       ),
     );
   }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile_app/common_widget/common_button.dart';
-import 'package:travellery_mobile_app/generated/assets.dart';
-import 'package:travellery_mobile_app/utils/app_color.dart';
-import 'package:travellery_mobile_app/utils/app_radius.dart';
-import 'package:travellery_mobile_app/utils/app_strings.dart';
-import 'package:travellery_mobile_app/utils/font_manager.dart';
-import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/add_properties_pages/controller/addProperties_controller.dart';
 
+  Widget photoUploadRows() {
+    int imagesPerRow = 2;
+    int totalImages = controller.imagePaths.length;
 
-class NewAmenitiesPages extends StatefulWidget {
-  const NewAmenitiesPages({super.key});
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: imagesPerRow,
+        childAspectRatio: 1.4,
+        crossAxisSpacing: 10.0,
+        mainAxisSpacing: 10.0,
+      ),
+      itemCount: totalImages,
+      itemBuilder: (context, index) {
+        int uploadedImages =
+            controller.imagePaths.where((paths) => paths.isNotEmpty).length;
 
-  @override
-  State<NewAmenitiesPages> createState() => _NewAmenitiesPagesState();
-}
+        return GestureDetector(
+          onTap: () async {
+            var result = await FilePicker.platform.pickFiles(
+              type: FileType.image,
+              allowMultiple: true,
+            );
 
-class _NewAmenitiesPagesState extends State<NewAmenitiesPages> {
-  final AddPropertiesController controller =
-  Get.find<AddPropertiesController>();
+            if (result != null && result.paths.isNotEmpty) {
+              List<String> selectedPaths =
+                  result.paths.map((path) => path!).toList();
+              if (selectedPaths.length > 5) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('You can only select up to 5 images.')),
+                );
+                return;
+              }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 7.w),
-        child: SingleChildScrollView(
-          child: Column(
+              setState(() {
+                controller.imagePaths[index] = selectedPaths;
+              });
+            }
+          },
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              SizedBox(height: 7.2.h),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(Icons.keyboard_arrow_left, size: 30),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    Strings.newAmenities,
-                    style: FontManager.medium(20, color: AppColors.black),
-                  ),
-                ],
+              PhotoUploadContainer(
+                index: index,
+                imagePath: controller.imagePaths[index].isNotEmpty
+                    ? controller.imagePaths[index].first
+                    : null,
+                onImageSelected: (paths) {
+                  setState(() {
+                    controller.imagePaths[index] = paths!.split(",");
+                  });
+                },
+                isSingleSelect: false,
               ),
-              SizedBox(height: 3.h),
-              buildTitleStep(controller.currentPage.value.toString()),
-              amenitiesList(),
-              SizedBox(height: 2.h),
-              addTextField(),
-              SizedBox(height: 12.h),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Obx(() => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: LinearProgressIndicator(
-                        value: controller.currentPage.value / 10,
-                        backgroundColor: AppColors.greyText,
-                        color: AppColors.buttonColor,
-                        minHeight: 3,
-                        borderRadius:
-                        const BorderRadius.all(AppRadius.radius4),
-                      ),
-                    )),
-                    SizedBox(height: 1.h),
-                    CommonButton(
-                      title: Strings.done,
-                      onPressed: () {
-                        Get.back();
-                      },
-                    ),
-                    SizedBox(height: 10.h),
-                  ],
+              if (controller.imagePaths[index].isNotEmpty)
+                CircularPercentIndicator(
+                  radius: 23,
+                  lineWidth: 2.0,
+                  animation: true,
+                  circularStrokeCap: CircularStrokeCap.round,
+                  percent: controller.imagePaths[index].length / 5,
+                  center: Text(
+                    "${(controller.imagePaths[index].length / 5 * 100).toStringAsFixed(0)}%",
+                    style: FontManager.regular(13, color: AppColors.white),
+                  ),
+                  progressColor: AppColors.white,
+                  footer: Text(
+                    Strings.uploadingImage,
+                    style: FontManager.regular(12, color: AppColors.white),
+                  ),
                 ),
-              )
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget addTextField() {
-    return Container(
-      width: 110.w,
-      height: 7.h,
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.all(Radius.circular(10)),
-        border: Border.all(color: AppColors.borderContainerGriedView),
-      ),
-      child: Center(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(width: 5.w),
-            Obx(() =>  Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 0, top: 3, bottom: 0),
-                child: TextFormField(
-                  controller: controller.amenitiesName,
-                  style: FontManager.regular(16),
-                  decoration: InputDecoration(
-                    hintText: "Amenity ${controller.addAmenities.length + 1}",
-                    hintStyle: FontManager.regular(16, color: AppColors.greyText),
-                    border: InputBorder.none,
-                    suffixIcon: GestureDetector(
-                      onTap: () {
-                        final String newAmenity = controller.amenitiesName.text.trim();
-                        print("111111aaaaaa${newAmenity}");
-                        if (newAmenity.isNotEmpty) {
-                          print("222222222}");
-                          controller.addAmenity(newAmenity);
-                          controller.amenitiesName.clear();
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(13),
-                        child: Image.asset(
-                          Assets.imagesPluscircle2,
-                          height: 20,
-                          width: 18,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget amenitiesList() {
-    return Obx(() {
-      return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: controller.addAmenities.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Container(
-              width: 110.w,
-              height: 7.h,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                border: Border.all(color: AppColors.borderContainerGriedView),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(width: 5.w),
-                    Text(
-                      controller.addAmenities[index],
-                      style: FontManager.regular(16,
-                          color: AppColors.textAddProreties),
-                    ),
-                    Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        controller.removeAmenity(index);
-                      },
-                      child: Image.asset(
-                        Assets.imagesDividecircle2,
-                        height: 21,
-                        width: 22,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    SizedBox(width: 3.5.w),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    });
-  }
-
-  Widget buildTitleStep(String stepCount) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "${Strings.stepCount} $stepCount/10",
-          style: FontManager.regular(18, color: AppColors.black),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-      ],
+        );
+      },
     );
   }
 }
- "addAmenities":jsonEncode(allAmenities.map((amenity)  {
-        int index = allAmenities.indexOf(amenity);
-        print("aaaaaaaaaaaa${selectedAmenities.length > customAmenities.length && index >= customAmenities.length}");
-        return {
-          "name": amenity,
-          "isChecked": selectedAmenities[index],
-          "isNewAdded": selectedAmenities.length > customAmenities.length && index >= customAmenities.length,
-        };
-        // "name": amenity,
-        // "isChecked": selectedAmenities[allAmenities.indexOf(amenity)],
-        // "isNewAdded": true,
+  var coverImagePaths = <String?>[null].obs;
+  var imagePaths = List<List<String?>>.filled(6, []).obs;
