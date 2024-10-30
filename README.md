@@ -18,7 +18,1348 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220397599-f5b30425-689b-459b-a885-142f62cde580.png" height="50%" width="30%">
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
+import 'package:get/get_utils/src/get_utils/get_utils.dart';
 
+import 'app_string.dart';
+
+class AppValidation {
+
+  static String? validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return Strings.nameError;
+    }
+    return null;
+  }
+
+  static String? validateMobile(String? value) {
+    final phoneRegex = RegExp(r'^[0-9]{10}$');
+    if (value == null || value.isEmpty) {
+      return Strings.mobileNumberError;
+    } else if (!phoneRegex.hasMatch(value)) {
+      return Strings.mobileNumberLengthError;
+    }
+    return null;
+  }
+
+  static String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return Strings.emailEmpty;
+    } else if (!GetUtils.isEmail(value)) {
+      return Strings.emailFormatError;
+    }
+    return null;
+  }
+
+  static String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return Strings.passwordError;
+    } else if (value.length < 8) {
+      return Strings.passwordLengthError;
+    }
+    return null;
+  }
+  //
+  // static String? validateConfirmPassword(String? value, String password) {
+  //   if (value != password) {
+  //     return 'Passwords do not match';
+  //   }
+  //   return null;
+  // }
+}
+// lib/utils/strings.dart
+
+class Strings {
+  // Onboarding Titles
+  static const String onboardingTitle1 = "Book with ease, travel with joy";
+  static const String onboardingTitle2 =
+      "Discover and find your perfect healing place";
+  static const String onboardingTitle3 = "Giving the best deal just for you";
+
+  // Onboarding Descriptions
+  static const String onboardingDescription1 =
+      '"Discover a seamless booking experience with our user-friendly interface and exclusive deals."';
+  static const String onboardingDescription2 =
+      '"Escape to a world of tranquility and rejuvenation. Discover our curated selection of wellness retreats and healing spaces."';
+  static const String onboardingDescription3 =
+      '"Get exclusive offers and discounts on hotels, flights, and packages, curated just for your travel style."';
+
+  // Button Texts
+  static const String nextButton = "Next";
+
+  // General Strings
+  static const String welcome = "Welcome";
+  static const String gladToSeeYou = "Glad to see you!";
+
+  // Form Labels
+  static const String rememberMe = "Remember me";
+  static const String forgetPassword = "Forget password?";
+  static const String loginButton = "Login";
+  static const String dontHaveAccount = "Don’t have an account?";
+
+  // Validation Messages
+  static const String emailEmpty = 'The email field is required.';
+  static const String invalidEmail = 'Invalid email. Please enter your registered email';
+  static const String passwordEmpty = 'Please enter your password';
+  static const String shortPassword = 'Password must be at least 6 characters';
+
+  // Hint texts
+  static const String nameHint = 'Enter your name';
+  static const String mobileNumberHint = 'Enter your Mobile Number';
+  static const String emailHint = 'Enter Your Email';
+  static const String passwordHint = 'Enter your Password';
+  static const String confirmPasswordHint = 'Confirm Password';
+  static const String addProfileImage = 'Add Profile Image';
+
+  // Labels
+  static const String createAccount = 'Create Account';
+  static const String passwordLabel = 'Password';
+  static const String confirmPasswordLabel = 'Confirm Password';
+  static const String nameLabel = 'Name';
+  static const String mobileNumberLabel = 'Mobile Number';
+  static const String emailLabel = 'Email';
+  static const String signUp = ' Sign Up';
+  static const String alreadyHaveAccount = 'Already have an account?';
+  static const String login = 'Login';
+
+  // Error messages
+  static const String nameError = 'The name field is required.';
+  static const String mobileNumberError =
+      'The mobile number field is required.';
+  static const String mobileNumberLengthError =
+      'Mobile number must be at least 10 digits';
+  static const String emailError = 'Please enter your email';
+  static const String emailFormatError = 'Please enter a valid email';
+  static const String passwordError = 'The password field is required.';
+  static const String passwordLengthError =
+      'Password must be at least 8 characters long.';
+  static const String confirmPasswordError =
+      'The confirm password field is required.';
+  static const String passwordMatchError = 'Passwords do not match';
+
+  static const String forgetPasswordPrompt =
+      "Provide your account's email for which you want to reset your password";
+  static const String reset = "Reset";
+  static const String resend = "Resend";
+  static const String cancel = "Cancel";
+  static const String checkYouEmail = "Check Your Email";
+  static const String theEmailHasBeenResent =
+      "The email has been resent. You will receive an email with a verification code to reset your password.";
+  static const String changeEmail = "Change Email";
+
+  // verification
+  static const String verificationCodeTitle = "Verification Code";
+  static const String verificationCodePrompt =
+      "Enter your verification code sent to ";
+  static const String verificationCodeHint = "Enter verification code.";
+  static const String verificationCodeError = "Please enter a valid code";
+  static const String verify = "Verify";
+  static const String verifyFullCodeError = "Please enter the full code";
+  static const String success = "Success";
+  static const String verificationCodeEntered = "Verification code entered!";
+  static const String error = "Error";
+  static const String verifiCodeComple = "Please enter a complete code.";
+
+  static const String resetPassword = "Reset Password";
+  static const String resetCodePrompt =
+      "Enter new password amd confirm password.";
+  static const String newPasswordLabel = "New password";
+  static const String confirmPassword = "Confirm Password";
+  static const String otpEmpty = "This field cannot be empty";
+  static const String submit = "Submit";
+
+  static const String passwordUpdate = "Password Updated";
+  static const String thepasswordChange = "Your password has been updated";
+  static const String listHomeStay = "List Homestay";
+  static const String listHomeStayGreyText =
+      "List your stay in few simple steps to earn and welcome travelers across the world";
+  static const String aboutYourStay = "About your Stay";
+  static const String listHomeStayInto1 =
+      "Give your stay a catchy name and detailed description and provide basic info around accommodation details , amenities you offer , House rules and checkin/checkout details";
+  static const String getStarted = "Get Started";
+  static const String hotToGetThere = "How to get there";
+  static const String listHomeStayInto2 =
+      "Upload beautiful images of your stay as well location and contact details";
+  static const String previewandPublish = "Preview and Publish";
+  static const String listHomeStayInto3 =
+      "Just preview how your details would look like to a traveler and publish. Your are all set to go !";
+  static const String homestayTitle = 'Homestay Title';
+  static const String homestayType = 'Homestay Type';
+  static const String titleLabel = 'Title';
+  static const String enterTitle = 'Enter title';
+  static const String titleHint = '0/100';
+  static const String stepCount = 'STEP';
+  static const String nextStep = 'Next';
+  static const String done = "Done";
+  static const String accommodationDetails = "Accommodation Details";
+  static const String entirePlace = "Entire Place";
+  static const String wholePlacetoGuests = "Whole place to Guests";
+  static const String privateRoom = "Private Room";
+  static const String guestsSleepInPrivateRoomButSomeAreasAreShared =
+      "Guests sleep in private room but some areas are shared";
+  static const String maxGuests = "Max. Guests";
+  static const String bedRooms = "Bedrooms";
+  static const String singleBed = "Single Bed";
+  static const String doubleBed = "Double Bed";
+  static const String extraFloorMattress = "Extra floor mattress";
+  static const String bathRooms = "Bathrooms";
+  static const String kitchenAvailable = "Kitchen available";
+  static const String defutlNumber = "06";
+  static const String saveAndExit = "Save And Exit";
+  static const String saveExit1 = "Save & Exit";
+  static const String questionDialogText = "Are you sure, you want to exit? All changes done till now would be saved as Dtaft.";
+  static const String yes = "Yes";
+  static const String no = "No";
+  static const String amenities = 'Amenities';
+  static const String newAmenities = 'New Amenities';
+  static const String wiFi = 'Wi-Fi';
+  static const String airConditioner = 'Air-conditioner';
+  static const String fireAlarm = 'Fire alarm';
+  static const String homeTheater = 'Home Theater';
+  static const String masterSuiteBalcony = 'Master Suite Balcony';
+  static const String amenities3 = 'Amenities 3';
+  static const String amenities4 = 'Amenities 4';
+  static const String amenities5 = 'Amenities 5';
+  static const String houseRules = 'House Rules';
+  static const String addRules = '+ Add Rules';
+  static const String addAmenities = '+ Add Amenities';
+  static const String noSmoking = 'No smoking';
+  static const String noDrinking = 'No drinking';
+  static const String noPet = 'No pet';
+  static const String newRules = 'New Rules';
+  static const String damageToProperty = 'Damage to Property';
+  static const String rules = 'Rules';
+  static const String checkInOutDetails = 'Check-in/out details';
+  static const String checkInTime = 'Check-In Time';
+  static const String checkOutTime = 'Check-Out Time';
+  static const String flexibleWithCheckInTime = 'Flexible with Check-in time';
+  static const String selectCheckInTime = 'Select Check In Time';
+  static const String selectCheckOutTime = 'Select Check Out Time';
+  static const String selectTime = 'Select Time';
+  static const String turnLocationOn = 'Turn Location On';
+  static const String locationDiscription = 'Your Location is off. please turn on Location to allow travelbud to see your location.';
+  static const String settings = 'Settings';
+  static const String location = 'Location';
+  static const String addLocation = 'Add Location';
+  static const String address = 'Address';
+  static const String addressIcon = '*';
+  static const String streetAddress = 'Street Address';
+  static const String landmark = 'Landmark';
+  static const String cityTown = 'City/Town';
+  static const String pinCode = 'Pin code';
+  static const String state = 'State';
+  static const String showYourSpecificLocation = 'Show your specific location';
+  static const String addressDiscription = 'Make it clear to guests where your place is located. We’ll only share your address after they’ve made a reservation.';
+  static const String enterYourAddress = 'Enter your address';
+  static const String enterYourStreetAddress = 'Enter your street address';
+  static const String enterYourLandmark = 'Enter your landmark';
+  static const String enterYourCity = 'Enter your city';
+  static const String enterYourPinCode = 'Enter your pin code';
+  static const String selectYourState = 'Select your state';
+  static const String coverPhoto = 'Cover Photo';
+  static const String photoChooseDiscription = 'Click photo or';
+  static const String chooseFile = ' choose file';
+  static const String to = ' to\n';
+  static const String upload = 'upload';
+  static const String homestayPhotos = 'Homestay Photos';
+  static const String photos = 'Photos';
+  static const String fileExpection = 'Picked file';
+  static const String noFileSelectedExpection = 'No file selected';
+  static const String homeStayDescription = 'Homestay Description';
+  static const String description = 'Description';
+  static const String enterDescription = 'Enter description';
+  static const String priceAndContactDetailsPage = 'Price and Contact Details';
+  static const String basePrice = 'Base Price';
+  static const String weekendPrice = 'Weekend Price';
+  static const String enterStartPrice = 'Enter start price';
+  static const String enterEndPrice = 'Enter end price';
+  static const String ownerDetails = 'Owner Details';
+  static const String ownerContactNo = 'Owner Contact No.';
+  static const String ownerEmailID = 'Owner Email ID';
+  static const String homeStayDetails = 'Homestay Details';
+  static const String homeStayContactNo = 'Homestay Contact No.';
+  static const String enterHomeStayContactNo = 'Enter homestay contact no.';
+  static const String homeStayEmailID = 'Homestay Email ID';
+  static const String enterHomeStayEmailID = 'Enter homestay email ID';
+  static const String preview = 'Preview';
+  static const String hiltonViewVilla = 'Hilton View Villa';
+  static const String newYorkUSA = 'New York, USA';
+  static const String doller = '5,000 - 6,500';
+  static const String details = 'Details';
+  static const String contact = 'Contact';
+  static const String traditional = 'Traditional';
+  static const String defultbedrooms = '6 Bedrooms';
+  static const String defultSingleBed = '5 Single Bed';
+  static const String defultGuests = '12 Guests';
+  static const String defultBathrooms = '6 Bathrooms';
+  static const String defultDoubleBed = '6 Double Bed';
+  static const String defultFloorMattress = '2 Floor mattress';
+  static const String descriptionReadMore =
+      "'Hilton View Villa is a luxurious retreat offering modern comfort with stunning panoramic views. Featuring elegant rooms, private balconies, a pool,  and gourmet dining, it's perfect for guests seeking relaxation and exclusivity in a scenic setting. ";
+  static const String readMore = ' Read more...';
+  static const String time = 'Time';
+  static const String termsAndConditions = 'Terms & Conditions';
+  static const String term1 = '1. Term 1';
+  static const String term2 = '2. Term 2';
+  static const String term3 = '3. Term 3';
+  static const String term4 = '4. Term 4';
+  static const String term1desc =
+      'Lorem ipsum dolor sit amet consectetur. Nisl a pellentesque id semper quam donec. Hendrerit eleifend at vel curabitur. Risus morbi adipiscing porttitor et facilisis. Ornare massa at ut morbi felis dui senectus. Cum ac varius sapien id nam nisl.';
+  static const String term2desc =
+      'Aliquet lacus vitae bibendum morbi. Id ornare ultricies sit sapien arcu auctor sed pretium. Non lectus egestas consectetur urna viverra tincidunt iaculis lacus donec. Mauris arcu gravida dui mauris nunc mauris blandit. Ut quam augue sodales nibh quis. Eu suspendisse aliquet sed blandit nullam libero. Nunc vivamus non id eleifend ullamcorper. Non malesuada consectetur ante ultrices morbi. Tortor maecenas sed scelerisque fermentum ut quam. Urna enim etiam fames gravida.';
+  static const String term3desc =
+      'Mi bibendum volutpat non eget. Ultrices semper sit enim tincidunt. Vitae purus sed in sapien feugiat ac a. Congue sit lacus nulla non nibh facilisi tempor justo. Porttitor augue enim diam netus aliquam ut. Cursus pretium in fringilla gravida. Id habitasse dictum proin feugiat amet elit. Ac gravida et quis diam elementum aliquet. Ante lorem id lacus sit arcu quam gravida in. Tellus mollis malesuada nulla phasellus vitae aliquet risus neque odio. Rhoncus condimentum sagittis at nisl pellentesque sed vitae id. ';
+  static const String term4desc =
+      'Morbi vel aliquam nisl vel a convallis faucibus at. Pulvinar tellus imperdiet amet massa turpis suspendisse non id. Aliquet sagittis maecenas vitae sapien sapien consequat accumsan ultricies. Pellentesque morbi et pellentesque aliquet integer vulputate. Id nunc nisl vitae facilisis turpis tempus. Nisi nulla faucibus erat metus bibendum sollicitudin suscipit laoreet. Urna pharetra risus magnis orci amet sed interdum malesuada.';
+
+  static const String seeAll = 'See all';
+  static const String freeWifi = 'Free \n Wifi';
+  static const String airCondition2 = 'Air- \n Condition';
+  static const String hometheater2 = 'Home \n Theater';
+  static const String firAlarm2 = 'Fir \n alarm';
+
+  static const String noSmoking2 = 'No \n smoking';
+  static const String noDrinking2 = 'No- \n drinking';
+  static const String noPet2 = 'No Pet';
+  static const String damageToProperty2 = 'Damage to \n Property';
+
+  static const String defultCallNumber = '+1 23456 78901';
+  static const String defultEmail = 'travellery1234@gmail.com';
+
+  static const String congratulations = 'Congratulations';
+  static const String congraDesc =
+      'Congratulations, you are one step away from getting You property listed.  \n Review process would be completed within 48 hours.';
+  static const String okay = 'Okay';
+  static const String yourProperties = 'Your Properties';
+  static const String ecoFriendly = 'Eco-Friendly';
+  static const String approved = 'Approved';
+  static const String luxury = 'luxury';
+  static const String pending = 'Pending';
+  static const String rejected = 'Rejected';
+  static const String evolveBackCoorg = 'Evolve Back Coorg';
+  static const String urban = 'Urban';
+  static const String draft = 'Draft';
+  static const String edit = 'edit';
+  static const String delete = 'Delete';
+  static const String chooseImageSource = 'Choose Image Source';
+  static const String gallery = 'Gallery';
+  static const String camera = 'Camera';
+  static const String bedAndBreakfast = 'Bed & Breakfast';
+  static const String adventure = 'Adventure ';
+  static const String deleteDesc =
+      'Are you sure you want to delete this properties ? ';
+  static const String updateAndExit = 'Update and Exit ';
+  static const String home = 'Home';
+  static const String profile = 'Profile';
+  static const String trips = 'Trips';
+  static const String helloJhon = 'Hello Jhon!';
+  static const String welcomeToTravelbud = 'Welcome to Travelbud.';
+  static const String search = 'Search';
+  static const String delhi = 'Delhi';
+  static const String goa = 'Goa';
+  static const String jaipur = 'Jaipur';
+  static const String kerela = 'Kerela';
+  static const String uttarakhand = 'Uttarakhand';
+  static const String properties = 'Properties';
+  static const String defultDoller = '₹ 10,000 - 12,000';
+  static const String defultDoller1 = '₹ 15,000 - 20,000';
+  static const String defultDoller2 = '₹ 20,000 - 25,000';
+  static const String defultDoller3 = '₹ 14,000 - 20,000';
+  static const String defultDoller4 = '₹ 10,000 - 15,000';
+  static const String defultDoller5 = '₹ 16,000 - 20,000';
+  static const String defultDoller6 = '₹ 13,000 - 20,000';
+  static const String filter = 'Filter';
+  static const String priceRange = 'Price Range';
+  static const String minimum = 'Minimum';
+  static const String maximum = 'Maximum';
+  static const String sortByPrice = 'Sort by Price';
+  static const String any = 'Any';
+  static const String lowestToHighest = 'Lowest to Highest';
+  static const String highestToLowest = 'Highest to Lowest ';
+  static const String typeOfPlace = 'Type of place';
+  static const String clearAll = 'Clear All';
+  static const String showMore = 'Show more';
+  static const String orUseMyCurrentLocation = 'or use my current location';
+  static const String recentSearch = 'Recent Search';
+  static const String apply = 'Apply';
+  static const String defult5Night = '5 nights';
+  static const String selectGuest = 'Select Guest';
+  static const String adults = 'Adults';
+  static const String children = 'Adults';
+  static const String infants = 'Infants';
+  static const String ages14orAbove = 'Ages 14 or above';
+  static const String ages2to13 = 'Ages 2-13';
+  static const String under2 = 'Under 2';
+  static const String checkInOutDate = 'Check in - out date';
+  static const String reserve = 'Reserve';
+  static const String bookingRequest = 'Booking Request';
+  static const String yourBookingDetails = 'Your Booking Details';
+  static const String date = 'Dates';
+  static const String guest = 'Guest';
+  static const String priceDetails = 'Price Details';
+  static const String taxes = 'Taxes';
+  static const String serviceFee = 'Service fee';
+  static const String total = 'Total';
+  static const String mealsIncluded = 'Meals Included';
+  static const String freeBreakfastLunchDinner = 'Free Breakfast, Lunch & Dinner';
+  static const String cancellationPolicy = 'Cancellation Policy';
+  static const String freeCancellationUntil = 'Free Cancellation until 15 Jun 2024';
+  static const String houseRulesDes = 'We expect guests to treat Host’s place like your own and look after it.';
+  static const String houseRulesDes2 = 'Read and comply with all the House rules mentioned by Host.';
+  static const String houseRulesDes3 = 'Valid identity proof for all the guests required at the time of check-in';
+  static const String confirmPaymentDesc = 'I also agree to the Uploaded Terms of Service, Payments Terms of Service and I acknowledgement the Privacy Policy ';
+  static const String confirmPayment = 'Confirm Payment';
+  static const String uploadingImage = "Uploading...";
+  static const String pinCodeEnterValidation = 'Please enter a PIN code';
+  static const String pinMaximumDigit = 'Enter maximum 6 digit number';
+  static const String pinOnlyDigit = 'PIN code must contain only digits';
+
+}
+
+import 'dart:io';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/generated/assets.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/auth_flow/controller/auth_controller.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_radius.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_validation.dart';
+import '../../../../common_widgets/common_button.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import '../../../../utils/textFormField.dart';
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
+  @override
+  State<SignupPage> createState() => _SignupPageState();
+}
+
+class _SignupPageState extends State<SignupPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthController controller = Get.find<AuthController>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 7.w),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 11.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: Image.asset(Assets.imagesSplash),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          Strings.createAccount,
+                          style: FontManager.semiBold(28),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 6.5.h),
+                        Obx(() {
+                          return controller.imageFile.value != null
+                              ? Container(
+                            height: 100,
+                            width: 100,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                              const BorderRadius.all(Radius.circular(100)),
+                              border: Border.all(
+                                  color: AppColors.buttonColor),
+                              image: DecorationImage(
+                                  image: FileImage(
+                                    File(
+                                      controller.imageFile.value!.path),
+                                  ),
+                                  fit: BoxFit.fill),
+                            ),
+                          )
+                              : Image.asset(
+                            Assets.imagesProfile,
+                            height: 13.1.h,
+                            width: 30.w,
+                          );
+                        }),
+                        SizedBox(height: 2.h),
+                        GestureDetector(
+                          onTap: () async {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    Strings.chooseImageSource,
+                                    style: FontManager.regular(20),
+                                  ),
+                                  content: SingleChildScrollView(
+                                    child: ListBody(
+                                      children: [
+                                        ListTile(
+                                          leading: Icon(
+                                            Icons.camera,
+                                          ),
+                                          title: Text(Strings.camera),
+                                          onTap: () {
+                                            controller
+                                                .pickImage(ImageSource.camera);
+                                            Get.back();
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: Icon(Icons.photo),
+                                          title: Text(Strings.gallery),
+                                          onTap: () {
+                                            controller.pickImage(ImageSource.gallery);
+                                            Get.back();
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Get.back();
+                                      },
+                                      child: Text(Strings.cancel),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            height: 5.2.h,
+                            width: 141,
+                            decoration: const BoxDecoration(
+                              color: AppColors.buttonColor,
+                              borderRadius:
+                              BorderRadius.all(AppRadius.radius10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                Strings.addProfileImage,
+                                style: FontManager.medium(15.sp,
+                                    color: AppColors.white),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(Strings.nameLabel, style: FontManager.regular(14)),
+                SizedBox(height: 0.5.h),
+                CustomTextField(
+                  controller: controller.nameController,
+                  hintText: Strings.nameHint,
+                  prefixIconImage: Image.asset(Assets.imagesSignupProfile,
+                      width: 20, height: 20),
+                  validator: AppValidation.validateName,
+                  onSaved: (value) => controller.name.value = value!,
+                ),
+                SizedBox(height: 3.h),
+                Text(Strings.mobileNumberLabel, style: FontManager.regular(14)),
+                SizedBox(height: 0.5.h),
+                CustomTextField(
+                  controller: controller.mobileController,
+                  keyboardType: TextInputType.number,
+                  hintText: Strings.mobileNumberHint,
+                  prefixIconImage:
+                  Image.asset(Assets.imagesPhone, width: 20, height: 20),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return Strings.mobileNumberError;
+                    } else if (value.length < 10) {
+                      return Strings.mobileNumberLengthError;
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => controller.mobile.value = value!,
+                ),
+                SizedBox(height: 3.h),
+                Text(
+                  Strings.emailLabel,
+                  style: FontManager.regular(14, color: Colors.black),
+                ),
+                SizedBox(height: 0.5.h),
+                CustomTextField(
+                  controller: controller.emailController,
+                  hintText: Strings.emailHint,
+                  validator: AppValidation.validateEmail,
+                  onChanged: (value) => controller.email.value = value,
+                  prefixIconImage: Image.asset(
+                    Assets.imagesEmail,
+
+                    height: 20,
+                    width: 20,
+                  ),
+                ),
+                SizedBox(height: 3.h),
+                Text(Strings.passwordLabel, style: FontManager.regular(14)),
+                SizedBox(height: 0.5.h),
+                Obx(() => CustomTextField(
+                  controller: controller.passwordController,
+                  hintText: Strings.passwordHint,
+                  prefixIconImage: Image.asset(
+                    Assets.imagesPassword,
+                    height: 20,
+                    width: 20,
+                  ),
+                  obscureText: !controller.isSignUpPasswordVisible.value,
+                  validator: AppValidation.validatePassword,
+                  onSaved: (value) => controller.password.value = value!,
+                  showSuffixIcon: true,
+                  onSuffixIconPressed: () {
+                    controller.isSignUpPasswordVisible.value =
+                    !controller.isSignUpPasswordVisible.value;
+                  },
+                )),
+                SizedBox(height: 3.h),
+                Text(Strings.confirmPasswordLabel,
+                    style: FontManager.regular(14)),
+                SizedBox(height: 0.5.h),
+                Obx(() => CustomTextField(
+                  controller: controller.confirmPasswordController,
+                  hintText: Strings.confirmPasswordHint,
+                  prefixIconImage: Image.asset(
+                    Assets.imagesPassword,
+                    height: 20,
+                    width: 20,
+                  ),
+                  onSaved:(value) => controller.confirmPassword.value = value!,
+                  obscureText: !controller.isConfirmPasswordVisible.value,
+                  showSuffixIcon: true,
+                  onSuffixIconPressed: () {
+                    controller.isConfirmPasswordVisible.value =
+                    !controller.isConfirmPasswordVisible.value;
+                  },
+                )),
+                SizedBox(height: 11.9.h),
+                CommonButton(
+                  title: Strings.signUp,
+                  onPressed: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      debugPrint('qqqqqqqqqqqqqqqqq');
+                      controller.signup();
+                    }
+                  },
+                ),
+                SizedBox(height: 5.5.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: Strings.alreadyHaveAccount,
+                            style: FontManager.regular(14),
+                          ),
+                          TextSpan(
+                            text: ' ${Strings.login}',
+                            style: FontManager.semiBold(14,
+                                color: AppColors.buttonColor),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Get.toNamed(Routes.login);
+                              },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/auth_flow/controller/auth_controller.dart';
+import 'package:travellery_mobile/travellery_mobile/utils/app_validation.dart';
+import '../../../../../common_widgets/common_button.dart';
+import '../../../../../routes_app/all_routes_app.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+import '../../../../../utils/textFormField.dart';
+import '../../common_view/common_topview_forget_pages.dart';
+
+class ForgetPassword extends StatefulWidget {
+  const ForgetPassword({super.key});
+
+  @override
+  State<ForgetPassword> createState() => _ForgetPasswordState();
+}
+
+class _ForgetPasswordState extends State<ForgetPassword> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final AuthController controller = Get.find<AuthController>();
+  bool isValidating = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return TopView(
+      title: Strings.forgetPassword,
+      promptText: Strings.forgetPasswordPrompt,
+      content: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              Strings.emailLabel,
+              style: FontManager.regular(14, color: Colors.black),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              hintText: Strings.emailHint,
+              validator: AppValidation.validateEmail,
+              onChanged: (value) {
+                controller.email.value = value;
+                setState(() {
+                  if(_formKey.currentState!.validate()){
+                    isValidating = false;
+                  }else{
+                    isValidating = true;
+                  }
+                });
+              },
+              prefixIconData: Icons.email_outlined,
+              isValidating: isValidating,
+              isForgetPage: true,
+              controller: controller.forgotPasswordEmailController,
+            ),
+            const SizedBox(height: 273),
+            CommonButton(
+                title: Strings.reset,
+                onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    controller.sendVerificationCode(email: controller.forgotPasswordEmailController.text);
+                  }
+                },
+            ),
+            SizedBox(height: 2.5.h),
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  Get.offNamed(Routes.login);
+                },
+                child: Text(
+                  Strings.cancel,
+                  style: FontManager.regular(color: AppColors.buttonColor, 20),
+                ),
+              ),
+            ),
+            SizedBox(height: 4.h),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'dart:async';
+import 'package:get/get.dart';
+
+import '../../../controller/auth_controller.dart';
+
+class VerificationController extends GetxController {
+  final AuthController authController = Get.find<AuthController>();
+  RxInt remainingTime = 150.obs;
+  Timer? timer;
+
+
+  @override
+  void onInit() {
+    super.onInit();
+    startTimer();
+  }
+
+  void startTimer() {
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (remainingTime.value > 0) {
+        remainingTime.value--;
+      } else {
+        timer.cancel();
+        onTimerComplete();
+      }
+    });
+  }
+
+  void onTimerComplete() {
+    Get.back();
+    authController.verificationController.clear();
+  }
+
+  @override
+  void onClose() {
+    timer?.cancel();
+    super.onClose();
+  }
+
+  String get formattedTime {
+    int minutes = remainingTime.value ~/ 60;
+    int seconds = remainingTime.value % 60;
+    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')} minutes";
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/auth_flow/controller/auth_controller.dart';
+import '../../../../../common_widgets/common_button.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+import '../../common_view/common_topview_forget_pages.dart';
+import '../controller/verification_controller.dart';
+
+class VerificationCodeScreen extends StatelessWidget {
+  const VerificationCodeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final VerificationController controller = Get.find();
+   final AuthController authController = Get.find<AuthController>();
+    return TopView(
+      title: Strings.verificationCodeTitle,
+      promptText: Strings.verificationCodePrompt+authController.email.value,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(height: 2.h),
+          Center(
+            child: Text(
+              Strings.verificationCodeHint,
+              style: FontManager.regular(14, color: AppColors.black),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 2.5.h),
+          PinCodeTextField(
+            controller: authController.verificationController,
+            appContext: context,
+            length: 6,textStyle: FontManager.regular(23,color: AppColors.black),
+            obscureText: false,
+            animationType: AnimationType.fade,keyboardType: TextInputType.number,
+            pinTheme: PinTheme(
+              shape: PinCodeFieldShape.box,
+              borderRadius: BorderRadius.circular(5),
+              borderWidth: 1,
+              fieldHeight: 42,inactiveBorderWidth: 1.5,selectedBorderWidth: 2,activeBorderWidth: 1.5,
+              fieldWidth: 43,
+              inactiveColor: AppColors.texFiledColor,
+              activeColor:  AppColors.greyText,
+              selectedColor:  AppColors.greyText,
+              errorBorderColor: AppColors.errorTextfieldColor,
+            ),
+            onChanged: (value) {},
+          ),
+          SizedBox(height: 3.h),
+          Obx(() {
+            return Text(
+              controller.formattedTime,
+              style: FontManager.regular(12, color: AppColors.textAddProreties),
+            );
+          }),
+          SizedBox(height: 201),
+          CommonButton(
+            title: Strings.verify,
+
+            onPressed: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              if (authController.verificationController.text.length == 6) {
+              authController.verifyVerificationCode();
+              } else {
+                Get.snackbar(Strings.error, Strings.verifiCodeComple);
+              }
+            },
+          ),
+          SizedBox(height: 2.5.h),
+          Center(
+            child: GestureDetector(
+              onTap: () {
+                controller.startTimer();
+                authController.sendVerificationCode(email: authController.verificationController.text);
+              },
+              child: Text(
+                Strings.resend,
+                style: FontManager.regular(color: AppColors.buttonColor, 20),
+              ),
+            ),
+          ),
+          SizedBox(height: 4.h),
+        ],
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:time_picker_spinner/time_picker_spinner.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/add_properties_screen/steps/custom_add_properties_pages/custom_add_properties_pages.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+import '../../controller/add_properties_controller.dart';
+
+class CheckInOutDetailsPage extends StatefulWidget {
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+
+  const CheckInOutDetailsPage({super.key, required this.onNext, required this.onBack});
+
+  @override
+  State<CheckInOutDetailsPage> createState() => _CheckInOutDetailsPageState();
+}
+
+class _CheckInOutDetailsPageState extends State<CheckInOutDetailsPage> {
+  final AddPropertiesController  controller = Get.find<AddPropertiesController>();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomAddPropertiesPage(
+      body: Column(
+        children: [
+          SizedBox(height: 1.5.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(Strings.checkInTime,
+                  style: FontManager.medium(color: AppColors.black, 16)),
+            ],
+          ),
+          SizedBox(height: 0.5.h),
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0,right: 8.0),
+            child: TimePickerSpinner(
+              locale: const Locale('en', ''),
+              time: controller.checkInTime.value,
+              is24HourMode: false,
+              isShowSeconds: true,itemWidth: 40,
+              itemHeight: 80,alignment: Alignment.bottomLeft,
+              normalTextStyle: FontManager.regular(20.sp),
+              highlightedTextStyle: FontManager.semiBold(20, color: AppColors.buttonColor),
+              isForce2Digits: true,
+              onTimeChange: (time) {
+                controller.checkInTime.value = time;
+              },
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Obx(() => Checkbox(activeColor: AppColors.buttonColor,
+                value: controller.flexibleWithCheckInTime.value,
+                onChanged: (bool? newValue) {
+                  controller.flexibleWithCheckInTime.value = newValue ?? false;
+                  controller.checkInTimeUpdate(controller.flexibleWithCheckInTime.value);
+                },
+                side: const BorderSide(color: AppColors.texFiledColor),
+              )),
+              Text(Strings.flexibleWithCheckInTime,
+                  style: FontManager.regular(color: AppColors.black, 14)),
+              const Spacer(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(Strings.checkOutTime,
+                  style: FontManager.medium(color: AppColors.black, 16)),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TimePickerSpinner(
+              locale: const Locale('en', ''),
+              time: controller.checkOutTime.value,
+              is24HourMode: false,
+              isShowSeconds: true,itemWidth: 40,
+              itemHeight: 80,alignment: Alignment.bottomLeft,
+              normalTextStyle: FontManager.regular(20.sp),
+              highlightedTextStyle: FontManager.semiBold(20, color: AppColors.buttonColor),
+              isForce2Digits: true,
+              onTimeChange: (time) {
+                controller.checkOutTime.value = time;
+              },
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Obx(() => Checkbox(activeColor: AppColors.buttonColor,
+                value: controller.flexibleWithCheckInOut.value,
+                onChanged: (bool? newValue) {
+                  controller.flexibleWithCheckInOut.value = newValue ?? false;
+                  controller.checkOutTimeUpdate(controller.flexibleWithCheckInOut.value);
+                },
+                side: const BorderSide(color: AppColors.texFiledColor),
+              )),
+              Text(
+                Strings.flexibleWithCheckInTime,
+                style: FontManager.regular(color: AppColors.black, 14),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../../generated/assets.dart';
+import '../../../../../common_widgets/accommodation_type_of_place.dart';
+import '../../../../../utils/app_radius.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/font_manager.dart';
+import '../../../../../common_widgets/accommondation_details.dart';
+import '../../controller/add_properties_controller.dart';
+import '../../custom_add_properties_pages/custom_add_properties_pages.dart';
+
+class AccommodationDetailsPage extends StatelessWidget {
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+
+  const AccommodationDetailsPage({
+    super.key,
+    required this.onNext,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final AddPropertiesController controller = Get.find<AddPropertiesController>();
+
+    return CustomAddPropertiesPage(
+      body: buildBody(controller),
+    );
+  }
+
+  Widget buildBody(AddPropertiesController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildAccommodationOption(
+          title: Strings.entirePlace,
+          subtitle: Strings.wholePlacetoGuests,
+          imageAsset: Assets.imagesTraditional,
+          value: 'entirePlace',
+          controller: controller,
+        ),
+        const SizedBox(height: 20),
+        buildAccommodationOption(
+          title: Strings.privateRoom,
+          subtitle: Strings.guestsSleepInPrivateRoomButSomeAreasAreShared,
+          imageAsset: Assets.imagesPrivateRoom,
+          value: 'privateRoom',
+          controller: controller,
+        ),
+        SizedBox(height: 4.h),
+        buildCustomContainer(Assets.imagesMaxGuests, Strings.maxGuests,
+            controller.maxGuestsCount),
+        SizedBox(height: 2.h),
+        buildCustomContainer(Assets.imagesSingleBed, Strings.singleBed,
+            controller.singleBedCount),
+        SizedBox(height: 2.h),
+        buildCustomContainer(Assets.imagesBedRooms, Strings.bedRooms,
+            controller.bedroomsCount),
+        SizedBox(height: 2.h),
+        buildCustomContainer(Assets.imagesDubleBed, Strings.doubleBed,
+            controller.doubleBedCount),
+        SizedBox(height: 2.h),
+        buildCustomContainer(Assets.imagesExtraFloor,
+            Strings.extraFloorMattress, controller.extraFloorCount),
+        SizedBox(height: 2.h),
+        buildCustomContainer(Assets.imagesBathRooms, Strings.bathRooms,
+            controller.bathRoomsCount),
+        SizedBox(height: 2.h),
+        Container(
+          width: 100.w,
+          padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 4.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.borderContainerGriedView,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(width: 0.w),
+              Image.asset(
+                Assets.imagesKitchen,
+                height: 26,
+                width: 26,
+                fit: BoxFit.cover,
+              ),
+              SizedBox(width: 3.w),
+              Text(
+                Strings.kitchenAvailable,
+                style: FontManager.regular(14, color: AppColors.black),
+                textAlign: TextAlign.start,
+              ),
+              Spacer(),
+              Obx(() => Text(Strings.yes,style: FontManager.regular(14,color:  controller.isKitchenAvailable.value ? AppColors.black : AppColors.greyText),)),
+              Obx(() {
+                 return   Switch(
+                   value: controller.isKitchenAvailable.value,
+                   onChanged: (value) {
+                     controller.isKitchenAvailable.value = value;
+                   },
+                   activeColor: AppColors.buttonColor,
+                 );
+              }),
+              Obx(() => Text(Strings.no,style: FontManager.regular(14,color:  controller.isKitchenAvailable.value ? AppColors.greyText : AppColors.black),)),
+
+            ],
+          ),
+        ),
+        SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget buildCustomContainer(String imageAsset, String title, RxInt count) {
+    return CusttomContainer(
+      imageAsset: imageAsset,
+      title: title,
+      count: count,
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import 'package:get/get.dart';
+import 'package:travellery_mobile/travellery_mobile/screen/add_properties_screen/steps/controller/add_properties_controller.dart';
+import '../../generated/assets.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_radius.dart';
+import '../utils/font_manager.dart';
+
+
+class CusttomContainer extends StatelessWidget {
+  final String imageAsset;
+  final String title;
+  final RxInt count;
+
+  const CusttomContainer({
+    super.key,
+    required this.imageAsset,
+    required this.title,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 100.w,
+      height: 7.h,
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.borderContainerGriedView,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(width: 0.w),
+          Image.asset(
+            imageAsset,
+            height: 26,
+            width: 26,
+            fit: BoxFit.cover,
+          ),
+          SizedBox(width: 3.w),
+          Text(
+            title,
+            style: FontManager.regular(14, color: AppColors.black),
+            textAlign: TextAlign.start,
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Get.find<AddPropertiesController>().decrement(count);
+                },
+                child: Image.asset(
+                  Assets.imagesDividecircle,
+                  height: 20.sp,
+                ),
+              ),
+              SizedBox(width: 1.w),
+              Container(
+                width: 11.w,
+                height: 4.h,
+                decoration: const BoxDecoration(
+                  color: AppColors.perpalContainer,
+                  borderRadius: BorderRadius.all(AppRadius.radius4),
+                ),
+                child: Obx(() {
+                  return TextField(
+                    controller: TextEditingController(text: count.value.toString()),
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.only(bottom: 16),
+                    ),
+                    style: FontManager.regular(14),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      count.value = int.tryParse(value) ?? 0;
+                    },
+                  );
+                }),
+              ),
+              SizedBox(width: 1.w),
+              GestureDetector(
+                onTap: () {
+                  Get.find<AddPropertiesController>().increment(count);
+                },
+                child: Image.asset(
+                  Assets.imagesPluscircle,
+                  height: 20.sp,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:sizer/sizer.dart';
+
+import '../screen/add_properties_screen/steps/controller/add_properties_controller.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_radius.dart';
+import '../utils/font_manager.dart';
+
+Widget buildAccommodationOption({
+  required String title,
+  required String subtitle,
+  required String imageAsset,
+  required String value,
+  required AddPropertiesController controller,
+  // final Function(String) onChanged;
+  // final bool isSelected;
+}) {
+  return GestureDetector(
+    onTap: () {},
+    child: Obx(() {
+      bool isSelected = controller.selectedAccommodation.value == value;
+      return Container(
+        width: double.infinity,
+        height: 9.3.h,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.selectContainerColor : Colors.white,
+          borderRadius: BorderRadius.all(AppRadius.radius10),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.buttonColor
+                : AppColors.borderContainerGriedView,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset(
+                imageAsset,
+                height: 24,
+                width: 24,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: 1.h),
+                  Text(
+                    title,
+                    style: FontManager.regular(16, color: AppColors.black),
+                  ),
+                  SizedBox(height: 2),
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      subtitle,
+                      style:
+                      FontManager.regular(12, color: AppColors.greyText),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Obx(() => Radio(
+                value: value,
+                groupValue: controller.selectedAccommodation.value,
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    controller.selectAccommodation(newValue,imageAsset);
+                  }
+                },
+              )),
+            ),
+          ],
+        ),
+      );
+    }),
+  );
+}
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
