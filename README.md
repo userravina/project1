@@ -353,3 +353,267 @@ class CusttomContainer extends StatelessWidget {
     );
   }
 }
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile_app/utils/app_color.dart';
+import 'package:travellery_mobile_app/utils/app_strings.dart';
+import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/add_properties_pages/controller/addProperties_controller.dart';
+import 'package:travellery_mobile_app/view/auth_flow/add_properties_screen/add_properties_pages/custom_view.dart';
+import '../../../../../utils/font_manager.dart';
+
+class CheckInOutDetailsPage extends StatelessWidget {
+  final Rx<DateTime> selectedTime;
+  final Function(DateTime) onTimeChange;
+  final Rx<DateTime> selectedTime2;
+  final Function(DateTime) onTimeChange2;
+
+  const CheckInOutDetailsPage( {super.key, required this.selectedTime, required this.onTimeChange, required this.selectedTime2, required this.onTimeChange2});
+
+  @override
+  Widget build(BuildContext context) {
+    final AddPropertiesController controller = Get.find<AddPropertiesController>();
+    return CustomAddPropertiesPage(
+      body: Column(
+        children: [
+          SizedBox(height: 1.5.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(Strings.checkInTime,
+                  style: FontManager.medium(color: AppColors.black, 16)),
+            ],
+          ),
+          SizedBox(height: 0.5.h),
+        Obx(
+              () => Column(
+            children: [
+              Stack(
+                children: [
+                  Padding(padding: EdgeInsets.only(top: 5.h,left: 15.w,right: 15.w),child: Divider(color: Colors.grey,)),
+                  Padding(padding: EdgeInsets.only(top: 12.h,left: 15.w,right: 15.w),child: Divider(color: Colors.grey,)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Hours Column
+                      _buildTimeColumn(
+                        range: List.generate(12, (index) => index + 1),
+                        // Hours from 1 to 12
+                        selectedValue: selectedTime.value.hour % 12 == 0
+                            ? 12
+                            : selectedTime.value.hour % 12,
+                        onValueSelected: (value) => _onTimePartChanged(hour: value),
+                      ),
+
+                      _buildPoinet(),
+                      // Minutes Column
+                      _buildTimeColumn(
+                        range: List.generate(60, (index) => index),
+                        // Minutes from 0 to 59
+                        selectedValue: selectedTime.value.minute,
+                        onValueSelected: (value) => _onTimePartChanged(minute: value),
+                      ),
+                      _buildPoinet(),
+
+                      // Seconds Column
+                      _buildTimeColumn(
+                        range: List.generate(60, (index) => index),
+                        // Seconds from 0 to 59
+                        selectedValue: selectedTime.value.second,
+                        onValueSelected: (value) => _onTimePartChanged(second: value),
+                      ),
+                      _buildPoinet(),
+                      // AM/PM Column
+                      _buildTimeColumn(
+                        range: ["AM", "PM"],
+                        selectedValue: selectedTime.value.hour < 12 ? "AM" : "PM",
+                        onValueSelected: (value) {
+                          final isPM = value == "PM";
+                          _onTimePartChanged(
+                              hour: isPM
+                                  ? selectedTime.value.hour + 12
+                                  : selectedTime.value.hour - 12);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Obx(() => Checkbox(activeColor: AppColors.buttonColor,
+                value: controller.flexibleWithCheckInTime.value,
+                onChanged: (bool? newValue) {
+                  controller.flexibleWithCheckInTime.value = newValue ?? false;
+                  controller.checkInTimeUpdate(controller.flexibleWithCheckInTime.value);
+                },
+
+                side: const BorderSide(color: AppColors.texFiledColor),
+              )),
+              Text(Strings.flexibleWithCheckInTime,
+                  style: FontManager.regular(color: AppColors.black, 14)),
+              const Spacer(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(Strings.checkOutTime,
+                  style: FontManager.medium(color: AppColors.black, 16)),
+            ],
+          ),
+          SizedBox(height: 2.h),
+          Obx(
+                () => Column(
+              children: [
+                Stack(
+                  children: [
+                    Padding(padding: EdgeInsets.only(top: 5.h,left: 15.w,right: 15.w),child: Divider(color: Colors.grey,)),
+                    Padding(padding: EdgeInsets.only(top: 12.h,left: 15.w,right: 15.w),child: Divider(color: Colors.grey,)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Hours Column
+                        _buildTimeColumn(
+                          range: List.generate(12, (index) => index + 1),
+                          // Hours from 1 to 12
+                          selectedValue: selectedTime2.value.hour % 12 == 0
+                              ? 12
+                              : selectedTime2.value.hour % 12,
+                          onValueSelected: (value) => _onTimePartChanged2(hour: value),
+                        ),
+
+                        _buildPoinet(),
+                        // Minutes Column
+                        _buildTimeColumn(
+                          range: List.generate(60, (index) => index),
+                          // Minutes from 0 to 59
+                          selectedValue: selectedTime2.value.minute,
+                          onValueSelected: (value) => _onTimePartChanged2(minute: value),
+                        ),
+                        _buildPoinet(),
+
+                        // Seconds Column
+                        _buildTimeColumn(
+                          range: List.generate(60, (index) => index),
+                          // Seconds from 0 to 59
+                          selectedValue: selectedTime2.value.second,
+                          onValueSelected: (value) => _onTimePartChanged2(second: value),
+                        ),
+                        _buildPoinet(),
+                        // AM/PM Column
+                        _buildTimeColumn(
+                          range: ["AM", "PM"],
+                          selectedValue: selectedTime2.value.hour < 12 ? "AM" : "PM",
+                          onValueSelected: (value) {
+                            final isPM = value == "PM";
+                            _onTimePartChanged2(
+                                hour: isPM
+                                    ? selectedTime2.value.hour + 12
+                                    : selectedTime2.value.hour - 12);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Obx(() => Checkbox(activeColor: AppColors.buttonColor,
+                value: controller.flexibleWithCheckInOut.value,
+                onChanged: (bool? newValue) {
+                  controller.flexibleWithCheckInOut.value = newValue ?? false;
+                  controller.checkOutTimeUpdate(controller.flexibleWithCheckInOut.value);
+                },
+                side: const BorderSide(color: AppColors.texFiledColor),
+              )),
+              Text(
+                Strings.flexibleWithCheckInTime,
+                style: FontManager.regular(color: AppColors.black, 14),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeColumn({
+    required List<dynamic> range,
+    required dynamic selectedValue,
+    required ValueChanged<dynamic> onValueSelected,
+  }) {
+    return SizedBox(
+      width: 15.w,
+      height: 20.h,
+      child: ListWheelScrollView.useDelegate(
+        itemExtent: 50,
+        diameterRatio: 1.2,
+        physics: FixedExtentScrollPhysics(),
+        onSelectedItemChanged: (index) => onValueSelected(range[index]),
+        childDelegate: ListWheelChildBuilderDelegate(
+          builder: (context, index) {
+            final value = range[index];
+            final isSelected = value == selectedValue;
+            return Center(
+              child: Text(
+                value.toString().padLeft(2, '0'),
+                style: isSelected
+                    ? FontManager.semiBold(20, color: AppColors.buttonColor)
+                    : FontManager.regular(20, color: AppColors.black),
+              ),
+            );
+          },
+          childCount: range.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPoinet() {
+    return Text(
+      ':',
+      style: FontManager.semiBold(20, color: AppColors.texFiledColor),
+    );
+  }
+
+  // Update time based on selected part (hour, minute, second)
+  void _onTimePartChanged({int? hour, int? minute, int? second}) {
+    final updatedTime = DateTime(
+      selectedTime.value.year,
+      selectedTime.value.month,
+      selectedTime.value.day,
+      hour ?? selectedTime.value.hour,
+      minute ?? selectedTime.value.minute,
+      second ?? selectedTime.value.second,
+    );
+    onTimeChange(updatedTime);
+    selectedTime.value = updatedTime;
+  }
+  void _onTimePartChanged2({int? hour, int? minute, int? second}) {
+    final updatedTime = DateTime(
+      selectedTime2.value.year,
+      selectedTime2.value.month,
+      selectedTime2.value.day,
+      hour ?? selectedTime2.value.hour,
+      minute ?? selectedTime2.value.minute,
+      second ?? selectedTime2.value.second,
+    );
+    onTimeChange2(updatedTime);
+    selectedTime2.value = updatedTime;
+  }
+}
+CheckInOutDetailsPage(selectedTime: controller.checkInTime,onTimeChange: (time) => controller.checkInTime.value = time,selectedTime2: controller.checkOutTime,onTimeChange2: (time) => controller.checkOutTime.value = time,),
