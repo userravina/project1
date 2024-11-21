@@ -19,42 +19,3122 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
 
-https://github.com/kaushik072/travellery_app_mobile
+import 'package:get/get.dart';
+
+class BottomNavigationController extends GetxController{
+
+  var selectedIndex = 0.obs;
+
+  void selectedUpdate(int index) {
+    selectedIndex.value = index;
+    update();
+  }
+}
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/generated/assets.dart';
-import '../../../common_widgets/common_button.dart';
-import '../../../common_widgets/common_dialog.dart';
-import '../../../routes_app/all_routes_app.dart';
-import '../../../utils/app_colors.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../generated/assets.dart';
 import '../../../utils/app_radius.dart';
 import '../../../utils/app_string.dart';
 import '../../../utils/font_manager.dart';
-import '../../add_properties_screen/add_properties_steps/data/model/local_homestaydata_model.dart';
-import '../controller/preview_properties_controller.dart';
-import 'package:travellery_mobile/screen/your_properties_screen/controller/your_properties_controller.dart';
+import '../../profile_pages/view/profile_page.dart';
+import '../../traveling_flow/view/home_pages/home_page.dart';
+import '../controller/bottom_controller.dart';
+import '../../traveling_flow/view/trip_pages/trips_page.dart';
 
-class PreviewPage extends StatefulWidget {
-  final int selectedIndex;
-  final LocalHomestaydataModel homestayData;
-
-  const PreviewPage({super.key, required this.selectedIndex,required this.homestayData});
+class BottomNavigationPage extends StatelessWidget {
+  const BottomNavigationPage({super.key});
 
   @override
-  State<PreviewPage> createState() => _PreviewPageState();
+  Widget build(BuildContext context) {
+    final BottomNavigationController controller =
+        Get.put(BottomNavigationController());
+
+    return Scaffold(
+      body: Obx(() {
+        return IndexedStack(
+          index: controller.selectedIndex.value,
+          children: const [
+            HomeTravelingPage(),
+            TripsPage(),
+            ProfilePage(),
+          ],
+        );
+      }),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 1.5.h),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Obx(
+              () => buildNavItem(
+                index: 0,
+                imagePath: controller.selectedIndex.value == 0
+                    ? Assets.imagesHomeVector
+                    : Assets.imagesBottomHome2,
+                label: Strings.home,
+                onTap: () => controller.selectedUpdate(0),
+              ),
+            ),
+            Obx(
+              () => buildNavItem(
+                index: 1,
+                imagePath: controller.selectedIndex.value == 1
+                    ? Assets.imagesBottomTrip2
+                    : Assets.imagesBottomTrip,
+                label: Strings.trips,
+                onTap: () => controller.selectedUpdate(1),
+              ),
+            ),
+            Obx(
+              () => buildNavItem(
+                index: 2,
+                imagePath: controller.selectedIndex.value == 2
+                    ? Assets.imagesBottomProfile2
+                    : Assets.imagesBottomProfile,
+                label: Strings.profile,
+                onTap: () => controller.selectedUpdate(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildNavItem({
+    required int index,
+    required String imagePath,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 5.4.h,
+        width: 111,
+        decoration: BoxDecoration(
+          color: index ==
+                  Get.find<BottomNavigationController>().selectedIndex.value
+              ? AppColors.bottomActiveColor
+              : Colors.transparent,
+          borderRadius: const BorderRadius.all(AppRadius.radius36),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              imagePath,
+              width: 21.sp,
+              height: 21.sp,
+            ),
+            SizedBox(width: 2.w),
+            if (index ==
+                Get.find<BottomNavigationController>().selectedIndex.value)
+              Text(
+                label,
+                style:
+                    FontManager.semiBold(14.sp, color: AppColors.buttonColor),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+ import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
+import '../../../api_helper/api_helper.dart';
+import '../../../api_helper/getit_service.dart';
+import '../../../common_widgets/common_loading_process.dart';
+import '../../../routes_app/all_routes_app.dart';
+import '../../../services/storage_services.dart';
+import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+import '../data/model/home_properties_model.dart';
+
+class TravelingHomeController extends GetxController{
+  HomeTravelingPropertiesModel? homeProperty;
+  List<ReUsedDataModel> propertiesList = [];
+  var travelingRepository = getIt<TravelingRepository>();
+  var apiHelper = getIt<ApiHelper>();
+
+  Future<void> getYourPropertiesData() async {
+    homeProperty = await travelingRepository.getYourProperties(limit: 5);
+    if (homeProperty != null && homeProperty!.homestaysData != null) {
+      propertiesList = homeProperty!.homestaysData!;
+    } else {
+      propertiesList = [];
+    }
+    update();
+  }
+
+  void getDetails(index) {
+    LoadingProcessCommon().showLoading();
+    final singleFetchUserModel = propertiesList[index].id;
+    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
+    getIt<StorageServices>().getYourPropertiesId();
+    getSingleYourProperties().then(
+          (value) {
+        LoadingProcessCommon().hideLoading();
+        Get.toNamed(Routes.detailsYourProperties,
+        );
+      },
+    );
+  }
+
+  late HomeStaySingleFetchResponse detailsProperty;
+
+  Future<void> getSingleYourProperties() async {
+    detailsProperty =
+    await travelingRepository.getSingleFetchYourProperties();
+  }
+
+}import 'package:get/get.dart';
+import '../../../utils/app_colors.dart';
+import '../../../utils/app_string.dart';
+import '../../your_properties_screen/view/your_properties_page.dart';
+
+class TravelingFlow extends GetxController{
+
+  RxInt selectedIndex = 0.obs;
+
+  RxInt  selectedSorting = 1.obs;
+  var selectedTypeOfPlace = ''.obs;
+  var selectedTypeOfPlaceImage = ''.obs;
+  var selectedHomeStayType = ''.obs;
+
+  void onSelectSoring(var index) {
+    selectedSorting.value = index;
+    update();
+  }
+
+  void onSelectHomeStayType(var index) {
+    selectedHomeStayType.value = index;
+  }
+
+  void selectType(String value,String image) {
+    selectedTypeOfPlace.value = value;
+    selectedTypeOfPlaceImage.value = image;
+  }
+
+   RxList<Property> properties = [
+
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.hiltonViewVilla,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.ecoFriendly,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.delhi,
+      status: Strings.defultDoller1,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.jaipur,
+      status: Strings.defultDoller2,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.uttarakhand,
+      status: Strings.defultDoller3,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.kerela,
+      status: Strings.defultDoller4,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.goa,
+      status: Strings.defultDoller5,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+      "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller6,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+  ].obs;
+   RxList<Property> filteredProperties = RxList<Property>();
+   RxBool isSearching = false.obs;
+
+  var startDate = Rxn<DateTime>();
+  var endDate = Rxn<DateTime>();
+
+  void updateDateRange(DateTime? start, DateTime? end) {
+    startDate.value = start;
+    endDate.value = end;
+  }
+
+  var adultCount = 1.obs;
+  var childCount = 1.obs;
+  var infantCount = 1.obs;
+
+  void incrementAdult() => adultCount.value++;
+  void decrementAdult() {
+    if (adultCount.value > 0) adultCount.value--;
+  }
+
+  void incrementChild() => childCount.value++;
+  void decrementChild() {
+    if (childCount.value > 0) childCount.value--;
+  }
+
+  void incrementInfant() => infantCount.value++;
+  void decrementInfant() {
+    if (infantCount.value > 0) infantCount.value--;
+  }
+}
+import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+
+class HomeTravelingPropertiesModel {
+  String? message;
+  List<ReUsedDataModel>? homestaysData;
+  int? totalHomestay;
+
+  HomeTravelingPropertiesModel({this.message, this.homestaysData, this.totalHomestay});
+
+  HomeTravelingPropertiesModel.fromJson(Map<String, dynamic> json) {
+    message = json['message'];
+    if (json['HomestaysData'] != null) {
+      homestaysData = <ReUsedDataModel>[];
+      json['HomestaysData'].forEach((v) {
+        homestaysData!.add(ReUsedDataModel.fromJson(v));
+      });
+    }
+    totalHomestay = json['totalHomestay'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['message'] = message;
+    if (homestaysData != null) {
+      data['HomestaysData'] = homestaysData!.map((v) => v.toJson()).toList();
+    }
+    data['totalHomestay'] = totalHomestay;
+    return data;
+  }
+}
+import '../../../../api_helper/api_helper.dart';
+import '../../../../api_helper/api_uri.dart';
+import '../../../../api_helper/getit_service.dart';
+import '../../../../services/storage_services.dart';
+import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+import 'package:dio/dio.dart' as dio;
+import '../model/home_properties_model.dart';
+
+class TravelingRepository{
+
+  var apiProvider = getIt<ApiHelper>();
+  var apiURLs = getIt<APIUrls>();
+
+  Future<HomeTravelingPropertiesModel> getYourProperties(
+      {int limit = 0, int skip = 0}) async {
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/?limit=$limit&skip=$skip",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeTravelingPropertiesModel.fromJson(data);
+  }
+
+  Future<HomeStaySingleFetchResponse> getSingleFetchYourProperties() async {
+    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/$yourPropertiesId",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeStaySingleFetchResponse.fromJson(data);
+  }
+}import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/utils/app_radius.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../common_widgets/common_button.dart';
+import '../../controller/traveling_flow_controller.dart';
+
+class BookingRequestPage extends StatefulWidget {
+  const BookingRequestPage({super.key});
+
+  @override
+  State<BookingRequestPage> createState() => _BookingRequestPageState();
 }
 
-class _PreviewPageState extends State<PreviewPage> with SingleTickerProviderStateMixin {
-  final PreviewPropertiesController previewController = Get.put(PreviewPropertiesController());
-  final YourPropertiesController controller = Get.put(YourPropertiesController());
+class _BookingRequestPageState extends State<BookingRequestPage> {
+  final TravelingFlow controller = Get.put(TravelingFlow());
+  bool isChecked = false;
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.w),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 7.3.h),
+              Row(
+                children: [
+                  GestureDetector(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: const Icon(Icons.keyboard_arrow_left_rounded,
+                          size: 30)),
+                  SizedBox(width: 1.w),
+                  Text(
+                    Strings.checkInOutDate,
+                    style: FontManager.medium(20, color: AppColors.black),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 3.h,
+              ),
+              Card(
+                color: AppColors.white,
+                elevation: 3,
+                shadowColor: const Color(0xffEEEEEE),
+                child: Container(
+                  height: 90,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 2.w,
+                      ),
+                      Container(
+                        width: 90,
+                        height: 73,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.all(AppRadius.radius10),
+                          image: DecorationImage(
+                            image: NetworkImage(
+                                "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 3.w,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.hiltonViewVilla,
+                            style: FontManager.semiBold(16,
+                                color: AppColors.textAddProreties),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                Strings.newYorkUSA,
+                                style: FontManager.regular(12,
+                                    color: AppColors.divaide2Color),
+                              ),
+                              SizedBox(width: 1.4.w),
+                              const Icon(Icons.location_on,
+                                  color: AppColors.buttonColor),
+                            ],
+                          ),
+                          Text(
+                            Strings.entirePlace,
+                            style: FontManager.regular(10,
+                                color: AppColors.buttonColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.yourBookingDetails,
+                style:
+                    FontManager.semiBold(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.date,
+                style:
+                    FontManager.medium(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 1.3.h,
+              ),
+              Text(
+                "${controller.startDate.value != null ? controller.startDate.value!.toLocal().toString().split(' ')[0] : ''} - ${controller.endDate.value != null ? controller.endDate.value!.toLocal().toString().split(' ')[0] : ''}",
+                style: FontManager.regular(14, color: AppColors.greyText),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.guest,
+                style:
+                    FontManager.medium(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 1.3.h,
+              ),
+              Row(
+                children: [
+                  Text(
+                    "${controller.adultCount.value} ${Strings.adults}",
+                    style: FontManager.regular(14, color: AppColors.greyText),
+                  ),
+                  SizedBox(
+                    width: 1.3.h,
+                  ),
+                  Container(
+                    width: 1.5,
+                    height: 3.h,
+                    decoration: const BoxDecoration(
+                      color: AppColors.buttonColor,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 1.3.h,
+                  ),
+                  Text(
+                    "${controller.childCount.value} ${Strings.children}",
+                    style: FontManager.regular(14, color: AppColors.greyText),
+                  ),
+                  SizedBox(
+                    width: 1.3.h,
+                  ),
+                  Container(
+                    width: 1.5,
+                    height: 3.h,
+                    decoration: const BoxDecoration(
+                      color: AppColors.buttonColor,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 1.3.h,
+                  ),
+                  Text(
+                    "${controller.infantCount.value} ${Strings.infants}",
+                    style: FontManager.regular(14, color: AppColors.greyText),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 0.5,
+                decoration: const BoxDecoration(color: AppColors.divaide2Color),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.priceDetails,
+                style:
+                    FontManager.semiBold(16, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.defult5Night,
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                  Text(
+                    "6,000",
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 1.5.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.taxes,
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                  Text(
+                    "60",
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 1.5.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.serviceFee,
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                  Text(
+                    "600",
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 1.8.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 0.5,
+                decoration: const BoxDecoration(color: AppColors.divaideColor),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.total,
+                    style: FontManager.semiBold(14, color: AppColors.black),
+                  ),
+                  Text(
+                    "6,660",
+                    style: FontManager.semiBold(14, color: AppColors.black),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 0.5,
+                decoration: const BoxDecoration(color: AppColors.divaide2Color),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.mealsIncluded,
+                style:
+                    FontManager.semiBold(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.freeBreakfastLunchDinner,
+                style:
+                    FontManager.regular(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 0.5,
+                decoration: const BoxDecoration(color: AppColors.divaide2Color),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.cancellationPolicy,
+                style:
+                    FontManager.semiBold(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.freeCancellationUntil,
+                style:
+                    FontManager.regular(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 0.5,
+                decoration: const BoxDecoration(color: AppColors.divaide2Color),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.houseRules,
+                style:
+                    FontManager.semiBold(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.houseRulesDes,
+                style:
+                    FontManager.regular(14, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Text(
+                Strings.houseRulesDes2,
+                style:
+                    FontManager.regular(14, color: AppColors.textAddProreties),
+              ),
+              const SizedBox(
+                height: 14,
+              ),
+              Text(
+                Strings.houseRulesDes3,
+                style:
+                    FontManager.regular(14, color: AppColors.textAddProreties),
+              ),
+              const SizedBox(
+                height: 14,
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    activeColor: AppColors.buttonColor,
+                    value: isChecked,
+                    onChanged: (bool? newValue) {
+                      setState(() {
+                        isChecked = newValue ?? false;
+                      });
+                    },
+                    side: const BorderSide(color: AppColors.texFiledColor),
+                  ),
+                  SizedBox(width: 2.w),
+                  Flexible(
+                    flex: 2,
+                    child: Text(
+                      Strings.confirmPaymentDesc,
+                      style: FontManager.regular(10,
+                          color: AppColors.texFiledColor),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 5.h,
+              ),
+              CommonButton(
+                title: Strings.confirmPayment,
+                onPressed: () {},
+              ),
+              SizedBox(
+                height: 5.h,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+import 'package:sizer/sizer.dart';
+import 'package:get/get.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_button.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import '../../controller/traveling_flow_controller.dart';
+
+class CheckinoutdatePage extends StatefulWidget {
+  const CheckinoutdatePage({super.key});
+
+  @override
+  State<CheckinoutdatePage> createState() => _CheckinoutdatePageState();
+}
+
+class _CheckinoutdatePageState extends State<CheckinoutdatePage> {
+  final TravelingFlow controller = Get.put(TravelingFlow());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 7.3.h),
+            Row(
+              children: [
+                GestureDetector(
+                    onTap: () {
+                      Get.back();
+                    },
+                    child: const Icon(Icons.keyboard_arrow_left_rounded,
+                        size: 30)),
+                SizedBox(width: 1.w),
+                Text(
+                  Strings.checkInOutDate,
+                  style: FontManager.medium(20, color: AppColors.black),
+                )
+              ],
+            ),
+            SizedBox(height: 3.h,),
+            SizedBox(
+              height: 260,
+              child: SfDateRangePicker(
+                backgroundColor: AppColors.datePickerBackgroundColor,
+                rangeSelectionColor: AppColors.selectContainerColor,
+                startRangeSelectionColor: AppColors.buttonColor,
+                endRangeSelectionColor: AppColors.buttonColor,
+                selectionColor: AppColors.buttonColor,
+                headerStyle: DateRangePickerHeaderStyle(
+                  backgroundColor: AppColors.datePickerBackgroundColor,
+                  textStyle: FontManager.regular(16, color: AppColors.black),
+                ),
+                onSelectionChanged: (args) {
+                  if (args.value is PickerDateRange) {
+                    final PickerDateRange range = args.value;
+                    controller.updateDateRange(
+                        range.startDate, range.endDate);
+                  }
+                },
+                selectionMode: DateRangePickerSelectionMode.extendableRange,
+                initialSelectedRanges: [
+                  PickerDateRange(
+                    DateTime.now(),
+                    DateTime.now().add(const Duration(days: 1)),
+                  ),
+                ],
+                minDate: DateTime(2020),
+                maxDate: DateTime(2025),
+              ),
+            ),
+            SizedBox(height: 1.8.h),
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.defult5Night,
+                    style: FontManager.regular(14, color: AppColors.black),
+                  ),
+                  Text(
+                    "${controller.startDate.value != null ? controller.startDate.value!.toLocal().toString().split(' ')[0] : ''} - ${controller.endDate.value != null ? controller.endDate.value!.toLocal().toString().split(' ')[0] : ''}",
+                    style: FontManager.regular(12, color: AppColors.greyText),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 3.8.h),
+            Text(
+              Strings.selectGuest,
+              style:
+                  FontManager.semiBold(16, color: AppColors.textAddProreties),
+            ),
+            SizedBox(height: 1.8.h),
+            createGuestRow(Strings.adults, Strings.ages14orAbove,
+                controller.adultCount),
+            SizedBox(height: 1.8.h),
+            createDivider(),
+            SizedBox(height: 1.8.h),
+            createGuestRow(
+                Strings.children, Strings.ages2to13, controller.childCount),
+            SizedBox(height: 1.8.h),
+            createDivider(),
+            SizedBox(height: 1.8.h),
+            createGuestRow(
+                Strings.infants, Strings.under2, controller.infantCount),
+            SizedBox(
+              height: 6.h,
+            ),
+            CommonButton(
+              title: Strings.nextStep,
+              onPressed: () {
+                Get.toNamed(Routes.bookingRequestPage);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget createGuestRow(String title, String subtitle, RxInt count) {
+    return Row(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style:
+                    FontManager.regular(16, color: AppColors.textAddProreties)),
+            Text(subtitle,
+                style: FontManager.regular(11, color: AppColors.greyText)),
+          ],
+        ),
+        const Spacer(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () => count.value > 0 ? count.value-- : null,
+              child: Container(
+                height: 26,
+                width: 26,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(AppRadius.radius6),
+                  color: AppColors.selectGuestDecColor,
+                ),
+                child:
+                    Center(child: Image.asset(Assets.imagesMinus, width: 15)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Obx(() => Text("${count.value}")),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => count.value++,
+              child: Container(
+                height: 26,
+                width: 26,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(AppRadius.radius6),
+                  color: AppColors.buttonColor,
+                ),
+                child: const Icon(Icons.add, color: AppColors.white, size: 15),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget createDivider() {
+    return Container(
+      width: double.infinity,
+      height: 0.5,
+      decoration: const BoxDecoration(color: AppColors.greyText),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../common_widgets/accommondation_details.dart';
+import '../../../../utils/font_manager.dart';
+import '../../../add_properties_screen/add_properties_steps/controller/add_properties_controller.dart';
+import '../../../add_properties_screen/add_properties_steps/view/common_widget/amenities_and_houserules_custom.dart';
+import '../../controller/traveling_flow_controller.dart';
+
+class FilterPage extends StatefulWidget {
+  const FilterPage({super.key});
+
+  @override
+  State<FilterPage> createState() => _FilterPageState();
+}
+
+class _FilterPageState extends State<FilterPage> {
+  final AddPropertiesController addcontroller =
+  Get.put(AddPropertiesController());
+  final TravelingFlow controller = Get.put(TravelingFlow());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.w),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 7.3.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 15.sp),
+                    child: Text(
+                      Strings.filter,
+                      style: FontManager.medium(19.4.sp,
+                          color: AppColors.textAddProreties),
+                    ),
+                  ),
+                  GestureDetector(onTap: () {
+                    Get.back();
+                  },
+                    child: Icon(
+                      Icons.clear,
+                      color: AppColors.greyText,
+                    ),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 3.9.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    Strings.priceRange,
+                    style: FontManager.medium(18,
+                        color: AppColors.textAddProreties),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 2.5.h,
+              ),
+              Container(
+                width: double.infinity,
+                height: 74,
+                decoration: BoxDecoration(
+                    image: DecorationImage(
+                  image: AssetImage(Assets.imagesDefultChart),
+                )),
+              ),
+              SizedBox(
+                height: 2.5.h,
+              ),
+              SizedBox(height: 2.5.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          Strings.minimum,
+                          style: FontManager.regular(16.1.sp,
+                              color: AppColors.textAddProreties),
+                        ),
+                        SizedBox(height: 0.5.h),
+                        Container(
+                          width: 110.w,
+                          height: 7.h,
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
+                            border: Border.all(
+                                color: AppColors.borderContainerGriedView),
+                          ),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                SizedBox(width: 5.w),
+                                Expanded(
+                                  child: TextFormField(
+                                    style: FontManager.regular(16,
+                                        color: AppColors.textAddProreties),
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: "₹ 5,00"),
+                                    onFieldSubmitted: (value) {
+                                      // controller.amenities[index] = value;
+                                    },
+                                    onChanged: (value) {
+                                      // controller.amenities[index] = value;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 3.5.w),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          Strings.maximum,
+                          style: FontManager.regular(16.1.sp,
+                              color: AppColors.textAddProreties),
+                        ),
+                        SizedBox(height: 0.5.h),
+                        Container(
+                          width: 110.w,
+                          height: 7.h,
+                          decoration: BoxDecoration(
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(10)),
+                            border: Border.all(
+                                color: AppColors.borderContainerGriedView),
+                          ),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                SizedBox(width: 5.w),
+                                Expanded(
+                                  child: TextFormField(
+                                    style: FontManager.regular(16,
+                                        color: AppColors.textAddProreties),
+                                    decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: "₹ 2,000"),
+                                    onFieldSubmitted: (value) {
+                                      // controller.amenities[index] = value;
+                                    },
+                                    onChanged: (value) {
+                                      // controller.amenities[index] = value;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 3.5.w),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 3.h,
+              ),
+              Text(
+                Strings.sortByPrice,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Obx(
+                () => AmenityAndHouseRulesContainer(
+                  imageAsset: Assets.imagesAny,
+                  title: Strings.any,
+                  isSelected: controller.selectedSorting.value == 0,
+                  onSelect: () => controller.onSelectSoring(0),
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Obx(
+                () => AmenityAndHouseRulesContainer(
+                  imageAsset: Assets.imagesLtohighest,
+                  title: Strings.lowestToHighest,
+                  isSelected: controller.selectedSorting.value == 1,
+                  onSelect: () => controller.onSelectSoring(1),
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Obx(
+                () => AmenityAndHouseRulesContainer(
+                  imageAsset: Assets.imagesHToLowest,
+                  title: Strings.highestToLowest,
+                  isSelected: controller.selectedSorting.value == 2,
+                  onSelect: () => controller.onSelectSoring(2),
+                ),
+              ),
+              SizedBox(
+                height: 3.h,
+              ),
+              Text(
+                Strings.typeOfPlace,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              buildTypeOfPlace(
+                title: Strings.entirePlace,
+                subtitle: Strings.wholePlacetoGuests,
+                imageAsset: Assets.imagesTraditional,
+                value: 'entirePlace',
+                controller: controller,
+              ),
+              const SizedBox(height: 20),
+              buildTypeOfPlace(
+                title: Strings.privateRoom,
+                subtitle: Strings.guestsSleepInPrivateRoomButSomeAreasAreShared,
+                imageAsset: Assets.imagesPrivateRoom,
+                value: 'privateRoom',
+                controller: controller,
+              ),
+              SizedBox(
+                height: 3.2.h,
+              ),
+              Text(
+                Strings.homestayType,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesTraditional,
+                title: Strings.traditional,
+                controller: controller,
+                value: 'traditional',
+                height: 7.6.h,
+              ),
+              SizedBox(height: 2.h),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesBedAndBreakfast2,
+                title: Strings.bedAndBreakfast,
+                controller: controller,
+                value: 'bedAndBreakfast',
+                height: 7.6.h,
+              ),
+              SizedBox(height: 2.h),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesUrban2,
+                title: Strings.urban,
+                controller: controller,
+                value: 'urban',
+                height: 7.6.h,
+              ),
+              SizedBox(height: 2.h),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesEcoFriendly2,
+                title: Strings.ecoFriendly,
+                controller: controller,
+                value: 'ecoFriendly',
+                height: 7.6.h,
+              ),
+              SizedBox(height: 2.h),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesAdvanture2,
+                title: Strings.adventure,
+                controller: controller,
+                value: 'adventure',
+                height: 7.6.h,
+              ),
+              SizedBox(height: 2.h),
+              buildTypeOfPlace(
+                imageAsset: Assets.imagesLuxury2,
+                title: Strings.luxury,
+                controller: controller,
+                value: 'luxury',
+                height: 7.6.h,
+              ),
+              SizedBox(
+                height: 3.2.h,
+              ),
+              Text(
+                Strings.accommodationDetails,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              buildCustomContainer(Assets.imagesMaxGuests, Strings.maxGuests,
+                  addcontroller.maxGuestsCount),
+              SizedBox(height: 2.h),
+              buildCustomContainer(Assets.imagesBedRooms, Strings.singleBed,
+                  addcontroller.singleBedCount),
+              SizedBox(height: 2.h),
+              buildCustomContainer(Assets.imagesSingleBed, Strings.bedRooms,
+                  addcontroller.bedroomsCount),
+              SizedBox(height: 2.h),
+              buildCustomContainer(Assets.imagesDubleBed, Strings.doubleBed,
+                  addcontroller.doubleBedCount),
+              SizedBox(height: 2.h),
+              buildCustomContainer(Assets.imagesExtraFloor,
+                  Strings.extraFloorMattress, addcontroller.extraFloorCount),
+              SizedBox(height: 2.h),
+              buildCustomContainer(Assets.imagesBathRooms, Strings.bathRooms,
+                  addcontroller.bathRoomsCount),
+              SizedBox(height: 2.h),
+              Container(
+                width: 100.w,
+                height: 7.h,
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.borderContainerGriedView,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(width: 0.w),
+                    Image.asset(
+                      Assets.imagesKitchen,
+                      height: 26,
+                      width: 26,
+                      fit: BoxFit.cover,
+                    ),
+                    SizedBox(width: 3.w),
+                    Text(
+                      Strings.kitchenAvailable,
+                      style: FontManager.regular(14, color: AppColors.black),
+                      textAlign: TextAlign.start,
+                    ),
+                    Spacer(),
+                    Obx(() => Checkbox(
+                          activeColor: AppColors.buttonColor,
+                          value: addcontroller.isKitchenAvailable.value,
+                          onChanged: (bool? newValue) {
+                            addcontroller.isKitchenAvailable.value =
+                                newValue ?? false;
+                          },
+                          side:
+                              const BorderSide(color: AppColors.texFiledColor),
+                        )),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 3.2.h,
+              ),
+              Text(
+                Strings.amenities,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties),
+              ),
+              SizedBox(
+                height: 2.h,
+              ),
+              Obx(
+                () {
+                  return Column(
+                    children: [
+                      AmenityAndHouseRulesContainer(
+                        imageAsset: Assets.imagesWiFi,
+                        title: Strings.wiFi,
+                        isSelected: addcontroller.selectedAmenities[0],
+                        onSelect: () => addcontroller.toggleAmenity(0),
+                      ),
+                      SizedBox(height: 2.h),
+                      AmenityAndHouseRulesContainer(
+                        imageAsset: Assets.imagesAirCondioner,
+                        title: Strings.airConditioner,
+                        isSelected: addcontroller.selectedAmenities[1],
+                        onSelect: () => addcontroller.toggleAmenity(1),
+                      ),
+                      SizedBox(height: 2.h),
+                      AmenityAndHouseRulesContainer(
+                        imageAsset: Assets.imagesFirAlarm,
+                        title: Strings.fireAlarm,
+                        isSelected: addcontroller.selectedAmenities[2],
+                        onSelect: () => addcontroller.toggleAmenity(2),
+                      ),
+                      SizedBox(height: 2.h),
+                     AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesHometherater,
+                          title: Strings.homeTheater,
+                          isSelected: addcontroller.selectedAmenities[3],
+                          onSelect: () => addcontroller.toggleAmenity(3),
+                        ),
+                      SizedBox(height: 2.h),
+                     AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesMastrSuite,
+                          title: Strings.masterSuiteBalcony,
+                          isSelected: addcontroller.selectedAmenities[4],
+                          onSelect: () => addcontroller.toggleAmenity(4),
+                        ),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(height: 2.4.h),
+              const Text(Strings.showMore,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.buttonColor,
+                    color: AppColors.buttonColor,
+                  )),
+              SizedBox(height: 4.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+
+                      },
+                      child: Container(
+                        height: 5.9.h,
+                        width: 20.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundColor,border: Border.all(color: AppColors.buttonColor),
+                          borderRadius: BorderRadius.all(AppRadius.radius10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            Strings.clearAll,
+                            style: FontManager.medium(18, color: AppColors.buttonColor),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10,),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: Container(
+                        height: 5.9.h,
+                        width: 20.w,
+                        decoration: BoxDecoration(
+                          color: AppColors.buttonColor,border: Border.all(color: AppColors.buttonColor),
+                          borderRadius: BorderRadius.all(AppRadius.radius10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            Strings.submit,
+                            style: FontManager.medium(18, color: AppColors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+              SizedBox(height: 50,),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildCustomContainer(String imageAsset, String title, RxInt count) {
+    return CusttomContainer(
+      imageAsset: imageAsset,
+      title: title,
+      count: count,
+    );
+  }
+
+  Widget buildTypeOfPlace({
+    required String title,
+    String? subtitle,
+    required String imageAsset,
+    required String value,
+    required TravelingFlow controller,
+    double? height,
+  }) {
+    return GestureDetector(
+      onTap: () {},
+      child: Obx(() {
+        bool isSelected;
+        height == null
+            ? isSelected = controller.selectedTypeOfPlace.value == value
+            : isSelected = controller.selectedHomeStayType.value == value;
+
+        return Container(
+          width: double.infinity,
+          height: height ?? 9.3.h,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.selectContainerColor : Colors.white,
+            borderRadius: const BorderRadius.all(AppRadius.radius10),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.buttonColor
+                  : AppColors.borderContainerGriedView,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  imageAsset,
+                  height: 24,
+                  width: 24,
+                  fit: BoxFit.cover,
+                  color:
+                      isSelected ? AppColors.buttonColor : AppColors.greyText,
+                ),
+              ),
+              subtitle == null
+                  ? SizedBox(
+                      width: 2.5,
+                    )
+                  : SizedBox.shrink(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 1.h),
+                    Text(
+                      title,
+                      style: FontManager.regular(16,
+                          color: isSelected
+                              ? AppColors.buttonColor
+                              : AppColors.black),
+                    ),
+                    SizedBox(height: 2),
+                    subtitle == null
+                        ? SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              subtitle,
+                              style: FontManager.regular(12,
+                                  color: AppColors.greyText),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Obx(
+                  () => Radio(
+                    value: value,
+                    groupValue: height == null
+                        ? controller.selectedTypeOfPlace.value
+                        : controller.selectedHomeStayType.value,
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        height == null
+                            ? controller.selectType(newValue, imageAsset)
+                            : controller.onSelectHomeStayType(newValue);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/traveling_flow/controller/home_controller.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_properti_card.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+
+class HomeTravelingPage extends StatefulWidget {
+  const HomeTravelingPage({super.key});
+
+  @override
+  State<HomeTravelingPage> createState() => _HomeTravelingPageState();
+}
+
+class _HomeTravelingPageState extends State<HomeTravelingPage> {
+  final List<Property> properties = [
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.hiltonViewVilla,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.ecoFriendly,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller1,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller2,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller3,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller4,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller5,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller6,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+  ];
+
+  final destinations = [
+    {
+      'image': "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.delhi,
+    },
+    {
+      'image': "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.goa,
+    },
+    {
+      'image': "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.jaipur,
+    },
+    {
+      'image': "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.kerela,
+    },
+    {
+      'image': "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.uttarakhand,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: GetBuilder(init: TravelingHomeController(), builder: (controller) =>  Column(
+          children: [
+            buildHeader(),
+            const SizedBox(height: 26),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Row(
+                children: destinations.map((destination) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 14, bottom: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 9.4.h,
+                          width: 20.w,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(AppRadius.radius10),
+                            image: DecorationImage(
+                              image: NetworkImage(destination['image']!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14,),
+                        Text(
+                          destination['label']!,
+                          style: FontManager.regular(12, color: AppColors.black),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Text(
+                    Strings.properties,
+                    style: FontManager.semiBold(20.sp, color: AppColors.black),
+                  ),
+                ),
+              ],
+            ),
+      controller.homeProperty == null ?  const Center(child: CircularProgressIndicator()) : Expanded(
+              child: ListView.builder(
+                itemCount: controller.propertiesList.length,
+                itemBuilder: (context, index) {
+                  return PropertyCard(
+                    coverPhotoUrl:
+                    controller.propertiesList[index].coverPhoto!.url!,
+                    homestayType:
+                    controller.propertiesList[index].homestayType!,
+                    title: controller.propertiesList[index].title!,
+                    onTap: () => controller.getDetails(index),
+                    location: Strings.newYorkUSA,
+                    status: controller.propertiesList[index].status!,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildHeader() {
+    return Container(
+      height: 190,
+      width: 100.w,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius16,
+          bottomRight: AppRadius.radius16,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 5.2.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    Strings.helloJhon,
+                    style: FontManager.medium(20, color: AppColors.white),
+                  ),
+                  Text(
+                    Strings.welcomeToTravelbud,
+                    style: FontManager.regular(14,
+                        color: AppColors.greyWelcomeToTravelbud),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Image.asset(
+                Assets.imagesTv,
+                width: 42,
+                height: 36,
+              ),
+              SizedBox(width: 4.6.w),
+            ],
+          ),
+          SizedBox(height: 4.5.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Spacer(),
+              Container(
+                height: 6.h,
+                width: 75.w,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(AppRadius.radius10),
+                  color: AppColors.white,
+                ),
+                child: Center(
+                  child: TextField(
+                    onTap: () {
+                      Get.toNamed(Routes.search);
+                    },
+                    cursorColor: AppColors.greyText,
+                    decoration: InputDecoration(
+                      hintText: Strings.search,
+                      hintStyle: FontManager.regular(16.sp,
+                          color: AppColors.searchTextColor),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.searchIconColor,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(onTap: () {
+                Get.toNamed(Routes.filterPage);
+              },
+                child: Container(
+                  height: 6.h,
+                  width: 15.w,
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      Assets.imagesFilterslines,
+                      height: 30,
+                      width: 30,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+        ],
+      ),
+    );
+  }
+}
+
+class Property {
+  final String imageUrl;
+  final String title;
+  final String location;
+  final String status;
+  final Color statusColor;
+  final String tag;
+  final Color tagColor;
+
+  Property({
+    required this.imageUrl,
+    required this.title,
+    required this.location,
+    required this.status,
+    required this.statusColor,
+    required this.tag,
+    required this.tagColor,
+  });
+}
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import '../../../../common_widgets/accommondation_details.dart';
+import '../../../add_properties_screen/add_properties_steps/controller/add_properties_controller.dart';
+import '../../../add_properties_screen/add_properties_steps/view/common_widget/amenities_and_houserules_custom.dart';
+import '../../../your_properties_screen/view/your_properties_page.dart';
+import '../../controller/traveling_flow_controller.dart';
+
+class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final AddPropertiesController controller = Get.put(AddPropertiesController());
+  final TravelingFlow travelingFlowController = Get.put(TravelingFlow());
+
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    travelingFlowController.filteredProperties
+        .addAll(travelingFlowController.properties);
+    searchController.addListener(filterProperties);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void filterProperties() {
+    String query = searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      travelingFlowController.isSearching.value = false;
+      travelingFlowController.filteredProperties
+          .assignAll(travelingFlowController.properties);
+    } else {
+      travelingFlowController.isSearching.value = true;
+      travelingFlowController.filteredProperties
+          .assignAll(travelingFlowController.properties.where((property) {
+        return property.location.toLowerCase().contains(query);
+      }).toList());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 7.3.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(onTap: () {
+                  Get.back();
+                },child: const Icon(Icons.keyboard_arrow_left_rounded, size: 30)),
+                SizedBox(width: 1.w),
+                Flexible(
+                  flex: 20,
+                  child: Container(
+                    height: 6.h,
+                    width: 100.w,
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(AppRadius.radius10),
+                      color: AppColors.white,
+                    ),
+                    child: Center(
+                      child: TextField(
+                        controller: searchController,
+                        cursorColor: AppColors.greyText,
+                        decoration: InputDecoration(
+                            hintText: Strings.search,
+                            hintStyle: FontManager.regular(16.sp,
+                                color: AppColors.searchTextColor),
+                            border: InputBorder.none,
+                            prefixIcon: IconButton(
+                              icon: Image.asset(
+                                Assets.imagesSearchIcon,
+                                height: 15,
+                                width: 15,
+                              ),
+                              onPressed: () {},
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Image.asset(
+                                Assets.imagesCloseIcon,
+                                height: 22,
+                                width: 22,
+                              ),
+                              onPressed: () {
+                                searchController.clear();
+                                travelingFlowController.filteredProperties
+                                    .assignAll(
+                                        travelingFlowController.properties);
+                              },
+                            )),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 2.h),
+           Obx(() =>  travelingFlowController.isSearching.value == true
+                ? Column(
+                    children: [
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  builder: (context) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Get.back();
+                                                },
+                                                child: Container(
+                                                  height: 3.1,
+                                                  width: 44,
+                                                  decoration: const BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              AppRadius
+                                                                  .radius4),
+                                                      color: AppColors
+                                                          .bottomCloseDividerColor),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 3.h,
+                                          ),
+                                          Text(
+                                            Strings.sortByPrice,
+                                            style: FontManager.medium(18,
+                                                color:
+                                                    AppColors.textAddProreties),
+                                          ),
+                                          const SizedBox(height: 16.0),
+                                          Obx(() =>
+                                              AmenityAndHouseRulesContainer(
+                                                imageAsset: Assets.imagesAny,
+                                                title: Strings.any,
+                                                isSelected:
+                                                    travelingFlowController
+                                                            .selectedSorting
+                                                            .value ==
+                                                        0,
+                                                onSelect: () {
+                                                  travelingFlowController
+                                                      .onSelectSoring(0);
+                                                  Navigator.pop(context);
+                                                },
+                                              )),
+                                          const SizedBox(height: 8.0),
+                                          Obx(() =>
+                                              AmenityAndHouseRulesContainer(
+                                                imageAsset:
+                                                    Assets.imagesLtohighest,
+                                                title: Strings.lowestToHighest,
+                                                isSelected:
+                                                    travelingFlowController
+                                                            .selectedSorting
+                                                            .value ==
+                                                        1,
+                                                onSelect: () {
+                                                  travelingFlowController
+                                                      .onSelectSoring(1);
+                                                  Navigator.pop(context);
+                                                },
+                                              )),
+                                          const SizedBox(height: 8.0),
+                                          Obx(() =>
+                                              AmenityAndHouseRulesContainer(
+                                                imageAsset:
+                                                    Assets.imagesHToLowest,
+                                                title: Strings.highestToLowest,
+                                                isSelected:
+                                                    travelingFlowController
+                                                            .selectedSorting
+                                                            .value ==
+                                                        2,
+                                                onSelect: () {
+                                                  travelingFlowController
+                                                      .onSelectSoring(2);
+                                                  Navigator.pop(context);
+                                                },
+                                              )),
+                                          const SizedBox(height: 16.0),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 160,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.sortByPrice,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  builder: (context) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Get.back();
+                                                },
+                                                child: Container(
+                                                  height: 3.1,
+                                                  width: 44,
+                                                  decoration: const BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              AppRadius
+                                                                  .radius4),
+                                                      color: AppColors
+                                                          .bottomCloseDividerColor),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 2.5.h,
+                                          ),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 74,
+                                            decoration: const BoxDecoration(
+                                                image: DecorationImage(
+                                              image: AssetImage(
+                                                  Assets.imagesDefultChart),
+                                            )),
+                                          ),
+                                          SizedBox(
+                                            height: 2.5.h,
+                                          ),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: () {},
+                                                  child: Container(
+                                                    height: 5.9.h,
+                                                    width: 20.w,
+                                                    decoration: const BoxDecoration(
+                                                      color: AppColors
+                                                          .clearContainerColor,
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              AppRadius
+                                                                  .radius10),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        Strings.clearAll,
+                                                        style:
+                                                            FontManager.regular(
+                                                                18,
+                                                                color: AppColors
+                                                                    .black),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: 10,
+                                              ),
+                                              Expanded(
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Get.back();
+                                                  },
+                                                  child: Container(
+                                                    height: 5.9.h,
+                                                    width: 20.w,
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          AppColors.buttonColor,
+                                                      border: Border.all(
+                                                          color: AppColors
+                                                              .buttonColor),
+                                                      borderRadius:
+                                                          const BorderRadius
+                                                              .all(AppRadius
+                                                                  .radius10),
+                                                    ),
+                                                    child: Center(
+                                                      child: Text(
+                                                        Strings.apply,
+                                                        style:
+                                                            FontManager.regular(
+                                                                18,
+                                                                color: AppColors
+                                                                    .white),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16.0),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 160,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.priceRange,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  builder: (context) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Get.back();
+                                                },
+                                                child: Container(
+                                                  height: 3.1,
+                                                  width: 44,
+                                                  decoration: const BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              AppRadius
+                                                                  .radius4),
+                                                      color: AppColors
+                                                          .bottomCloseDividerColor),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 3.h,
+                                          ),
+                                          Text(
+                                            Strings.typeOfPlace,
+                                            style: FontManager.medium(18,
+                                                color:
+                                                    AppColors.textAddProreties),
+                                          ),
+                                          SizedBox(
+                                            height: 2.h,
+                                          ),
+                                          buildTypeOfPlace(
+                                            title: Strings.entirePlace,
+                                            subtitle:
+                                                Strings.wholePlacetoGuests,
+                                            imageAsset:
+                                                Assets.imagesTraditional,
+                                            value: 'entirePlace',
+                                            controller: travelingFlowController,
+                                          ),
+                                          const SizedBox(height: 20),
+                                          buildTypeOfPlace(
+                                            title: Strings.privateRoom,
+                                            subtitle: Strings
+                                                .guestsSleepInPrivateRoomButSomeAreasAreShared,
+                                            imageAsset:
+                                                Assets.imagesPrivateRoom,
+                                            value: 'privateRoom',
+                                            controller: travelingFlowController,
+                                          ),
+                                          const SizedBox(height: 16.0),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 160,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.typeOfPlace,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return Container(
+                                      height:  MediaQuery.of(context).size.height * 0.7,
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+
+                                            MainAxisAlignment.center,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  Get.back();
+                                                },
+                                                child: Container(
+                                                  height: 3.1,
+                                                  width: 44,
+                                                  decoration: const BoxDecoration(
+                                                      borderRadius:
+                                                      BorderRadius.all(
+                                                          AppRadius
+                                                              .radius4),
+                                                      color: AppColors
+                                                          .bottomCloseDividerColor),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 3.h,
+                                          ),
+                                          Text(
+                                            Strings.homestayType,
+                                            style: FontManager.medium(18,
+                                                color:
+                                                    AppColors.textAddProreties),
+                                          ),
+                                          SizedBox(
+                                            height: 2.h,
+                                          ),
+                                          buildTypeOfPlace(
+                                            imageAsset:
+                                                Assets.imagesTraditional,
+                                            title: Strings.traditional,
+                                            controller: travelingFlowController,
+                                            value: 'traditional',
+                                            height: 7.6.h,
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          buildTypeOfPlace(
+                                            imageAsset:
+                                                Assets.imagesBedAndBreakfast2,
+                                            title: Strings.bedAndBreakfast,
+                                            controller: travelingFlowController,
+                                            value: 'bedAndBreakfast',
+                                            height: 7.6.h,
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          buildTypeOfPlace(
+                                            imageAsset: Assets.imagesUrban2,
+                                            title: Strings.urban,
+                                            controller: travelingFlowController,
+                                            value: 'urban',
+                                            height: 7.6.h,
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          buildTypeOfPlace(
+                                            imageAsset:
+                                                Assets.imagesEcoFriendly2,
+                                            title: Strings.ecoFriendly,
+                                            controller: travelingFlowController,
+                                            value: 'ecoFriendly',
+                                            height: 7.6.h,
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          buildTypeOfPlace(
+                                            imageAsset: Assets.imagesAdvanture2,
+                                            title: Strings.adventure,
+                                            controller: travelingFlowController,
+                                            value: 'adventure',
+                                            height: 7.6.h,
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          buildTypeOfPlace(
+                                            imageAsset: Assets.imagesLuxury2,
+                                            title: Strings.luxury,
+                                            controller: travelingFlowController,
+                                            value: 'luxury',
+                                            height: 7.6.h,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 125,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.homestayType,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Get.back();
+                                                  },
+                                                  child: Container(
+                                                    height: 3.1,
+                                                    width: 44,
+                                                    decoration: const BoxDecoration(
+                                                        borderRadius:
+                                                        BorderRadius.all(
+                                                            AppRadius
+                                                                .radius4),
+                                                        color: AppColors
+                                                            .bottomCloseDividerColor),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 3.h,
+                                            ),
+                                            Text(
+                                              Strings.accommodationDetails,
+                                              style: FontManager.medium(18,
+                                                  color:
+                                                  AppColors.textAddProreties),
+                                            ),
+                                            SizedBox(
+                                              height: 2.h,
+                                            ),
+                                            buildCustomContainer(
+                                                Assets.imagesMaxGuests,
+                                                Strings.maxGuests,
+                                                controller.maxGuestsCount),
+                                            SizedBox(height: 2.h),
+                                            buildCustomContainer(
+                                                Assets.imagesBedRooms,
+                                                Strings.singleBed,
+                                                controller.singleBedCount),
+                                            SizedBox(height: 2.h),
+                                            buildCustomContainer(
+                                                Assets.imagesSingleBed,
+                                                Strings.bedRooms,
+                                                controller.bedroomsCount),
+                                            SizedBox(height: 2.h),
+                                            buildCustomContainer(
+                                                Assets.imagesDubleBed,
+                                                Strings.doubleBed,
+                                                controller.doubleBedCount),
+                                            SizedBox(height: 2.h),
+                                            buildCustomContainer(
+                                                Assets.imagesExtraFloor,
+                                                Strings.extraFloorMattress,
+                                                controller.extraFloorCount),
+                                            SizedBox(height: 2.h),
+                                            buildCustomContainer(
+                                                Assets.imagesBathRooms,
+                                                Strings.bathRooms,
+                                                controller.bathRoomsCount),
+                                            SizedBox(height: 2.h),
+                                            Container(
+                                              width: 100.w,
+                                              height: 7.h,
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 4.w),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                BorderRadius.circular(10),
+                                                border: Border.all(
+                                                  color: AppColors
+                                                      .borderContainerGriedView,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                MainAxisAlignment
+                                                    .spaceBetween,
+                                                children: [
+                                                  SizedBox(width: 0.w),
+                                                  Image.asset(
+                                                    Assets.imagesKitchen,
+                                                    height: 26,
+                                                    width: 26,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                  SizedBox(width: 3.w),
+                                                  Text(
+                                                    Strings.kitchenAvailable,
+                                                    style: FontManager.regular(14,
+                                                        color: AppColors.black),
+                                                    textAlign: TextAlign.start,
+                                                  ),
+                                                  const Spacer(),
+                                                  Obx(() => Checkbox(
+                                                    activeColor:
+                                                    AppColors.buttonColor,
+                                                    value: controller
+                                                        .isKitchenAvailable
+                                                        .value,
+                                                    onChanged:
+                                                        (bool? newValue) {
+                                                      controller
+                                                          .isKitchenAvailable
+                                                          .value =
+                                                          newValue ?? false;
+                                                    },
+                                                    side: const BorderSide(
+                                                        color: AppColors
+                                                            .texFiledColor),
+                                                  )),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 16.0),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 190,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.accommodationDetails,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showModalBottomSheet(
+                                  backgroundColor: AppColors.backgroundColor,
+                                  context: context,
+                                  builder: (context) {
+                                    return Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Get.back();
+                                                  },
+                                                  child: Container(
+                                                    height: 3.1,
+                                                    width: 44,
+                                                    decoration: const BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius.all(
+                                                                AppRadius
+                                                                    .radius4),
+                                                        color: AppColors
+                                                            .bottomCloseDividerColor),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 3.h,
+                                            ),
+                                            Text(
+                                              Strings.amenities,
+                                              style: FontManager.medium(18,
+                                                  color:
+                                                      AppColors.textAddProreties),
+                                            ),
+                                            SizedBox(
+                                              height: 2.h,
+                                            ),
+                                            Obx(
+                                              () {
+                                                return Column(
+                                                  children: [
+                                                    AmenityAndHouseRulesContainer(
+                                                      imageAsset:
+                                                          Assets.imagesWiFi,
+                                                      title: Strings.wiFi,
+                                                      isSelected: controller
+                                                          .selectedAmenities[0],
+                                                      onSelect: () => controller
+                                                          .toggleAmenity(0),
+                                                    ),
+                                                    SizedBox(height: 2.h),
+                                                    AmenityAndHouseRulesContainer(
+                                                      imageAsset: Assets
+                                                          .imagesAirCondioner,
+                                                      title:
+                                                          Strings.airConditioner,
+                                                      isSelected: controller
+                                                          .selectedAmenities[1],
+                                                      onSelect: () => controller
+                                                          .toggleAmenity(1),
+                                                    ),
+                                                    SizedBox(height: 2.h),
+                                                    AmenityAndHouseRulesContainer(
+                                                      imageAsset:
+                                                          Assets.imagesFirAlarm,
+                                                      title: Strings.fireAlarm,
+                                                      isSelected: controller
+                                                          .selectedAmenities[2],
+                                                      onSelect: () => controller
+                                                          .toggleAmenity(2),
+                                                    ),
+                                                    SizedBox(height: 2.h),
+                                                    AmenityAndHouseRulesContainer(
+                                                      imageAsset: Assets
+                                                          .imagesHometherater,
+                                                      title: Strings.homeTheater,
+                                                      isSelected: controller
+                                                          .selectedAmenities[3],
+                                                      onSelect: () => controller
+                                                          .toggleAmenity(3),
+                                                    ),
+                                                    SizedBox(height: 2.h),
+                                                    AmenityAndHouseRulesContainer(
+                                                      imageAsset:
+                                                          Assets.imagesMastrSuite,
+                                                      title: Strings
+                                                          .masterSuiteBalcony,
+                                                      isSelected: controller
+                                                          .selectedAmenities[4],
+                                                      onSelect: () => controller
+                                                          .toggleAmenity(4),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            ),
+                                            const SizedBox(height: 16.0),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                height: 34,
+                                width: 115,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius:
+                                      BorderRadius.all(AppRadius.radius6),
+                                ),
+                                margin: const EdgeInsets.only(right: 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(
+                                      width: 12,
+                                    ),
+                                    Text(
+                                      Strings.amenities,
+                                      style: FontManager.regular(15.sp,
+                                          color: AppColors.textAddProreties),
+                                    ),
+                                    const Spacer(),
+                                    Image.asset(
+                                      Assets.imagesDropDaounIcon,
+                                      height: 3.h,
+                                      width: 2.5.w,
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  )
+                : Column(
+                    children: [
+                      Row(
+                        children: [
+                          Image.asset(Assets.imagesLocationIcon,
+                              height: 22, width: 22, fit: BoxFit.contain),
+                          SizedBox(width: 2.w),
+                          Text(Strings.orUseMyCurrentLocation,
+                              style: FontManager.regular(15.sp,
+                                  color: AppColors.buttonColor)),
+                        ],
+                      ),
+                      SizedBox(height: 2.h),
+                      Row(crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(Strings.recentSearch,
+                              style: FontManager.regular(14,
+                                  color: AppColors.greyWelcomeToTravelbud)),
+                        ],
+                      ),
+                    ],
+                  ),),
+            SizedBox(height: 2.h),
+            Expanded(
+              child: Obx(() => ListView.builder(
+                    itemCount:
+                        travelingFlowController.filteredProperties.length,
+                    itemBuilder: (context, index) {
+                      return buildPropertyCard(
+                          travelingFlowController.filteredProperties[index],
+                          index);
+                    },
+                  )),
+            ),
+            const SizedBox(height: 15.3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildPropertyCard(Property property, int index) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 1.h),
+      child: GestureDetector(
+        onTap: () {},
+        child: Container(
+          height: 35.h,
+          width: 100.w,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundColor,
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: Container(
+              //     height: 21.h,
+              //     width: 100.w,
+              //     decoration: BoxDecoration(
+              //       borderRadius: const BorderRadius.all(AppRadius.radius10),
+              //       image: DecorationImage(
+              //         image: controller.imagePaths[index] != null
+              //             ? FileImage(File(controller.imagePaths[index]!))
+              //             : NetworkImage(property.imageUrl),
+              //         fit: BoxFit.cover,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      property.tag,
+                      style: FontManager.regular(12, color: property.tagColor),
+                    ),
+                    Text(
+                      property.status,
+                      style: FontManager.semiBold(14.sp,
+                          color: property.statusColor),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, top: 7.0),
+                child: Text(
+                  property.title,
+                  style:
+                      FontManager.medium(16, color: AppColors.textAddProreties),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4.0, bottom: 8.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: AppColors.buttonColor),
+                    SizedBox(width: 1.4.w),
+                    Text(
+                      property.location,
+                      style: FontManager.regular(12, color: AppColors.greyText),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTypeOfPlace({
+    required String title,
+    String? subtitle,
+    required String imageAsset,
+    required String value,
+    required TravelingFlow controller,
+    double? height,
+  }) {
+    return GestureDetector(
+      onTap: () {},
+      child: Obx(() {
+        bool isSelected;
+        height == null
+            ? isSelected = controller.selectedTypeOfPlace.value == value
+            : isSelected = controller.selectedHomeStayType.value == value;
+
+        return Container(
+          width: double.infinity,
+          height: height ?? 9.3.h,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.selectContainerColor : Colors.white,
+            borderRadius: const BorderRadius.all(AppRadius.radius10),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.buttonColor
+                  : AppColors.borderContainerGriedView,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  imageAsset,
+                  height: 24,
+                  width: 24,
+                  fit: BoxFit.cover,
+                  color:
+                      isSelected ? AppColors.buttonColor : AppColors.greyText,
+                ),
+              ),
+              subtitle == null
+                  ? const SizedBox(
+                      width: 2.5,
+                    )
+                  : const SizedBox.shrink(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 1.h),
+                    Text(
+                      title,
+                      style: FontManager.regular(16,
+                          color: isSelected
+                              ? AppColors.buttonColor
+                              : AppColors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    subtitle == null
+                        ? const SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              subtitle,
+                              style: FontManager.regular(12,
+                                  color: AppColors.greyText),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Obx(
+                  () => Radio(
+                    value: value,
+                    groupValue: height == null
+                        ? controller.selectedTypeOfPlace.value
+                        : controller.selectedHomeStayType.value,
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        height == null
+                            ? controller.selectType(newValue, imageAsset)
+                            : controller.onSelectHomeStayType(newValue);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget buildCustomContainer(String imageAsset, String title, RxInt count) {
+    return CusttomContainer(
+      imageAsset: imageAsset,
+      title: title,
+      count: count,
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_radius.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/font_manager.dart';
+
+class TripsPage extends StatefulWidget {
+  const TripsPage({super.key});
+
+  @override
+  State<TripsPage> createState() => _TripsPageState();
+}
+
+class _TripsPageState extends State<TripsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -65,906 +3145,536 @@ class _PreviewPageState extends State<PreviewPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    double statusBarHeight = MediaQuery.of(context).padding.top;
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding:
-                    EdgeInsets.fromLTRB(5.w, statusBarHeight + 3.2.h, 4.w, 10),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: const Icon(
-                        Icons.keyboard_arrow_left,
-                        size: 30,
-                      ),
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            headerTrip(),
+            const SizedBox(height: 26),
+            TabBar(
+              unselectedLabelColor: AppColors.black,
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                  borderSide: BorderSide(
+                    width: 2.0,
+                    color: AppColors.buttonColor,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                  )),
+              unselectedLabelStyle: FontManager.regular(14),
+              indicatorPadding: const EdgeInsets.only(left: 10, right: 10),
+              labelStyle: FontManager.regular(14, color: AppColors.buttonColor),
+              indicatorWeight: 0.5.w,
+              tabs: const [
+                Tab(text: Strings.upcoming),
+                Tab(text: Strings.cancelRefund),
+                Tab(text: Strings.completed),
+              ],
+            ),
+            SizedBox(
+              height: 2.h,
+            ),
+            SizedBox(
+              height: 530,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  SingleChildScrollView(
+                    child: Column(
+                      children: List.generate(
+                          2, (index) => customCardTrip("panding")),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.selectedIndex == 1
-                          ? Strings.details
-                          : Strings.preview,
-                      style: FontManager.medium(20, color: AppColors.black),
+                  ),
+                  SingleChildScrollView(
+                    child: Column(
+                      children:
+                          List.generate(2, (index) => customCardTrip("Cancel")),
                     ),
-                    const Spacer(),
-                    if (widget.selectedIndex == 1) ...[
-                      PopupMenuButton<String>(
-                        color: AppColors.backgroundColor,
-                        icon: const Icon(
-                          Icons.more_vert,
-                          color: AppColors.textAddProreties,
-                        ),
-                        onSelected: (value) {
-                          if (value == Strings.edit) {
-                            // controller.currentPage.value = 1;
-                            // Get.toNamed(Routes.addPropertiesScreen,
-                            //     arguments: {'index': 1});
-                          } else if (value == Strings.delete) {
-                            CustomDialog.showCustomDialog(
-                              context: context,
-                              message: Strings.deleteDesc,
-                              imageAsset: Assets.imagesDeletedialog,
-                              buttonLabel: Strings.resend,
-                              changeEmailLabel: Strings.changeEmail,
-                              onResendPressed: () {
-                                controller.deleteProperties();
-                              },
-                              onChangeEmailPressed: () {},
-                            );
-                          }
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            buildPopupMenuItem(
-                                Assets.imagesEdit,
-                                Strings.edit,
-                                AppColors.editBackgroundColor,
-                                AppColors.blueColor),
-                            buildPopupMenuItem(
-                                Assets.imagesDeleteVector,
-                                Strings.delete,
-                                AppColors.deleteBackgroundColor,
-                                AppColors.redColor),
-                          ];
-                        },
-                      )
-                    ],
-                  ],
-                ),
+                  ),
+                  SingleChildScrollView(
+                    child: Column(
+                      children: List.generate(
+                          2, (index) => customCardTrip("Completed")),
+                    ),
+                  ),
+                ],
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 0),
-                child: Column(
-                  children: [
-                    // CarouselSlider(
-                    //   options: CarouselOptions(
-                    //     onPageChanged: (index, reason) {
-                    //       previewController.updateCarouselIndex(index);
-                    //     },
-                    //     padEnds: false,
-                    //     disableCenter: true,
-                    //     aspectRatio: 1.6,
-                    //     enlargeCenterPage: true,
-                    //     autoPlay: true,
-                    //     enableInfiniteScroll: false,
-                    //     viewportFraction: 1,
-                    //   ),
-                    //   carouselController: previewController.carouselController,
-                    //   items: widget.selectedIndex == 1
-                    //       ? controller.property.homestayData!.homestayPhotos!.map((imagePath) {
-                    //           return ClipRRect(
-                    //             borderRadius:
-                    //                 const BorderRadius.all(AppRadius.radius10),
-                    //             child: null != imagePath.url
-                    //                 ? Image.network(imagePath.url!,
-                    //                     fit: BoxFit.cover)
-                    //                 : Container(
-                    //                     color: Colors.grey[300],
-                    //                   ),
-                    //           );
-                    //         }).toList()
-                    //       : widget.homestayData.homestayPhotos!
-                    //           .map((imagePath) {
-                    //           return ClipRRect(
-                    //             borderRadius:
-                    //                 const BorderRadius.all(AppRadius.radius10),
-                    //             child: null != imagePath.url
-                    //                 ? Image.file(File(imagePath.url!),
-                    //                     fit: BoxFit.cover)
-                    //                 : Container(
-                    //                     color: Colors.grey[300],
-                    //                   ),
-                    //           );
-                    //         }).toList(),
-                    // ),
-                    SizedBox(
-                      height: 1.5.h,
-                    ),
-                    // Obx(
-                    //   () => AnimatedSmoothIndicator(
-                    //     count: widget.selectedIndex == 1
-                    //         ? controller
-                    //             .property.homestayData!.homestayPhotos!.length
-                    //         : widget.homestayData.homestayPhotos!.length,
-                    //     effect: const ExpandingDotsEffect(
-                    //         activeDotColor: AppColors.buttonColor,
-                    //         dotColor: AppColors.inactiveDotColor,
-                    //         spacing: 2,
-                    //         dotHeight: 5,
-                    //         dotWidth: 5),
-                    //     onDotClicked: (index) {
-                    //       previewController.carouselController
-                    //           .jumpToPage(index);
-                    //     },
-                    //     activeIndex: previewController.carouselIndex.value,
-                    //   ),
-                    // ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 3.h),
-                    widget.selectedIndex == 1
-                        ? Container(
-                            height: 2.7.h,
-                            width: 19.6.w,
-                            decoration: BoxDecoration(
-                                borderRadius:
-                                    const BorderRadius.all(AppRadius.radius4),
-                                color:
-                                    controller.property.homestayData!.status! ==
-                                            "Pending Approval"
-                                        ? AppColors.pendingColor
-                                        : controller.property.homestayData!
-                                                    .status! ==
-                                                "Approved"
-                                            ? AppColors.approvedColor
-                                            : AppColors.greyText),
-                            child: Center(
-                              child: Text(
-                                controller.property.homestayData!.status!,
-                                style: FontManager.regular(12,
-                                    color: AppColors.white),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                    widget.selectedIndex == 1
-                        ? const SizedBox(
-                            height: 12,
-                          )
-                        : const SizedBox.shrink(),
-                    Text(
-                      widget.selectedIndex == 1
-                          ? controller.property.homestayData!.title!
-                          : widget.homestayData.title,
-                      style: FontManager.semiBold(28,
-                          color: AppColors.textAddProreties),
-                    ),
-                    SizedBox(height: 1.5.h),
-                    Text(
-                      widget.selectedIndex == 1
-                          ? Strings.newYorkUSA
-                          : Strings.newYorkUSA,
-                      style: FontManager.regular(14, color: AppColors.greyText),
-                    ),
-                    SizedBox(height: 1.5.h),
-                    Text(
-                        widget.selectedIndex == 1
-                            ? '${controller.property.homestayData!.basePrice} - ${controller.property.homestayData!.weekendPrice}'
-                            : '${widget.homestayData.basePrice} - ${widget.homestayData.weekendPrice}',
-                        style: FontManager.medium(20,
-                            color: AppColors.textAddProreties)),
-                  ],
-                ),
-              ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  unselectedLabelColor: AppColors.greyText,
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorWeight: 0.5.w,
-                  tabs: const [
-                    Tab(text: Strings.details),
-                    Tab(text: Strings.contact),
-                  ],
-                ),
-              ),
-            ),
-            buildTabBarView(controller, widget.homestayData),
           ],
         ),
+      ),
     );
   }
 
-  PopupMenuItem<String> buildPopupMenuItem(
-      String image, String choice, Color bColor, Color tColor) {
-    return PopupMenuItem<String>(
-      value: choice,
-      child: Container(
-        width: double.infinity,
-        height: 5.h,
-        decoration: BoxDecoration(
-            color: bColor,
-            borderRadius: const BorderRadius.all(AppRadius.radius4)),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 8,
-            ),
-            Image.asset(
-              image,
-              height: 20,
-              width: 20,
-            ),
-            const SizedBox(
-              width: 8,
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+  Widget customCardTrip(String? status) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      child: GestureDetector(
+        onTap: () {},
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundColor,
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 2.h),
+                Row(
+                  children: [
+                    const ClipOval(
+                      child: Image(
+                        image: AssetImage(Assets.imagesProfile),
+                        height: 40,
+                        width: 40,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Kristin Martine",
+                                style: FontManager.regular(12),
+                              ),
+                              const Spacer(),
+                              Text(
+                                status!,
+                                style: FontManager.regular(10,
+                                    color: status == "panding"
+                                        ? AppColors.pendingColor
+                                        : status == "Cancel"
+                                            ? AppColors.redAccent
+                                            : AppColors.buttonColor),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                "2 ${Strings.adults}",
+                                style: FontManager.regular(10,
+                                    color: AppColors.greyText),
+                              ),
+                              SizedBox(width: 1.3.h),
+                              Container(
+                                width: 1.5,
+                                height: 1.5.h,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.buttonColor,
+                                ),
+                              ),
+                              SizedBox(width: 1.3.h),
+                              Text(
+                                "2 ${Strings.children}",
+                                style: FontManager.regular(10,
+                                    color: AppColors.greyText),
+                              ),
+                              SizedBox(width: 1.3.h),
+                              Container(
+                                width: 1.5,
+                                height: 1.5.h,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.buttonColor,
+                                ),
+                              ),
+                              SizedBox(width: 1.3.h),
+                              Text(
+                                "2 ${Strings.infants}",
+                                style: FontManager.regular(10,
+                                    color: AppColors.greyText),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
                 Text(
-                  choice.capitalizeFirst!,
-                  style: TextStyle(color: tColor),
+                  "Hilton View Villa",
+                  style: FontManager.medium(14),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  "P123456",
+                  style: FontManager.regular(10, color: AppColors.buttonColor),
+                ),
+                SizedBox(height: 2.h),
+                Container(
+                  height: 157,
+                  width: 100.w,
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 0.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 2.h),
+                        Text(
+                          "Booking Date",
+                          style:
+                              FontManager.regular(12, color: AppColors.black),
+                        ),
+                        Text(
+                          "04 April 24 06:00 PM",
+                          style: FontManager.regular(10,
+                              color: AppColors.greyText),
+                        ),
+                        SizedBox(height: 1.5.h),
+                        Text(
+                          "Request ID",
+                          style:
+                              FontManager.regular(12, color: AppColors.black),
+                        ),
+                        Text(
+                          "ABCD1234",
+                          style: FontManager.regular(10,
+                              color: AppColors.greyText),
+                        ),
+                        SizedBox(height: 1.5.h),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Total Booking Amount",
+                          style:
+                              FontManager.regular(12, color: AppColors.black),
+                        ),
+                        Text(
+                          "\$ 6,66,666",
+                          style: FontManager.regular(10,
+                              color: AppColors.greyText),
+                        ),
+                        SizedBox(height: 1.5.h),
+                        Text(
+                          "Request Date",
+                          style:
+                              FontManager.regular(12, color: AppColors.black),
+                        ),
+                        Text(
+                          "24 Nov 24 06:00 PM",
+                          style: FontManager.regular(10,
+                              color: AppColors.greyText),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  "Free Cancellation upto 48 hours before check-in",
+                  style: FontManager.regular(12, color: AppColors.buttonColor),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  Strings.descriptionReadMore,
+                  style: FontManager.regular(10, color: AppColors.black),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  SliverToBoxAdapter buildTabBarView(YourPropertiesController controller,
-      LocalHomestaydataModel homestayData) {
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 150.h,
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            buildDetailsView(controller, homestayData),
-            buildContactView(controller, homestayData),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildDetailsView(YourPropertiesController controller,
-      LocalHomestaydataModel homestayData) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 2.h),
-          Row(
-            children: [
-              Container(
-                height: 5.h,
-                width: 35.w,
-                decoration: const BoxDecoration(
-                  color: AppColors.lightPerpul,
-                  borderRadius: BorderRadius.all(AppRadius.radius24),
-                ),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    Image.asset(
-                      Assets.imagesTraditional,
-                      height: 2.h,
-                      width: 6.w,
-                    ),
-                    SizedBox(width: 2.w),
-                    Text(
-                      widget.selectedIndex == 1
-                          ? controller.property.homestayData!.homestayType!
-                          : homestayData.homestayType,
-                      style:
-                          FontManager.regular(10, color: AppColors.buttonColor),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                height: 5.h,
-                width: 35.w,
-                decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(AppRadius.radius24),
-                    border: Border.all(color: AppColors.lightPerpul)),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    Image.asset(
-                      Assets.imagesTraditional,
-                      height: 2.h,
-                      width: 6.w,
-                    ),
-                    SizedBox(width: 2.w),
-                    Text(
-                      widget.selectedIndex == 1
-                          ? controller.property.homestayData!
-                                      .accommodationDetails!.entirePlace ==
-                                  true
-                              ? Strings.entirePlace
-                              : Strings.privateRoom
-                          : homestayData.accommodationDetails.entirePlace ==
-                                  true
-                              ? Strings.entirePlace
-                              : Strings.privateRoom,
-                      style:
-                          FontManager.regular(10, color: AppColors.buttonColor),
-                    ),
-                    const Spacer(),
-                  ],
-                ),
-              ),
-            ],
           ),
-          SizedBox(height: 2.h),
+        ),
+      ),
+    );
+  }
+
+  Widget headerTrip() {
+    return Container(
+      height: 99,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius16,
+          bottomRight: AppRadius.radius16,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
+              SizedBox(width: 5.2.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesBedRooms,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.bedrooms} ${Strings.bedRooms}"
-                            : "${homestayData.accommodationDetails.bedrooms} ${Strings.bedRooms}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesMaxGuests,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.maxGuests} ${Strings.guest}"
-                            : "${homestayData.accommodationDetails.maxGuests} ${Strings.guest}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesDubleBed,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.doubleBed} ${Strings.doubleBed}"
-                            : "${homestayData.accommodationDetails.doubleBed} ${Strings.doubleBed}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
+                  Text(
+                    Strings.trips,
+                    style: FontManager.medium(20, color: AppColors.white),
                   ),
                 ],
-              ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesSingleBed,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.singleBed} ${Strings.singleBed}"
-                            : "${homestayData.accommodationDetails.singleBed} ${Strings.singleBed}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesBathRooms,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.bathrooms} ${Strings.bathRooms}"
-                            : "${homestayData.accommodationDetails.bathrooms} ${Strings.bathRooms}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Image.asset(
-                        Assets.imagesExtraFloor,
-                        height: 5.h,
-                        width: 7.w,
-                        fit: BoxFit.contain,
-                      ),
-                      SizedBox(
-                        width: 2.w,
-                      ),
-                      Text(
-                        widget.selectedIndex == 1
-                            ? "${controller.property.homestayData!.accommodationDetails!.extraFloorMattress} ${Strings.extraFloorMattress}"
-                            : "${homestayData.accommodationDetails.extraFloorMattress} ${Strings.extraFloorMattress}",
-                        style: FontManager.regular(12,
-                            color: AppColors.textAddProreties),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const Spacer(),
-            ],
-          ),
-          SizedBox(
-            height: 2.h,
-          ),
-          Row(
-            children: [
-              Text(
-                Strings.description,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
               ),
             ],
           ),
           SizedBox(height: 2.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 0.w),
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: widget.selectedIndex == 1
-                        ? controller.property.homestayData!.description
-                        : homestayData.description,
-                    style: FontManager.regular(12, color: AppColors.black),
-                  ),
-                  // TextSpan(
-                  //   style:
-                  //       FontManager.regular(12, color: AppColors.buttonColor),
-                  //   text: Strings.readMore,
-                  //   recognizer: TapGestureRecognizer()
-                  //     ..onTap = () => Get.toNamed(''),
-                  // ),
-                ],
-              ),
-            ),
-          ),
-          SizedBox(height: 2.h),
-          buildTimeSection(controller, homestayData),
-          SizedBox(height: 2.h),
-          buildAmenities(),
-          SizedBox(height: 2.h),
-          buildHouseRules(),
-          SizedBox(height: 2.h),
-          buildAddress(controller, homestayData),
-          SizedBox(height: 2.h),
-          CommonButton(
-            title: Strings.done,
-            onPressed: () {
-              widget.selectedIndex == 1
-                  ? Get.toNamed('')
-                  : Get.toNamed(Routes.termsAndCondition);
-            },
-          ),
         ],
       ),
-    );
-  }
-
-  Widget buildTimeSection(YourPropertiesController controller,
-      LocalHomestaydataModel homestayData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Strings.time,
-            style: FontManager.medium(18, color: AppColors.textAddProreties)),
-        SizedBox(height: 2.h),
-        Container(
-          height: 9.h,
-          width: 100.w,
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(AppRadius.radius10),
-            border: Border.all(color: AppColors.borderContainerGriedView),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              buildTimeItem(
-                  Assets.imagesClock,
-                  Strings.checkInTime,
-                  widget.selectedIndex == 1
-                      ? controller.property.homestayData!.flexibleCheckIn ==
-                              true
-                          ? Strings.flexible
-                          : controller.property.homestayData!.checkInTime!
-                      : homestayData.flexibleCheckIn == true
-                          ? Strings.flexible
-                          : homestayData.checkInTime),
-              buildTimeSeparator(),
-              buildTimeItem(
-                  Assets.imagesClock,
-                  Strings.checkOutTime,
-                  widget.selectedIndex == 1
-                      ? controller.property.homestayData!.flexibleCheckOut ==
-                              true
-                          ? Strings.flexible
-                          : controller.property.homestayData!.checkOutTime!
-                      : homestayData.flexibleCheckOut == true
-                          ? Strings.flexible
-                          : homestayData.checkOutTime),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget buildTimeItem(String iconPath, String label, String time) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          children: [
-            Image.asset(iconPath, height: 14, width: 14),
-            SizedBox(width: 1.w),
-            Text(label,
-                style:
-                    FontManager.regular(12, color: AppColors.textAddProreties)),
-          ],
-        ),
-        Text(time, style: FontManager.medium(15, color: AppColors.buttonColor)),
-      ],
-    );
-  }
-
-  Widget buildTimeSeparator() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          height: 6.h,
-          width: 1,
-          decoration:
-              const BoxDecoration(color: AppColors.borderContainerGriedView),
-        ),
-      ],
-    );
-  }
-
-  Widget buildAmenities() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Strings.amenities,
-            style: FontManager.medium(18, color: AppColors.textAddProreties)),
-        SizedBox(height: 2.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            buildAmenityItem(Assets.imagesWiFi, Strings.freeWifi),
-            buildAmenityItem(Assets.imagesAirCondioner, Strings.airCondition2),
-            buildAmenityItem(Assets.imagesHometherater, Strings.hometheater2),
-            buildAmenityItem(Assets.imagesFirAlarm, Strings.firAlarm2),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget buildAmenityItem(String iconPath, String label) {
-    return Column(
-      children: [
-        Image.asset(iconPath, height: 35, width: 35),
-        SizedBox(height: 2.w),
-        Text(label,
-            style: FontManager.regular(12, color: AppColors.textAddProreties),
-            textAlign: TextAlign.center),
-      ],
-    );
-  }
-
-  Widget buildHouseRules() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Strings.houseRules,
-            style: FontManager.medium(18, color: AppColors.textAddProreties)),
-        SizedBox(height: 2.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            buildHouseRuleItem(Assets.imagesNoSmoking, Strings.noSmoking2),
-            buildHouseRuleItem(Assets.imagesNoDrinking, Strings.noDrinking2),
-            buildHouseRuleItem(Assets.imagesNoPet, Strings.noPet2),
-            buildHouseRuleItem(
-                Assets.imagesDamageToProretiy, Strings.damageToProperty2),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget buildHouseRuleItem(String iconPath, String label) {
-    return Column(
-      children: [
-        Image.asset(iconPath, height: 35, width: 35),
-        SizedBox(height: 2.w),
-        Text(label,
-            style: FontManager.regular(12, color: AppColors.textAddProreties),
-            textAlign: TextAlign.center),
-      ],
-    );
-  }
-
-  Widget buildAddress(YourPropertiesController controller,
-      LocalHomestaydataModel homestayData) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Strings.address,
-            style: FontManager.medium(18, color: AppColors.textAddProreties)),
-        SizedBox(height: 2.h),
-        Container(
-          width: 100.w,
-          height: 200,
-          decoration: const BoxDecoration(
-              color: AppColors.greyText,
-              borderRadius: BorderRadius.all(AppRadius.radius10),
-              image: DecorationImage(
-                  image: AssetImage(Assets.imagesMapDefoulte),
-                  fit: BoxFit.cover)),
-        ),
-        SizedBox(height: 2.h),
-        Text(
-            widget.selectedIndex == 1
-                ? "${controller.property.homestayData!.address}"
-                : homestayData.address,
-            style: FontManager.regular(12, color: AppColors.black)),
-      ],
-    );
-  }
-
-  Widget buildContactView(YourPropertiesController controller,
-      LocalHomestaydataModel homestayData) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 2.h),
-          Text(Strings.ownerDetails,
-              style: FontManager.medium(18, color: AppColors.textAddProreties)),
-          SizedBox(height: 2.h),
-          buildContactRow(
-              Assets.imagesCallicon,
-              widget.selectedIndex == 1
-                  ? controller.property.homestayData!.ownerContactNo!
-                  : homestayData.ownerContactNo),
-          SizedBox(height: 1.h),
-          buildContactRow(
-              Assets.imagesEmailicon,
-              widget.selectedIndex == 1
-                  ? controller.property.homestayData!.ownerEmailId!
-                  : homestayData.ownerEmailId),
-          SizedBox(height: 2.h),
-          Text(Strings.homeStayDetails,
-              style: FontManager.medium(18, color: AppColors.textAddProreties)),
-          SizedBox(height: 2.h),
-          // ...buildContactList(
-          //   widget.selectedIndex == 1
-          //       ? controller.property.homestayData!.homestayContactNo!
-          //       : homestayData.homestayContactNo,
-          //   Assets.imagesCallicon,
-          // ),
-          // SizedBox(height: 1.h),
-          // ...buildContactList(
-          //   widget.selectedIndex == 1
-          //       ? controller.property.homestayData!.homestayEmailId!
-          //       : homestayData.homestayEmailId,
-          //   Assets.imagesEmailicon,
-          // ),
-          SizedBox(height: 5.h),
-          CommonButton(
-            title: Strings.done,
-            onPressed: () => widget.selectedIndex == 1
-                ? Get.toNamed('')
-                : Get.toNamed(Routes.termsAndCondition),
-          ),
-          SizedBox(height: 5.h),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> buildContactList(List<dynamic> contactList, String iconPath) {
-    return contactList.map<Widget>((contact) {
-      return Column(
-        children: [
-          buildContactRow(iconPath, contact.contactNo ?? contact.emailId),
-          SizedBox(height: 1.h),
-        ],
-      );
-    }).toList();
-  }
-
-  Widget buildContactRow(String iconPath, String text) {
-    return Row(
-      children: [
-        Image.asset(iconPath, height: 35, width: 35),
-        SizedBox(width: 2.w),
-        Text(text, style: FontManager.regular(14, color: AppColors.black)),
-      ],
     );
   }
 }
 
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar tabBar;
 
-  _SliverAppBarDelegate(this.tabBar);
+class AccommodationDetails {
+  bool? entirePlace;
+  bool? privateRoom;
+  int? maxGuests;
+  int? bedrooms;
+  int? singleBed;
+  int? doubleBed;
+  int? extraFloorMattress;
+  int? bathrooms;
+  bool? kitchenAvailable;
 
-  @override
-  double get minExtent => tabBar.preferredSize.height;
+  AccommodationDetails(
+      {this.entirePlace,
+        this.privateRoom,
+        this.maxGuests,
+        this.bedrooms,
+        this.singleBed,
+        this.doubleBed,
+        this.extraFloorMattress,
+        this.bathrooms,
+        this.kitchenAvailable});
 
-  @override
-  double get maxExtent => tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Material(
-      color: AppColors.backgroundColor,
-      child: tabBar,
-    );
+  AccommodationDetails.fromJson(Map<String, dynamic> json) {
+    entirePlace = json['entirePlace'];
+    privateRoom = json['privateRoom'];
+    maxGuests = json['maxGuests'];
+    bedrooms = json['bedrooms'];
+    singleBed = json['singleBed'];
+    doubleBed = json['doubleBed'];
+    extraFloorMattress = json['extraFloorMattress'];
+    bathrooms = json['bathrooms'];
+    kitchenAvailable = json['kitchenAvailable'];
   }
 
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return tabBar != oldDelegate.tabBar;
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['entirePlace'] = entirePlace;
+    data['privateRoom'] = privateRoom;
+    data['maxGuests'] = maxGuests;
+    data['bedrooms'] = bedrooms;
+    data['singleBed'] = singleBed;
+    data['doubleBed'] = doubleBed;
+    data['extraFloorMattress'] = extraFloorMattress;
+    data['bathrooms'] = bathrooms;
+    data['kitchenAvailable'] = kitchenAvailable;
+    return data;
   }
 }
-import 'package:get/get.dart';
-import 'package:travellery_mobile/common_widgets/common_loading_process.dart';
-import '../../../api_helper/api_helper.dart';
-import '../../../api_helper/getit_service.dart';
-import '../../../routes_app/all_routes_app.dart';
-import '../../../services/storage_services.dart';
-import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-import '../data/model/yourproperties_model.dart';
-import '../data/repository/your_properties_repository.dart';
 
-class YourPropertiesController extends GetxController {
-  var yourPropertiesRepository = getIt<YourPropertiesRepository>();
-  var apiHelper = getIt<ApiHelper>();
-  YourPropertiesModel? yourProperty;
-  List<ReUsedDataModel> propertiesList = [];
-  @override
-  void onInit() {
-    super.onInit();
-    getYourPropertiesData();
+class Amenities {
+  String? name;
+  bool? isChecked;
+  bool? isNewAdded;
+  String? sId;
+
+  Amenities({this.name, this.isChecked, this.isNewAdded, this.sId});
+
+  Amenities.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+    isChecked = json['isChecked'];
+    isNewAdded = json['isNewAdded'];
+    sId = json['_id'];
   }
 
-  init() async {
-    await getYourPropertiesData();
-    await getSingleYourProperties();
-    update();
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['name'] = name;
+    data['isChecked'] = isChecked;
+    data['isNewAdded'] = isNewAdded;
+    data['_id'] = sId;
+    return data;
+  }
+}
+
+class HouseRules {
+  String? name;
+  bool? isChecked;
+  bool? isNewAdded;
+  String? sId;
+
+  HouseRules({this.name, this.isChecked, this.isNewAdded, this.sId});
+
+  HouseRules.fromJson(Map<String, dynamic> json) {
+    name = json['name'];
+    isChecked = json['isChecked'];
+    isNewAdded = json['isNewAdded'];
+    sId = json['_id'];
   }
 
-  Future<void> getYourPropertiesData() async {
-    yourProperty = await yourPropertiesRepository.getYourProperties(limit: 5);
-    if (yourProperty != null && yourProperty!.homestaysData != null) {
-      propertiesList = yourProperty!.homestaysData!;
-    } else {
-      propertiesList = [];
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['name'] = name;
+    data['isChecked'] = isChecked;
+    data['isNewAdded'] = isNewAdded;
+    data['_id'] = sId;
+    return data;
+  }
+}
+
+class CoverPhoto {
+  String? publicId;
+  String? url;
+
+  CoverPhoto({this.publicId, this.url});
+
+  CoverPhoto.fromJson(Map<String, dynamic> json) {
+    publicId = json['public_id'];
+    url = json['url'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['public_id'] = publicId;
+    data['url'] = url;
+    return data;
+  }
+}
+
+class HomestayPhotos {
+  String? publicId;
+  String? url;
+  String? sId;
+
+  HomestayPhotos({this.publicId, this.url, this.sId});
+
+  HomestayPhotos.fromJson(Map<String, dynamic> json) {
+    publicId = json['public_id'];
+    url = json['url'];
+    sId = json['_id'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['public_id'] = publicId;
+    data['url'] = url;
+    data['_id'] = sId;
+    return data;
+  }
+}
+
+class HomestayContactNo {
+  String? contactNo;
+  String? sId;
+
+  HomestayContactNo({this.contactNo, this.sId});
+
+  HomestayContactNo.fromJson(Map<String, dynamic> json) {
+    contactNo = json['contactNo'];
+    sId = json['_id'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['contactNo'] = contactNo;
+    data['_id'] = sId;
+    return data;
+  }
+}
+
+class HomestayEmailId {
+  String? emailId;
+  String? sId;
+
+  HomestayEmailId({this.emailId, this.sId});
+
+  HomestayEmailId.fromJson(Map<String, dynamic> json) {
+    emailId = json['EmailId'];
+    sId = json['_id'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['EmailId'] = emailId;
+    data['_id'] = sId;
+    return data;
+  }
+}
+
+
+class CreatedBy {
+  ProfileImage? profileImage;
+  String? id;
+  String? name;
+  String? mobile;
+  String? email;
+
+  CreatedBy({
+    this.profileImage,
+    this.id,
+    this.name,
+    this.mobile,
+    this.email,
+  });
+
+  CreatedBy.fromJson(Map<String, dynamic> json) {
+    profileImage = json['profileImage'] != null
+        ? ProfileImage.fromJson(json['profileImage'])
+        : null;
+    id = json['_id'];
+    name = json['name'];
+    mobile = json['mobile'];
+    email = json['email'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (profileImage != null) {
+      data['profileImage'] = profileImage!.toJson();
     }
-  }
-
-  void getDetails(index) {
-    LoadingProcessCommon().showLoading();
-    final singleFetchUserModel = propertiesList[index].id;
-    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
-    getIt<StorageServices>().getYourPropertiesId();
-    getSingleYourProperties().then(
-      (value) {
-        LoadingProcessCommon().hideLoading();
-        Get.toNamed(
-          Routes.previewPage,
-          arguments: {
-            'index': 1,
-          },
-        );
-      },
-    );
-  }
-
-  late HomeStaySingleFetchResponse property;
-  Future<void> getSingleYourProperties() async {
-    property = await yourPropertiesRepository.getSingleFetchYourProperties();
-  }
-
-  void deleteProperties() {
-    print("qqqqq=============");
-    yourPropertiesRepository.deleteData().then((value) async {
-      print("Delete=============");
-      yourProperty = await yourPropertiesRepository.getYourProperties(limit: 5).then((value) {
-        Get.back();
-        Get.back();
-        return null;
-      },);
-    },);
-    update();
+    data['_id'] = id;
+    data['name'] = name;
+    data['mobile'] = mobile;
+    data['email'] = email;
+    return data;
   }
 }
- 
+
+class ProfileImage {
+  String? publicId;
+  String? url;
+
+  ProfileImage({this.publicId, this.url});
+
+  ProfileImage.fromJson(Map<String, dynamic> json) {
+    publicId = json['public_id'];
+    url = json['url'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['public_id'] = publicId;
+    data['url'] = url;
+    return data;
+  }
+}
 import 'homestay_reused_model.dart';
 
 class HomeStaySingleFetchResponse {
@@ -1181,678 +3891,1199 @@ class ReUsedDataModel {
     return data;
   }
 }
- 
-import 'package:carousel_slider/carousel_controller.dart';
-import 'package:get/get.dart';
-
-class PreviewPropertiesController extends GetxController{
-  var carouselIndex = 0.obs;
-  CarouselSliderController carouselController = CarouselSliderController();
-
-  @override
-  void onInit() {
-    super.onInit();
-    carouselController = CarouselSliderController();
-  }
-
-
-  void updateCarouselIndex(int index) {
-    carouselIndex.value = index;
-  }
-}
-import 'package:dio/dio.dart' as dio;
-import '../../../../../api_helper/api_helper.dart';
-import '../../../../../api_helper/api_uri.dart';
-import '../../../../../api_helper/getit_service.dart';
-import '../../../../services/storage_services.dart';
-import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-import '../model/yourproperties_model.dart';
-
-class YourPropertiesRepository {
-  var apiProvider = getIt<ApiHelper>();
-  var apiURLs = getIt<APIUrls>();
-
-  Future<YourPropertiesModel> getYourProperties(
-      {int limit = 0, int skip = 0}) async {
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/?limit=$limit&skip=$skip",
-    );
-    Map<String, dynamic> data = response!.data;
-    return YourPropertiesModel.fromJson(data);
-  }
-
-  Future<HomeStaySingleFetchResponse> getSingleFetchYourProperties() async {
-    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/$yourPropertiesId",
-    );
-    Map<String, dynamic> data = response!.data;
-    return HomeStaySingleFetchResponse.fromJson(data);
-  }
-
-  Future<Map<String, dynamic>> deleteData() async {
-    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.propertiesDelete}/$yourPropertiesId",
-    );
-    Map<String, dynamic> data = response!.data;
-    return data;
-  }
-}
-class APIUrls{
-
-  String baseUrl = "https://travellery-backend.onrender.com";
-  String signupUrl = "/user/signup";
-  String loginUrl = "/user/login";
-  String googleRegisterUrl = "/user/google-registration/";
-  String forgePasswordUrl = "/user/forgot-password";
-  String userGetUrl = "/user/";
-  String verifyUrl = "/user/verfify-otp";
-  String resetPasswordUrl = "/user/reset-password";
-  String homeStayUrl = "/homestay/create";
-  String homeStaySingleFetchUrl = "/homestay";
-  String propertiesDelete = "/homestay/DeleteHomestay";
-
-} 
-import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-
-class YourPropertiesModel {
-  String? message;
-  List<ReUsedDataModel>? homestaysData;
-  int? totalHomestay;
-
-  YourPropertiesModel({this.message, this.homestaysData, this.totalHomestay});
-
-  YourPropertiesModel.fromJson(Map<String, dynamic> json) {
-    message = json['message'];
-    if (json['HomestaysData'] != null) {
-      homestaysData = <ReUsedDataModel>[];
-      json['HomestaysData'].forEach((v) {
-        homestaysData!.add(ReUsedDataModel.fromJson(v));
-      });
-    }
-    totalHomestay = json['totalHomestay'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['message'] = message;
-    if (homestaysData != null) {
-      data['HomestaysData'] = homestaysData!.map((v) => v.toJson()).toList();
-    }
-    data['totalHomestay'] = totalHomestay;
-    return data;
-  }
-}
- import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/address_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/amenities_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/check_in_out_details_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/homestay_title1.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/homestay_type.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/homestaydescription_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/house_rules_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/photo_page.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/price_and_contact_details_page.dart';
-import 'package:travellery_mobile/utils/app_radius.dart';
-import '../../../../../generated/assets.dart';
-import '../../../../common_widgets/common_button.dart';
-import '../../../../common_widgets/common_dialog.dart';
-import '../../../../routes_app/all_routes_app.dart';
-import '../../../../utils/app_colors.dart';
-import '../../../../utils/app_string.dart';
-import '../../../../utils/font_manager.dart';
-import 'widget_view/accommodation_details_page.dart';
-import '../controller/add_properties_controller.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/font_manager.dart';
 
-class AddPropertiesScreen extends StatefulWidget {
-  final int index;
-
-  const AddPropertiesScreen({super.key, required this.index});
-
-  @override
-  State<AddPropertiesScreen> createState() => _AddPropertiesScreenState();
-}
-
-class _AddPropertiesScreenState extends State<AddPropertiesScreen> {
-  @override
-  Widget build(BuildContext context) {
-    return GetBuilder(
-      init: AddPropertiesController(),
-      builder: (controller) => PopScope(
-        canPop: true,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          body: Form(
-            key: controller.formKey,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 7.w),
-              child: Column(
-                children: [
-                  SizedBox(height: 7.2.h),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: controller.backPage,
-                        child: const Icon(Icons.keyboard_arrow_left, size: 30),
-                      ),
-                      const SizedBox(width: 8),
-                      Obx(
-                        () => Text(
-                          widget.index == 1
-                              ? "Edit ${controller.pageTitles[controller.currentPage.value - 1]}"
-                              : controller.pageTitles[controller.currentPage.value - 1],
-                          style: FontManager.medium(
-                            20,
-                            color: AppColors.black,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 3.h),
-                  Obx(() =>
-                  buildTitleStep(controller.currentPage.value.toString())),
-                  Expanded(
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: PageView(
-                        // physics: const NeverScrollableScrollPhysics(),
-                        controller: controller.pageController,
-                        onPageChanged: (index) {
-                          controller.currentPage.value = index + 1;
-                        },
-                        children: [
-                          HomeStayTitleScreen(controller: controller),
-                          HomeStayTypeScreen(controller: controller),
-                          AccommodationDetailsPage(controller: controller),
-                          AmenitiesPage(controller: controller),
-                          HouseRulesPage(controller: controller),
-                          CheckInOutDetailsPage(controller: controller),
-                          AddressPage(controller: controller),
-                          PhotoPage(controller: controller),
-                          HomeStayDescriptionPage(controller: controller),
-                          PriceAndContactDetailsPage(controller: controller),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Obx(() => Padding(
-                        padding: const EdgeInsets.only(left: 60, right: 60),
-                        child: LinearProgressIndicator(
-                          value: controller.currentPage.value / 10,
-                          backgroundColor: AppColors.greyText,
-                          color: AppColors.buttonColor,
-                          minHeight: 3,
-                          borderRadius:
-                              const BorderRadius.all(AppRadius.radius4),
-                        ),
-                      )),
-                  SizedBox(height: 2.h),
-                  Obx(() => CommonButton(
-                        title: Strings.nextStep,
-                        onPressed: controller.isCurrentPageValid()
-                            ? controller.nextPage
-                            : null,
-                        backgroundColor: controller.isCurrentPageValid()
-                            ? AppColors.buttonColor
-                            : AppColors.lightPerpul,
-                      )),
-                  Obx(
-                    () => (controller.currentPage.value == 3 ||
-                            controller.currentPage.value == 4)
-                        ? SizedBox(height: 1.h)
-                        : const SizedBox(
-                            height: 0,
-                          ),
-                  ),
-                  Obx(
-                    () => (controller.currentPage.value == 3 ||
-                            controller.currentPage.value == 4)
-                        ? GestureDetector(
-                            onTap: () {
-                              CustomDialog.showCustomDialog(
-                                context: context,
-                                title: Strings.saveAndExit,
-                                message: Strings.questionDialogText,
-                                imageAsset: Assets.imagesQuestionDialog,
-                                buttonLabel: Strings.yes,
-                                changeEmailLabel: Strings.no,
-                                onResendPressed: () {
-                                  Get.toNamed(Routes.yourPropertiesPage);
-                                },
-                              );
-                            },
-                            child: Text(
-                              widget.index == 1
-                                  ? Strings.updateAndExit
-                                  : Strings.saveAndExit,
-                              style: FontManager.medium(18,
-                                  color: AppColors.buttonColor),
-                            ))
-                        : SizedBox(height: 5.h),
-                  ),
-                  Obx(
-                    () => (controller.currentPage.value == 3 ||
-                            controller.currentPage.value == 4)
-                        ? SizedBox(height: 1.5.h)
-                        : const SizedBox(
-                            height: 0,
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildTitleStep(String stepCount) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "${Strings.stepCount} $stepCount/10",
-          style: FontManager.regular(18, color: AppColors.black),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-}
- import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/utils/app_colors.dart';
-import '../../../../generated/assets.dart';
-import '../../../common_widgets/common_button.dart';
-import '../../../common_widgets/common_dialog.dart';
-import '../../../routes_app/all_routes_app.dart';
-import '../../../utils/app_string.dart';
-import '../../../utils/font_manager.dart';
-
-class TermsAndConditionPage extends StatefulWidget {
-  const TermsAndConditionPage({super.key});
-
-  @override
-  State<TermsAndConditionPage> createState() => _TermsAndConditionPageState();
-}
-
-class _TermsAndConditionPageState extends State<TermsAndConditionPage> {
-  bool isChecked = false;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-          backgroundColor: AppColors.backgroundColor,
-          body: Padding(
-    padding: EdgeInsets.symmetric(horizontal: 4.w),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+Widget titleAndIcon({
+  required String title,
+  required Function() onBackTap,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(height: 6.h),
+      Row(
         children: [
-          SizedBox(height: 7.2.h),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Get.back();
-                },
-                child: const Icon(Icons.keyboard_arrow_left, size: 30,),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                Strings.termsAndConditions,
-                style: FontManager.medium(20, color: AppColors.black),
-              ),
-            ],
-          ),
-          const SizedBox(height: 31),
-          Padding(
-            padding: EdgeInsets.only(left: 1.w),
-            child: Text(
-              Strings.term1,
-              style: FontManager.regular(14, color: AppColors.black),
+          GestureDetector(
+            onTap: onBackTap,
+            child: const Icon(
+              Icons.keyboard_arrow_left,
+              size: 30,
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(left: 4.w),
-            child: Text(
-              Strings.term1desc,
-              style: FontManager.regular(14, color: AppColors.greyText),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: FontManager.medium(
+              20,
+              color: AppColors.black,
             ),
-          ),
-          SizedBox(
-            height: 2.h,
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 1.w),
-            child: Text(
-              Strings.term2,
-              style: FontManager.regular(14, color: AppColors.black),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 4.w),
-            child: Text(
-              Strings.term2desc,
-              style: FontManager.regular(14, color: AppColors.greyText),
-            ),
-          ),
-          SizedBox(
-            height: 2.h,
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 1.w),
-            child: Text(
-              Strings.term3,
-              style: FontManager.regular(14, color: AppColors.black),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 4.w),
-            child: Text(
-              Strings.term3desc,
-              style: FontManager.regular(14, color: AppColors.greyText),
-            ),
-          ),
-          SizedBox(
-            height: 2.h,
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 1.w),
-            child: Text(
-              Strings.term4,
-              style: FontManager.regular(14, color: AppColors.black),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(left: 4.w),
-            child: Text(
-              Strings.term4desc,
-              style: FontManager.regular(14, color: AppColors.greyText),
-            ),
-          ),
-          SizedBox(height: 2.h,),
-          Row(crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Checkbox(activeColor: AppColors.buttonColor,
-                value: isChecked,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    isChecked = newValue ?? false;
-                  });
-                },
-                side: const BorderSide(color: AppColors.texFiledColor),
-              ),
-              SizedBox(width: 2.w),
-              Flexible(flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.all(1),
-                  child: Text(
-                    Strings.term1desc,
-                    style: FontManager.regular(14, color: AppColors.texFiledColor),
-
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 7.h),
-          CommonButton(
-            backgroundColor: isChecked == false ? AppColors.lightPerpul : AppColors.buttonColor,
-            title: Strings.submit,
-            onPressed: () {
-              CustomDialog.showCustomDialog(
-                context: context,
-                title: Strings.congratulations,
-                message: Strings.congraDesc,
-                imageAsset: Assets.imagesCongratulation,
-                buttonLabel: Strings.okay,
-                onResendPressed: () {
-                  Get.toNamed(Routes.yourPropertiesPage);
-                },
-                onChangeEmailPressed: () {
-                },
-              );
-            },
-          ),
-          SizedBox(
-            height: 5.h,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
-    ),
-          ),
-        );
-  }
+    ],
+  );
 }
- import 'package:get/get.dart';
-import 'package:travellery_mobile/common_widgets/common_loading_process.dart';
-import '../../../api_helper/api_helper.dart';
-import '../../../api_helper/getit_service.dart';
-import '../../../routes_app/all_routes_app.dart';
-import '../../../services/storage_services.dart';
-import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-import '../data/model/yourproperties_model.dart';
-import '../data/repository/your_properties_repository.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../common_widgets/common_dialog.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../../routes_app/all_routes_app.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_radius.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
 
-class YourPropertiesController extends GetxController {
-  var yourPropertiesRepository = getIt<YourPropertiesRepository>();
-  var apiHelper = getIt<ApiHelper>();
-  YourPropertiesModel? yourProperty;
-  List<ReUsedDataModel> propertiesList = [];
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
   @override
-  void onInit() {
-    super.onInit();
-    getYourPropertiesData();
-  }
-
-  init() async {
-    await getYourPropertiesData();
-    await getSingleYourProperties();
-    update();
-  }
-
-  Future<void> getYourPropertiesData() async {
-    yourProperty = await yourPropertiesRepository.getYourProperties(limit: 5);
-    if (yourProperty != null && yourProperty!.homestaysData != null) {
-      propertiesList = yourProperty!.homestaysData!;
-    } else {
-      propertiesList = [];
-    }
-  }
-
-  void getDetails(index) {
-    LoadingProcessCommon().showLoading();
-    final singleFetchUserModel = propertiesList[index].id;
-    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
-    getIt<StorageServices>().getYourPropertiesId();
-    getSingleYourProperties().then(
-      (value) {
-        LoadingProcessCommon().hideLoading();
-        Get.toNamed(
-          Routes.previewPage,
-          arguments: {
-            'index': 1,
-          },
-        );
-      },
-    );
-  }
-
-  late HomeStaySingleFetchResponse property;
-  Future<void> getSingleYourProperties() async {
-    property = await yourPropertiesRepository.getSingleFetchYourProperties();
-  }
-
-  void deleteProperties() {
-    print("qqqqq=============");
-    yourPropertiesRepository.deleteData().then((value) async {
-      print("Delete=============");
-      yourProperty = await yourPropertiesRepository.getYourProperties(limit: 5).then((value) {
-        Get.back();
-        Get.back();
-        return null;
-      },);
-    },);
-    update();
-  }
+  State<ProfilePage> createState() => _ProfilePageState();
 }
-import 'package:dio/dio.dart' as dio;
-import '../../../../../api_helper/api_helper.dart';
-import '../../../../../api_helper/api_uri.dart';
-import '../../../../../api_helper/getit_service.dart';
-import '../../../../services/storage_services.dart';
-import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-import '../model/yourproperties_model.dart';
 
-class YourPropertiesRepository {
-  var apiProvider = getIt<ApiHelper>();
-  var apiURLs = getIt<APIUrls>();
+class _ProfilePageState extends State<ProfilePage> {
+  bool isTraveling = true;
 
-  Future<YourPropertiesModel> getYourProperties(
-      {int limit = 0, int skip = 0}) async {
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/?limit=$limit&skip=$skip",
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: Column(
+        children: [
+          headerProfile(),
+          SizedBox(height: 3.h),
+          Container(
+            height: 39,
+            width: 70.w,
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              border: Border.all(color: AppColors.buttonColor),
+              borderRadius: const BorderRadius.all(AppRadius.radius10),
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isTraveling = true;
+                    });
+                  },
+                  child: Container(
+                    width: 34.8.w,
+                    decoration: BoxDecoration(
+                      color:
+                          isTraveling ? AppColors.buttonColor : AppColors.white,
+                      borderRadius: isTraveling
+                          ? const BorderRadius.all(AppRadius.radius10)
+                          : const BorderRadius.only(
+                              bottomLeft: Radius.circular(10),
+                              topLeft: Radius.circular(10)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        Strings.traveling,
+                        style: FontManager.regular(
+                          16,
+                          color: isTraveling
+                              ? AppColors.white
+                              : AppColors.buttonColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isTraveling = false;
+                    });
+                  },
+                  child: Container(
+                    width: 34.6.w,
+                    decoration: BoxDecoration(
+                      color: !isTraveling
+                          ? AppColors.buttonColor
+                          : AppColors.white,
+                      borderRadius: !isTraveling
+                          ? const BorderRadius.all(AppRadius.radius10)
+                          : const BorderRadius.only(
+                              bottomRight: Radius.circular(10),
+                              topRight: Radius.circular(10)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        Strings.hosting,
+                        style: FontManager.regular(
+                          16,
+                          color: !isTraveling
+                              ? AppColors.white
+                              : AppColors.buttonColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          Strings.additinalSettings,
+                          style: FontManager.medium(18,
+                              color: AppColors.textAddProreties),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 2.5.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.contactusPage);
+                      },
+                      image: Assets.imagesPhoneProfile,
+                      title: Strings.contactUs,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.changePasswordPage);
+                      },
+                      image: Assets.imagesPasswordProfile,
+                      title: Strings.changePassword,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.faqsPage);
+                      },
+                      image: Assets.imagesFaqsProfile,
+                      title: Strings.fAQs,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.faqsPage);
+                      },
+                      image: Assets.imagesLegalProfile,
+                      title: Strings.legalAndPrivacy,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.termsAndCondition);
+                      },
+                      image: Assets.imagesTermsProfile,
+                      title: Strings.termsAndConditions,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.feedbackPage);
+                      },
+                      image: Assets.imagesFeedBackProfile,
+                      title: Strings.feedBack,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        Get.toNamed(Routes.aboutUsPage);
+                      },
+                      image: Assets.imagesAboutProfile,
+                      title: Strings.aboutUs,
+                    ),
+                    SizedBox(height: 1.6.h),
+                    additionalSettingsWidgets(
+                      onTap: () {
+                        CustomDialog.showCustomDialog(
+                          context: context,
+                          message: Strings.logOutMessage,
+                          imageAsset: Assets.imagesLogOutIcon,
+                          buttonLabel: Strings.yes,
+                          changeEmailLabel: Strings.no,
+                          onResendPressed: () {
+                            print("xxzzzzzzzzzzzz");
+                            // controller.deleteProperties();
+                          },
+                          onChangeEmailPressed: () {},
+                        );
+                      },
+                      image: Assets.imagesLogOutProfile,
+                      title: Strings.logOut,
+                    ),
+                    SizedBox(height: 1.6.h),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
-    Map<String, dynamic> data = response!.data;
-    return YourPropertiesModel.fromJson(data);
   }
 
-  Future<HomeStaySingleFetchResponse> getSingleFetchYourProperties() async {
-    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/$yourPropertiesId",
+  Widget headerProfile() {
+    return Container(
+      height: 197,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius24,
+          bottomRight: AppRadius.radius24,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(5.2.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  Strings.profile,
+                  style: FontManager.medium(20, color: AppColors.white),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Get.toNamed(Routes.editProfilePage);
+                  },
+                  child: Image.asset(
+                    Assets.imagesProfileEdit,
+                    height: 24,
+                    width: 24,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    Assets.imagesDefualtProfile,
+                    height: 70,
+                    width: 70,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Jhon Doe",
+                      style: FontManager.medium(16, color: AppColors.white),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "jhondoe123@gmail.com",
+                      style: FontManager.regular(12, color: AppColors.white),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      "9752348952",
+                      style: FontManager.regular(12, color: AppColors.white),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
-    Map<String, dynamic> data = response!.data;
-    return HomeStaySingleFetchResponse.fromJson(data);
   }
 
-  Future<Map<String, dynamic>> deleteData() async {
-    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
-    dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.propertiesDelete}/$yourPropertiesId",
+  Widget additionalSettingsWidgets(
+      {String? image, String? title, final Function()? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.all(AppRadius.radius10),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 3.3.w),
+            Image.asset(
+              image!,
+              height: 20,
+              width: 20,
+            ),
+            SizedBox(width: 3.w),
+            Text(
+              title!,
+              style: FontManager.regular(16),
+            ),
+          ],
+        ),
+      ),
     );
-    Map<String, dynamic> data = response!.data;
-    return data;
   }
 }
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/screen/your_properties_screen/controller/your_properties_controller.dart';
-import '../../../common_widgets/common_properti_card.dart';
-import '../../../utils/app_colors.dart';
-import '../../../utils/app_radius.dart';
-import '../../../utils/app_string.dart';
-import '../../../utils/font_manager.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
 
-class YourPropertiesPage extends StatelessWidget {
-  const YourPropertiesPage({super.key});
+class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key});
 
+  @override
+  State<FeedbackPage> createState() => _FeedbackPageState();
+}
+
+class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundYourPropertiesPage,
-      body: GetBuilder<YourPropertiesController>(
-        init: YourPropertiesController(),
-        builder: (controller) {
-          if (controller.yourProperty == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return Column(
-            children: [
-              buildHeader(),
-              SizedBox(height: 1.h),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: controller.propertiesList.length,
-                  itemBuilder: (context, index) {
-                    return buildPropertyCard(controller, index);
-                  },
-                ),
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.feedBack,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.h),
+            Expanded(
+                child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const ClipOval(
+                        child: Image(
+                          image: AssetImage(Assets.imagesProfile),
+                          height: 50,
+                          width: 50,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Kristin Martine",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "21 September 2023, 12:15 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(Strings.feedBack, style: FontManager.regular(16)),
+                  SizedBox(height: 0.5.h),
+                  CustomTextField(
+                    // controller: controller.homeStayTitleController,
+                    hintText: Strings.enterFeedBack,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return Strings.enterFeedBack;
+                      }
+                      return null;
+                    },
+                    // onSaved: (value) => controller.homestayTitle.value = value!,
+                    // onChanged: (value) => controller.setTitle(value),
+                  ),
+                  SizedBox(
+                    height: 3.5.h,
+                  ),
+                  Text(
+                    Strings.review,
+                    style: FontManager.medium(18,
+                        color: AppColors.textAddProreties),
+                  ),
+                  SizedBox(
+                    height: 2.5.h,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          Assets.imagesProfile,
+                          height: 40,
+                          width: 40,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Max",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "01 September 2023, 12:10 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
+                                    style: FontManager.regular(12,
+                                        color: AppColors.textAddProreties),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 0.5,
+                    decoration: const BoxDecoration(
+                        color: AppColors.borderContainerGriedView),
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          Assets.imagesProfile,
+                          height: 40,
+                          width: 40,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Max",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "01 September 2023, 12:10 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
+                                    style: FontManager.regular(12,
+                                        color: AppColors.textAddProreties),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              SizedBox(height: 3.h),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget buildHeader() {
-    return Container(
-      height: 12.7.h,
-      width: 100.w,
-      decoration: const BoxDecoration(
-        color: AppColors.buttonColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: AppRadius.radius16,
-          bottomRight: AppRadius.radius16,
+            )),
+            CommonButton(
+              title: Strings.submit,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 6.h,
+            ),
+          ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Row(
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/utils/app_colors.dart';
+import 'package:travellery_mobile/utils/app_radius.dart';
+import 'package:travellery_mobile/utils/font_manager.dart';
+
+import '../../../../../../utils/app_string.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class FaqsPage extends StatefulWidget {
+  const FaqsPage({super.key});
+
+  @override
+  State<FaqsPage> createState() => _FaqsPageState();
+}
+
+class _FaqsPageState extends State<FaqsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          children: [
+          titleAndIcon(
+          title: Strings.fAQs,
+          onBackTap: () => Get.back(),
+        ),
+        SizedBox(height: 3.h),
+        Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: AppColors.texFiledColor),
+              borderRadius: BorderRadius.all(AppRadius.radius10)),
+          child: Column(
             children: [
-              SizedBox(width: 5.2.w),
-              Text(
-                Strings.yourProperties,
-                style: FontManager.medium(20, color: AppColors.white),
-              ),
-              const Spacer(),
-              GestureDetector(onTap: () {
-                // Get.toNamed(Routes.addPropertiesScreen);
-              },
-                child: const Icon(
-                  Icons.add_circle,
-                  size: 26,
-                  color: AppColors.white,
+            ExpansionTile(
+            trailing: Icon(Icons.arrow_drop_down_outlined),
+            title: Text(
+              "What is a Travellery app?",
+              style: FontManager.regular(13, color: AppColors.black),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "A travel app is a mobile or web application designed to assist users in planning, booking, and managing their travel experiences.",
+                  style:
+                  FontManager.regular(10, color: AppColors.black),
                 ),
               ),
-              SizedBox(width: 4.6.w),
             ],
           ),
-          SizedBox(height: 2.h),
-        ],
+          ],
+        ),
+      )
+      ],
+    ),)
+    ,
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.editProfile,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Column(
+              children: [
+                Center(
+                  child: Stack(
+                    alignment: const Alignment(1.1, 1.1),
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: Image.asset(Assets.imagesDefualtProfile),
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: const CircleAvatar(
+                          radius: 15,
+                          backgroundImage:
+                              AssetImage(Assets.imagesEditcirculer),
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(Strings.nameLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.nameController,
+              hintText: Strings.nameHint,
+              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
+                  width: 20, height: 20),
+              validator: AppValidation.validateName,
+              // onSaved: (value) => controller.name.value = value!,
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.emailLabel,
+              style: FontManager.regular(14, color: Colors.black),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.emailController,
+              hintText: Strings.emailHint,
+              validator: AppValidation.validateEmail,
+              // onChanged: (value) => controller.email.value = value,
+              prefixIconImage: Image.asset(
+                Assets.imagesEmail,
+                height: 20,
+                width: 20,
+              ),
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.mobileNumberLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.mobileController,
+              keyboardType: TextInputType.number,
+              hintText: Strings.mobileNumberHint,
+              prefixIconImage:
+                  Image.asset(Assets.imagesPhone, width: 20, height: 20),
+              validator: AppValidation.validateMobile,
+              // onSaved: (value) => controller.mobile.value = value!,
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.update,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../common_widget/title_icon_widget.dart';
 
+class ContactusPage extends StatefulWidget {
+  const ContactusPage({super.key});
+
+  @override
+  State<ContactusPage> createState() => _ContactusPageState();
 }
 
-class Property {
-  final String imageUrl;
+class _ContactusPageState extends State<ContactusPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.contactUs,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Text(Strings.nameLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.nameController,
+              hintText: Strings.nameHint,
+              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
+                  width: 20, height: 20),
+              validator: AppValidation.validateName,
+              // onSaved: (value) => controller.name.value = value!,
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.emailLabel,
+              style: FontManager.regular(14, color: Colors.black),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.emailController,
+              hintText: Strings.emailHint,
+              validator: AppValidation.validateEmail,
+              // onChanged: (value) => controller.email.value = value,
+              prefixIconImage: Image.asset(
+                Assets.imagesEmail,
+                height: 20,
+                width: 20,
+              ),
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.message, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.homeStayTitleController,
+              hintText: Strings.enterYourMessage,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return Strings.enterYourMessage;
+                }
+                return null;
+              },
+              // onSaved: (value) => controller.homestayTitle.value = value!,
+              // onChanged: (value) => controller.setTitle(value),
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.submit,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class ChangePasswordPage extends StatefulWidget {
+  const ChangePasswordPage({super.key});
+
+  @override
+  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
+}
+
+class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.changePassword,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Text(Strings.currentPassword, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetNewPasswordController,
+              hintText: Strings.enterYourCurrentPassword,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetPasswordVisible.value =
+                  // !controller.isResetPasswordVisible.value;
+                });
+              },
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.newPasswordLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetNewPasswordController,
+              hintText: Strings.passwordHint,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetPasswordVisible.value =
+                  // !controller.isResetPasswordVisible.value;
+                });
+              },
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.confirmPassword,
+              style: FontManager.regular(14),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetConfirmedNewPasswordController,
+              hintText: Strings.confirmPasswordHint,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetConfirmPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetConfirmPasswordVisible.value =
+                  // !controller.isResetConfirmPasswordVisible.value;
+                });
+              },
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.save,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/profile_pages/common_widget/title_icon_widget.dart';
+import 'package:travellery_mobile/utils/app_colors.dart';
+import 'package:travellery_mobile/utils/font_manager.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_string.dart';
+
+class AboutUsPage extends StatefulWidget {
+  const AboutUsPage({super.key});
+
+  @override
+  State<AboutUsPage> createState() => _AboutUsPageState();
+}
+
+class _AboutUsPageState extends State<AboutUsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.aboutUs,
+              onBackTap: () => Get.back(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 2.h),
+              child: Text(
+                "Lorem ipsum dolor sit amet consectetur. Nisl a pellentesque id semper quam donec. Hendrerit eleifend at vel curabitur. Risus morbi adipiscing porttitor et facilisis. Ornare massa at ut morbi felis dui senectus. Cum ac varius sapien id nam nisl. Aliquet lacus vitae bibendum morbi. Id ornare ultricies sit sapien arcu auctor sed pretium. Non lectus egestas consectetur urna viverra tincidunt iaculis lacus donec. Mauris arcu gravida dui mauris nunc mauris blandit. Ut quam augue sodales nibh quis. Eu suspendisse aliquet sed blandit nullam libero. Nunc vivamus non id eleifend ullamcorper. Non malesuada consectetur ante ultrices morbi. Tortor maecenas sed scelerisque fermentum ut quam. Urna enim etiam fames gravida. Mi bibendum volutpat non eget. Ultrices semper sit enim tincidunt. Vitae purus sed in sapien feugiat ac a. Congue sit lacus nulla non nibh facilisi tempor justo. Porttitor augue enim diam netus aliquam ut. Cursus pretium in fringilla gravida. Id habitasse dictum proin feugiat amet elit. Ac gravida et quis diam elementum aliquet. Ante lorem id lacus sit arcu quam gravida in. Tellus mollis malesuada nulla phasellus vitae aliquet risus neque odio. Rhoncus condimentum sagittis at nisl pellentesque sed vitae id. ",
+                style: FontManager.regular(12, color: AppColors.black),
+              ),
+            ),
+            SizedBox(
+              height: 2.5.h,
+            ),
+            Text(Strings.ownerDetails,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties)),
+            SizedBox(height: 2.h),
+            Row(
+              children: [
+                Image.asset(Assets.imagesCallicon, height: 35, width: 35),
+                SizedBox(width: 2.w),
+                Text(Strings.defultCallNumber,
+                    style: FontManager.regular(14, color: AppColors.black)),
+              ],
+            ),
+            SizedBox(height: 1.2.h),
+            Row(
+              children: [
+                Image.asset(Assets.imagesEmailicon, height: 35, width: 35),
+                SizedBox(width: 2.w),
+                Text(Strings.defultEmail,
+                    style: FontManager.regular(14, color: AppColors.black)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_radius.dart';
+import '../utils/font_manager.dart';
+
+class PropertyCard extends StatelessWidget {
+  final String coverPhotoUrl;
+  final String homestayType;
+  final String status;
   final String title;
   final String location;
-  final String status;
-  final Color statusColor;
-  final String tag;
-  final Color tagColor;
+  final void Function()? onTap;
 
-  Property({
-    required this.imageUrl,
+  const PropertyCard({
+    super.key,
+    required this.coverPhotoUrl,
+    required this.homestayType,
+    required this.status,
     required this.title,
     required this.location,
-    required this.status,
-    required this.statusColor,
-    required this.tag,
-    required this.tagColor,
+    required this.onTap,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 259,
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundColor,
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  height: 157,
+                  width: 100.w,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.all(AppRadius.radius10),
+                    image: DecorationImage(
+                      image: NetworkImage(coverPhotoUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      homestayType,
+                      style:
+                          FontManager.regular(12, color: AppColors.buttonColor),
+                    ),
+                    Text(
+                      status,
+                      style: FontManager.regular(
+                        12,
+                        color: status == "Pending Approval"
+                            ? AppColors.pendingColor
+                            : status == "Approved"
+                                ? AppColors.approvedColor
+                                : AppColors.greyText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, top: 7.0),
+                child: Text(
+                  title,
+                  style:
+                      FontManager.medium(16, color: AppColors.textAddProreties),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4.0, bottom: 8.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: AppColors.buttonColor),
+                    SizedBox(width: 1.4.w),
+                    Text(
+                      location,
+                      style: FontManager.regular(12, color: AppColors.greyText),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
+import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
+import '../screen/add_properties_screen/add_properties_steps/data/repository/homestay_repository.dart';
+import '../screen/your_properties_screen/data/repository/your_properties_repository.dart';
+import '../services/storage_services.dart';
+import 'api_helper.dart';
+import 'api_uri.dart';
+import 'dio_interceptors.dart';
+import '../screen/auth_flow/data/repository/auth_repository.dart';
+
+final getIt = GetIt.instance;
+
+Future<void> initGetIt() async {
+  getIt.registerLazySingleton<Dio>(() => Dio());
+  getIt.registerLazySingleton<APIUrls>(() => APIUrls());
+  getIt.registerLazySingleton<ApiHelper>(() => ApiHelper(getDioInstance()));
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository());
+  getIt.registerLazySingleton<HomeStayRepository>(() => HomeStayRepository());
+  getIt.registerLazySingleton<StorageServices>(() => StorageServices());
+  getIt.registerLazySingleton<YourPropertiesRepository>(() => YourPropertiesRepository());
+  getIt.registerLazySingleton<TravelingRepository>(() => TravelingRepository());
+
+}
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/splash_screen/view/splash_page.dart';
+import 'package:travellery_mobile/screen/your_properties_screen/view/details_page/details_page.dart';
+import '../screen/add_properties_screen/add_properties_steps/view/add_properties_page.dart';
+import '../screen/add_properties_screen/add_properties_steps/view/widget_view/add_new_amenities/add_new_amenities.dart';
+import '../screen/add_properties_screen/add_properties_steps/view/widget_view/location_page.dart';
+import '../screen/add_properties_screen/add_properties_steps/view/widget_view/new_rules_add/new_rules_add.dart';
+import '../screen/add_properties_screen/list_homestay_pages/view/home_list_stay_page.dart';
+import '../screen/auth_flow/view/forget_password_pages/reset_page/reset_page.dart';
+import '../screen/auth_flow/view/forget_password_pages/verification_page/verification_page.dart';
+import '../screen/auth_flow/view/forget_password_pages/forget_page/forget_password.dart';
+import '../screen/auth_flow/view/login_page/login_page.dart';
+import '../screen/auth_flow/view/signup_page/signup_page.dart';
+import '../screen/preview_properties_screen/view/preview_page.dart';
+import '../screen/preview_properties_screen/view/terms_and_condition_page.dart';
+import '../screen/onboarding_pages/view/onboarding_page.dart';
+import '../screen/profile_pages/view/abount_us/aboutUs_page.dart';
+import '../screen/profile_pages/view/change_password/changepassword_page.dart';
+import '../screen/profile_pages/view/contact_us/contactus_page.dart';
+import '../screen/profile_pages/view/edit_profile/edit_profile_page.dart';
+import '../screen/profile_pages/view/fAQs/fAQs_page.dart';
+import '../screen/profile_pages/view/feed_back/feedBack_page.dart';
+import '../screen/traveling_flow/view/booking_request/booking_request_page.dart';
+import '../screen/bottom_navigation_bar/view/bottom_view.dart';
+import '../screen/traveling_flow/view/checkIn_outedate/checkInOutDate_page.dart';
+import '../screen/traveling_flow/view/filter/filter_page.dart';
+import '../screen/traveling_flow/view/search/search_page.dart';
+import '../screen/your_properties_screen/view/your_properties_page.dart';
 
 class Routes {
-
   static const String splash = '/';
   static const String onboarding = '/onboarding';
   static const String signup = '/signup';
@@ -1868,6 +5099,7 @@ class Routes {
   static const String previewPage = '/previewPage';
   static const String termsAndCondition = '/termsAndCondition';
   static const String yourPropertiesPage = '/yourPropertiesPage';
+  static const String detailsYourProperties = '/detailsYourProperties';
   static const String bottomPages = '/bottom';
   static const String filterPage = '/filterPage';
   static const String search = '/search';
@@ -1880,8 +5112,6 @@ class Routes {
   static const String aboutUsPage = '/aboutUsPage';
   static const String faqsPage = '/faqsPage';
 
-
-
   static List<GetPage> get routes {
     return [
       GetPage(name: splash, page: () => const SplashPage()),
@@ -1889,7 +5119,8 @@ class Routes {
       GetPage(name: signup, page: () => const SignupPage()),
       GetPage(name: login, page: () => const LoginPage()),
       GetPage(name: forgetPage, page: () => const ForgetPassword()),
-      GetPage(name: verificationPage, page: () => const VerificationCodeScreen()),
+      GetPage(
+          name: verificationPage, page: () => const VerificationCodeScreen()),
       GetPage(name: resetPage, page: () => const ResetPasswordScreen()),
       GetPage(name: listHomestayPage1, page: () => const ListHomestayPages()),
       GetPage(
@@ -1898,22 +5129,12 @@ class Routes {
       GetPage(name: newamenities, page: () => const NewAmenitiesPages()),
       GetPage(name: newRules, page: () => const NewRulesPages()),
       GetPage(name: location, page: () => const LocationView()),
+      GetPage(name: previewPage, page: () => const PreviewPage()),
       GetPage(
-        name: Routes.previewPage,
-        page: () {
-          final arguments = Get.arguments;
-          final selectedIndex = arguments['index'] ?? 0;
-          final homestayData = arguments['homestayData'] as LocalHomestaydataModel;
-
-          return PreviewPage(
-            selectedIndex: selectedIndex,
-            homestayData: homestayData,
-          );
-        },
-      ),
-      GetPage(name: termsAndCondition, page: () => const TermsAndConditionPage()),
+          name: termsAndCondition, page: () => const TermsAndConditionPage()),
       GetPage(name: yourPropertiesPage, page: () => const YourPropertiesPage()),
-      GetPage(name: bottomPages, page: () => const Bottom()),
+      GetPage(name: detailsYourProperties, page: () => const DetailsPage()),
+      GetPage(name: bottomPages, page: () => const BottomNavigationPage()),
       GetPage(name: filterPage, page: () => const FilterPage()),
       GetPage(name: search, page: () => const SearchPage()),
       GetPage(name: checkInOutDatePage, page: () => const CheckinoutdatePage()),
@@ -1925,672 +5146,6 @@ class Routes {
       GetPage(name: aboutUsPage, page: () => const AboutUsPage()),
       GetPage(name: faqsPage, page: () => const FaqsPage()),
     ];
-  }
-}
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await initGetIt();
-  await GetStorage.init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    SystemChannels.textInput.invokeMethod('TextInput.hide');
-  });
-  runApp(
-    Sizer(
-      builder: (p0, p1, p2) => GetMaterialApp(
-        debugShowCheckedModeBanner: false,
-        initialRoute: Routes.splash,
-        getPages: Routes.routes,
-      ),
-    ),
-  );
-}
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:dio/dio.dart' as dio;
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-import 'package:travellery_mobile/common_widgets/common_loading_process.dart';
-import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/data/model/local_homestaydata_model.dart';
-import '../../../../api_helper/api_helper.dart';
-import '../../../../api_helper/getit_service.dart';
-import '../../../../common_widgets/common_image_picker.dart';
-import '../../../../routes_app/all_routes_app.dart';
-import '../../../../services/storage_services.dart';
-import '../../../../utils/app_colors.dart';
-import '../../../../utils/app_string.dart';
-import '../../../reuseble_flow/data/model/homestay_reused_model.dart';
-import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
-import '../data/model/homestay_model.dart';
-import '../data/repository/homestay_repository.dart';
-
-class AddPropertiesController extends GetxController {
-  var currentPage = 1.obs;
-  RxString homestayTitle = ''.obs;
-  var selectedType = ''.obs;
-  var selectedTypeImage = ''.obs;
-  var selectedAccommodation = ''.obs;
-  var selectedAccommodationImage = ''.obs;
-  RxBool isLoading = false.obs;
-  final PageController pageController = PageController();
-  var homeStayRepository = getIt<HomeStayRepository>();
-  var apiHelper = getIt<ApiHelper>();
-
-  List<String> pageTitles = [
-    Strings.homestayTitle,
-    Strings.homestayType,
-    Strings.accommodationDetails,
-    Strings.amenities,
-    Strings.houseRules,
-    Strings.checkInOutDetails,
-    Strings.address,
-    Strings.photos,
-    Strings.homeStayDescription,
-    Strings.priceAndContactDetailsPage,
-    Strings.preview,
-    Strings.termsAndConditions
-  ];
-
-  void nextPage() {
-    print("nnnnnnnnnooopppppeeeeeeennnnnnnnn");
-    LoadingProcessCommon().showLoading();
-    if (currentPage.value < 10) {
-      if (currentPage.value == 7) {
-        if (formKey.currentState!.validate()) {
-          formKey.currentState!.save();
-          isValidation.value = false;
-          FocusManager.instance.primaryFocus?.unfocus();
-
-          pageController.nextPage(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeIn,
-          );
-        } else {
-          return;
-        }
-      }
-      if (currentPage.value == 6) {
-        Get.toNamed(Routes.location);
-        return;
-      }
-      FocusManager.instance.primaryFocus?.unfocus();
-      pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
-      );
-    } else {
-      if (formKey.currentState!.validate()) {
-        formKey.currentState!.save();
-        homeStayAddDataLocally();
-      } else {
-        return;
-      }
-    }
-  }
-
-  void backPage() {
-    if (currentPage.value > 1) {
-      FocusManager.instance.primaryFocus?.unfocus();
-      pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeIn,
-      );
-    } else {
-      Get.toNamed(Routes.listHomestayPage1);
-    }
-  }
-
-  Widget loadingDialog() {
-    return const Center(
-      child: CircularProgressIndicator(
-        color: AppColors.greyText,
-      ),
-    );
-  }
-
-  // homestayTitle Page Logic
-
-  TextEditingController homeStayTitleController = TextEditingController();
-
-  void setTitle(String title) {
-    homestayTitle.value = title;
-    update();
-  }
-
-  // homestayType Page Logic
-  void selectHomeStayType(String index, String image) {
-    selectedType.value = index;
-    selectedTypeImage.value = image;
-    update();
-  }
-
-  bool isHomeStayTypeSelected(String index) {
-    return selectedType.value == index;
-  }
-
-  // Accommodation Page Logic
-  void selectAccommodation(String value, String image) {
-    selectedAccommodation.value = value;
-    selectedAccommodationImage.value = image;
-  }
-
-  var maxGuestsCount = 0.obs;
-  var singleBedCount = 0.obs;
-  var bedroomsCount = 0.obs;
-  var doubleBedCount = 0.obs;
-  var extraFloorCount = 0.obs;
-  var bathRoomsCount = 0.obs;
-  var isKitchenAvailable = false.obs;
-
-  void increment(RxInt count) {
-    count.value++;
-  }
-
-  void decrement(RxInt count) {
-    if (count.value > 0) {
-      count.value--;
-    }
-  }
-
-  // Amenities and New Amenities Page Logic
-  final List<String> customAmenities = [
-    Strings.wiFi,
-    Strings.airConditioner,
-    Strings.fireAlarm,
-    Strings.homeTheater,
-    Strings.masterSuiteBalcony
-  ];
-
-  RxList<bool> selectedAmenities = <bool>[].obs;
-
-  TextEditingController amenitiesName = TextEditingController();
-  List<TextEditingController> textControllers = [];
-  var addAmenities = <String>[].obs;
-  List<String> allAmenities = [];
-
-  void createAllAmenities() {
-    allAmenities = [...customAmenities, ...addAmenities];
-  }
-
-  void addAmenity(String amenityName) {
-    addAmenities.add(amenityName);
-    selectedAmenities.add(true);
-    textControllers.add(TextEditingController());
-    createAllAmenities();
-    update();
-  }
-
-  void removeAmenity(int index) {
-    if (index < addAmenities.length) {
-      if (index < textControllers.length) {
-        textControllers[index].dispose();
-        textControllers.removeAt(index);
-      }
-      addAmenities.removeAt(index);
-      createAllAmenities();
-    }
-
-    int selectedIndex = customAmenities.length + index;
-    if (selectedIndex < selectedAmenities.length) {
-      selectedAmenities.removeAt(selectedIndex);
-    }
-  }
-
-  void toggleAmenity(int index) {
-    if (index >= 0 && index < selectedAmenities.length) {
-      selectedAmenities[index] = !selectedAmenities[index];
-    }
-    update();
-  }
-
-  // House Rules and New Rules Logic
-  final List<String> customRules = [
-    Strings.noSmoking,
-    Strings.noDrinking,
-    Strings.noPet,
-    Strings.damageToProperty,
-  ];
-
-  RxList<bool> selectedRules = <bool>[].obs;
-  TextEditingController rulesName = TextEditingController();
-  List<TextEditingController> rulesTextControllers = [];
-  var addRules = <String>[].obs;
-  List<String> allRules = [];
-
-  void createAllRules() {
-    allRules = [...customRules, ...addRules];
-  }
-
-  void addRulesMethod(String rulesName) {
-    addRules.add(rulesName);
-    selectedRules.add(true);
-    rulesTextControllers.add(TextEditingController());
-    createAllRules();
-    update();
-  }
-
-  void removeRules(int index) {
-    if (index < addRules.length) {
-      if (index < rulesTextControllers.length) {
-        rulesTextControllers[index].dispose();
-        rulesTextControllers.removeAt(index);
-      }
-      addRules.removeAt(index);
-      createAllRules();
-    }
-
-    int selectedIndex = customRules.length + index;
-    if (selectedIndex < customRules.length) {
-      customRules.removeAt(selectedIndex);
-    }
-  }
-
-  void toggleRules(int index) {
-    if (index >= 0 && index < selectedRules.length) {
-      selectedRules[index] = !selectedRules[index];
-    }
-    update();
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    selectedAmenities
-        .addAll(List.generate(customAmenities.length, (_) => false));
-    selectedRules.addAll(List.generate(customRules.length, (_) => false));
-    createAllAmenities();
-  }
-
-  // Check - in/ut details page logic
-  var flexibleWithCheckInTime = false.obs;
-  var flexibleWithCheckInOut = false.obs;
-  Rx<DateTime> checkInTime = DateTime.now().obs;
-  Rx<DateTime> checkOutTime = DateTime.now().obs;
-
-  void checkInTimeUpdate(DateTime newTime) {
-    checkInTime.value = newTime;
-    update();
-  }
-
-  void checkOutTimeUpdate(DateTime newTime) {
-    checkOutTime.value = newTime;
-    update();
-  }
-
-  void toggleCheckInFlexibility(bool value) {
-    flexibleWithCheckInTime.value = value;
-    update();
-  }
-
-  void toggleCheckOutFlexibility(bool value) {
-    flexibleWithCheckInOut.value = value;
-    update();
-  }
-
-  // location page add logic
-
-  // Address page add logic
-  var address = ''.obs;
-  var streetAddress = ''.obs;
-  var landmark = ''.obs;
-  var city = ''.obs;
-  var pinCode = ''.obs;
-  var state = ''.obs;
-  var isSpecificLocation = false.obs;
-  RxBool isValidation = false.obs;
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController streetAddressController = TextEditingController();
-  TextEditingController landmarkController = TextEditingController();
-  TextEditingController cityTownController = TextEditingController();
-  TextEditingController pinCodeController = TextEditingController();
-  TextEditingController stateController = TextEditingController();
-
-  void saveAddress(String? value) {
-    if (value != null) {
-      address.value = value;
-      update();
-    }
-  }
-
-  void saveStreetAddress(String? value) {
-    if (value != null) {
-      streetAddress.value = value;
-      update();
-    }
-  }
-
-  void saveLandmark(String? value) {
-    if (value != null) {
-      landmark.value = value;
-      update();
-    }
-  }
-
-  void saveCity(String? value) {
-    if (value != null) {
-      city.value = value;
-      update();
-    }
-  }
-
-  void savePinCode(String? value) {
-    if (value != null) {
-      pinCode.value = value;
-      update();
-    }
-  }
-
-  void saveState(String? value) {
-    if (value != null) {
-      state.value = value;
-      update();
-    }
-  }
-
-  // Photos pade add logic
-  var coverImagePaths = <String?>[null].obs;
-  var imagePaths = RxList<String?>.filled(6, null);
-
-  // var imagePaths = List<List<String?>>.filled(6, []).obs;
-
-  var imagePickerCommon = ImagePickerCommon();
-
-  Future<void> pickPropertyImage(int index,
-      {required bool isSingleSelect}) async {
-    final croppedFile = await imagePickerCommon.pickImage(
-      source: ImageSource.gallery,
-      isSingleSelect: isSingleSelect,
-      index: index,
-    );
-    if (croppedFile != null) {
-      if (isSingleSelect) {
-        coverImagePaths.value = [croppedFile.path];
-      } else {
-        imagePaths[index] = croppedFile.path;
-      }
-    }
-  }
-
-  // description Page add logic
-  var description = ''.obs;
-  TextEditingController descriptionController = TextEditingController();
-
-  void setDescription(String value) {
-    description.value = value;
-    update();
-  }
-
-  // Price and Contact details page logic
-
-  var basePrice = ''.obs;
-  var weekendPrice = ''.obs;
-  var ownerContactNumber = ''.obs;
-  var ownerEmail = ''.obs;
-  TextEditingController basePriceController = TextEditingController();
-  TextEditingController weekendPriceController = TextEditingController();
-  TextEditingController ownerContactNumberController = TextEditingController();
-  TextEditingController ownerEmailController = TextEditingController();
-  var homeStayContactNumbers = <String>[].obs;
-  TextEditingController homeStayContactNumbersController =
-      TextEditingController();
-
-  void addHomeStayContactNumber(String newAdd) {
-    homeStayContactNumbers.add(newAdd);
-    update();
-  }
-
-  void removeHomeStayContactNumber(int index) {
-    if (index < homeStayContactNumbers.length) {
-      homeStayContactNumbers.removeAt(index);
-    }
-    update();
-  }
-
-  var homeStayEmails = <String>[].obs;
-  TextEditingController homeStayEmailsController = TextEditingController();
-
-  void addHomeStayEmails(String newAdd) {
-    homeStayEmails.add(newAdd);
-    update();
-  }
-
-  void removeHomeStayEmails(int index) {
-    if (index < homeStayEmails.length) {
-      homeStayEmails.removeAt(index);
-    }
-    update();
-  }
-
-  RxBool isEditing = false.obs;
-
-  // api add data
-  Future<void> homeStayAddData() async {
-    LoadingProcessCommon().showLoading();
-    String? userId = getIt<StorageServices>().getUserId();
-    dio.FormData formData = dio.FormData.fromMap({
-      "title": homestayTitle.value,
-      "homestayType": selectedType.value,
-      "accommodationDetails": jsonEncode({
-        "entirePlace": selectedAccommodation.value == Strings.entirePlaceValue,
-        "privateRoom": selectedAccommodation.value == Strings.privateRoomValue,
-        "maxGuests": maxGuestsCount.value,
-        "bedrooms": bedroomsCount.value,
-        "singleBed": singleBedCount.value,
-        "doubleBed": doubleBedCount.value,
-        "extraFloorMattress": extraFloorCount.value,
-        "bathrooms": bathRoomsCount.value,
-        "kitchenAvailable": isKitchenAvailable.value,
-      }),
-      "amenities": jsonEncode(allAmenities.map((amenity) {
-        int index = allAmenities.indexOf(amenity);
-        return {
-          "name": amenity,
-          "isChecked": selectedAmenities[index],
-          "isNewAdded": selectedAmenities.length > customAmenities.length &&
-              index >= customAmenities.length,
-        };
-      }).toList()),
-      "houseRules": jsonEncode(allRules.map((rules) {
-        int index = allRules.indexOf(rules);
-        return {
-          "name": rules,
-          "isChecked": selectedRules[index],
-          "isNewAdded": selectedRules.length > customRules.length &&
-              index >= customRules.length,
-        };
-      }).toList()),
-      "checkInTime": DateFormat('hh:mm a').format(checkInTime.value),
-      "checkOutTime": DateFormat('hh:mm a').format(checkOutTime.value),
-      "flexibleCheckIn": flexibleWithCheckInTime.value,
-      "flexibleCheckOut": flexibleWithCheckInOut.value,
-      "longitude": "72.88692069643963",
-      "latitude": "21.245049600735083",
-      "address": address.value,
-      "street": streetAddress.value,
-      "landmark": landmark.value,
-      "city": city.value,
-      "pinCode": pinCode.value,
-      "state": state.value,
-      "showSpecificLocation": isSpecificLocation,
-      "coverPhoto": await dio.MultipartFile.fromFile(coverImagePaths[0]!,
-          filename: "coverPhoto.jpg"),
-      "description": description.value,
-      "basePrice": basePrice.value,
-      "weekendPrice": weekendPrice.value,
-      "ownerContactNo": ownerContactNumber.value,
-      "ownerEmailId": ownerEmail.value,
-      "homestayContactNo": jsonEncode(homeStayContactNumbers
-          .map((contact) => {
-                "contactNo": contact,
-              })
-          .toList()),
-      "homestayEmailId": jsonEncode(homeStayEmails
-          .map((email) => {
-                "EmailId": email,
-              })
-          .toList()),
-      "status": isEditing.value == true ? "Draft" : "Pending Approval",
-      "createdBy": userId,
-    });
-
-    for (int index = 0; index < imagePaths.length; index++) {
-      if (imagePaths[index] != null) {
-        formData.files.add(MapEntry(
-          "homestayPhotos",
-          await dio.MultipartFile.fromFile(imagePaths[index]!,
-              filename: "photo.jpg"),
-        ));
-      }
-    }
-
-    homeStayRepository.homeStayData(formData: formData).then(
-      (value) {
-        final singleFetchUserModel = HomestayData.fromJson(value);
-        getIt<StorageServices>().setHomeStayId(singleFetchUserModel.homestay!.sId!);
-        String? homeStayId = getIt<StorageServices>().getHomeStayId();
-        if (homeStayId != null) {
-          print("homeStayId user ID: $homeStayId");
-        }
-        getSinglePropertiesData().then(
-          (value) {
-            LoadingProcessCommon().hideLoading();
-            Get.snackbar('', 'Homestay Data created successfully!');
-            Get.toNamed(
-              Routes.previewPage,
-              arguments: {
-                'index': 0,
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Future<void> homeStayAddDataLocally() async {
-    LoadingProcessCommon().showLoading();
-    List<HomestayPhotos> homestayPhotosList = imagePaths
-        .where((path) => path != null)
-        .map((path) => HomestayPhotos(url: path))
-        .toList();
-
-    LocalHomestaydataModel homestayData = LocalHomestaydataModel(
-      title: homestayTitle.value,
-      homestayType: selectedType.value,
-      accommodationDetails: AccommodationDetails(
-        entirePlace: selectedAccommodation.value == Strings.entirePlaceValue,
-        privateRoom: selectedAccommodation.value == Strings.privateRoomValue,
-        maxGuests: maxGuestsCount.value,
-        bedrooms: bedroomsCount.value,
-        singleBed: singleBedCount.value,
-        doubleBed: doubleBedCount.value,
-        extraFloorMattress: extraFloorCount.value,
-        bathrooms: bathRoomsCount.value,
-        kitchenAvailable: isKitchenAvailable.value,
-      ),
-      amenities: allAmenities.map((amenity) {
-        int index = allAmenities.indexOf(amenity);
-        return Amenities(
-          name: amenity,
-          isChecked: selectedAmenities[index],
-          isNewAdded: selectedAmenities.length > customAmenities.length && index >= customAmenities.length,
-        );
-      }).toList(),
-      houseRules: allRules.map((rules) {
-        int index = allRules.indexOf(rules);
-        return HouseRules(
-          name: rules,
-          isChecked: selectedRules[index],
-          isNewAdded: selectedRules.length > customRules.length && index >= customRules.length,
-        );
-      }).toList(),
-      checkInTime: DateFormat('hh:mm a').format(checkInTime.value),
-      checkOutTime: DateFormat('hh:mm a').format(checkOutTime.value),
-      flexibleCheckIn: flexibleWithCheckInTime.value,
-      flexibleCheckOut: flexibleWithCheckInOut.value,
-      longitude: "72.88692069643963",
-      latitude: "21.245049600735083",
-      address: address.value,
-      street: streetAddress.value,
-      landmark: landmark.value,
-      city: city.value,
-      pinCode: pinCode.value,
-      state: state.value,
-      showSpecificLocation: isSpecificLocation.value,
-      coverPhoto: coverImagePaths.isNotEmpty ? coverImagePaths[0] : null,
-      homestayPhotos: homestayPhotosList.isNotEmpty ? homestayPhotosList : null,
-      description: description.value,
-      basePrice: basePrice.value,
-      weekendPrice: weekendPrice.value,
-      ownerContactNo: ownerContactNumber.value,
-      ownerEmailId: ownerEmail.value,
-      homestayContactNo: homeStayContactNumbers.map((contact) => HomestayContactNo(contactNo: contact)).toList(),
-      homestayEmailId: homeStayEmails.map((email) => HomestayEmailId(emailId: email)).toList(),
-      status: isEditing.value ? "Draft" : "Pending Approval",
-    );
-    LoadingProcessCommon().hideLoading();
-    Get.snackbar('Success', 'Homestay data saved locally');
-    Get.toNamed(
-      Routes.previewPage,
-      arguments: {
-        'index': 0,
-        'homestayData': homestayData,
-      },
-    );
-  }
-
-  late HomeStaySingleFetchResponse property;
-
-  Future<void> getSinglePropertiesData() async {
-    property = await homeStayRepository.getSingleFetchPreviewProperties();
-  }
-
-  bool isCurrentPageValid() {
-    switch (currentPage.value) {
-      case 1:
-        return homestayTitle.value.isNotEmpty;
-      case 2:
-        return selectedType.value.isNotEmpty;
-      case 3:
-        return selectedAccommodation.value.isNotEmpty;
-      case 4:
-        return selectedAmenities.contains(true);
-      case 5:
-        return selectedRules.contains(true);
-      case 6:
-        return flexibleWithCheckInTime.value ||
-            flexibleWithCheckInOut.value == true;
-      case 7:
-        return address.value.isNotEmpty &&
-            streetAddress.value.isNotEmpty &&
-            landmark.value.isNotEmpty &&
-            city.value.isNotEmpty &&
-            pinCode.value.isNotEmpty &&
-            state.value.isNotEmpty;
-      case 8:
-        return coverImagePaths[0] != null;
-      case 9:
-        return description.value.isNotEmpty;
-      case 10:
-        return basePrice.value.isNotEmpty &&
-            weekendPrice.value.isNotEmpty &&
-            ownerContactNumber.value.isNotEmpty &&
-            ownerEmail.value.isNotEmpty &&
-            homeStayContactNumbers.isNotEmpty &&
-            homeStayEmails.isNotEmpty;
-      default:
-        return false;
-    }
   }
 }
 
