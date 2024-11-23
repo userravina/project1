@@ -20,8 +20,10 @@ samples, guidance on mobile development, and a full API reference.
 </p>
 
 import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/profile_pages/controller/profile_controller.dart';
 
-class BottomNavigationController extends GetxController{
+class BottomNavigationController extends GetxController {
+  ProfileController profileCtrl = Get.put(ProfileController());
 
   var selectedIndex = 0.obs;
 
@@ -38,6 +40,8 @@ import '../../../generated/assets.dart';
 import '../../../utils/app_radius.dart';
 import '../../../utils/app_string.dart';
 import '../../../utils/font_manager.dart';
+import '../../hosting_flow/view/Home_page/home_page.dart';
+import '../../hosting_flow/view/listing_page/listing_page.dart';
 import '../../profile_pages/view/profile_page.dart';
 import '../../traveling_flow/view/home_pages/home_page.dart';
 import '../controller/bottom_controller.dart';
@@ -55,10 +59,14 @@ class BottomNavigationPage extends StatelessWidget {
       body: Obx(() {
         return IndexedStack(
           index: controller.selectedIndex.value,
-          children: const [
-            HomeTravelingPage(),
-            TripsPage(),
-            ProfilePage(),
+          children: [
+            controller.profileCtrl.isTraveling.value == false
+                ? const HomeHostingPage()
+                : const HomeTravelingPage(),
+            controller.profileCtrl.isTraveling.value == false
+                ? const ListingPage()
+                : const TripsPage(),
+            const ProfilePage(),
           ],
         );
       }),
@@ -83,9 +91,13 @@ class BottomNavigationPage extends StatelessWidget {
             Obx(
               () => buildNavItem(
                 index: 1,
-                imagePath: controller.selectedIndex.value == 1
-                    ? Assets.imagesBottomTrip2
-                    : Assets.imagesBottomTrip,
+                imagePath: controller.profileCtrl.isTraveling.value == false
+                    ? controller.selectedIndex.value == 1
+                        ? Assets.imagesBottomlisting2
+                        : Assets.imagesBottomlisting
+                    : controller.selectedIndex.value == 1
+                        ? Assets.imagesBottomTrip2
+                        : Assets.imagesBottomTrip,
                 label: Strings.trips,
                 onTap: () => controller.selectedUpdate(1),
               ),
@@ -146,13 +158,1063 @@ class BottomNavigationPage extends StatelessWidget {
     );
   }
 }
- import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/font_manager.dart';
+
+Widget titleAndIcon({
+  required String title,
+  required Function() onBackTap,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(height: 6.h),
+      Row(
+        children: [
+          GestureDetector(
+            onTap: onBackTap,
+            child: const Icon(
+              Icons.keyboard_arrow_left,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: FontManager.medium(
+              20,
+              color: AppColors.black,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+import 'package:get/get.dart';
+
+class ProfileController extends GetxController{
+
+  RxBool isTraveling = true.obs;
+
+  void updateTraveling(bool value) {
+    isTraveling.value = value;
+    update();
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/profile_pages/controller/profile_controller.dart';
+import '../../../../../common_widgets/common_dialog.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../../routes_app/all_routes_app.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_radius.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+
+class ProfilePage extends StatefulWidget {
+  const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: GetBuilder(
+        init: ProfileController(),
+        builder: (controller) => Column(
+          children: [
+            headerProfile(),
+            SizedBox(height: 3.h),
+            Container(
+              height: 39,
+              width: 70.w,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                border: Border.all(color: AppColors.buttonColor),
+                borderRadius: const BorderRadius.all(AppRadius.radius10),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      controller.updateTraveling(true);
+                    },
+                    child: Obx(
+                      () => Container(
+                        width: 34.8.w,
+                        decoration: BoxDecoration(
+                          color: controller.isTraveling.value
+                              ? AppColors.buttonColor
+                              : AppColors.white,
+                          borderRadius: controller.isTraveling.value
+                              ? const BorderRadius.all(AppRadius.radius10)
+                              : const BorderRadius.only(
+                                  bottomLeft: Radius.circular(10),
+                                  topLeft: Radius.circular(10)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            Strings.traveling,
+                            style: FontManager.regular(
+                              16,
+                              color: controller.isTraveling.value
+                                  ? AppColors.white
+                                  : AppColors.buttonColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      controller.updateTraveling(false);
+                    },
+                    child: Obx(
+                      () => Container(
+                        width: 34.6.w,
+                        decoration: BoxDecoration(
+                          color: !controller.isTraveling.value
+                              ? AppColors.buttonColor
+                              : AppColors.white,
+                          borderRadius: !controller.isTraveling.value
+                              ? const BorderRadius.all(AppRadius.radius10)
+                              : const BorderRadius.only(
+                                  bottomRight: Radius.circular(10),
+                                  topRight: Radius.circular(10)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            Strings.hosting,
+                            style: FontManager.regular(
+                              16,
+                              color: !controller.isTraveling.value
+                                  ? AppColors.white
+                                  : AppColors.buttonColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            Strings.additinalSettings,
+                            style: FontManager.medium(18,
+                                color: AppColors.textAddProreties),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 2.5.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.contactusPage);
+                        },
+                        image: Assets.imagesPhoneProfile,
+                        title: Strings.contactUs,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.changePasswordPage);
+                        },
+                        image: Assets.imagesPasswordProfile,
+                        title: Strings.changePassword,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.faqsPage);
+                        },
+                        image: Assets.imagesFaqsProfile,
+                        title: Strings.fAQs,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.faqsPage);
+                        },
+                        image: Assets.imagesLegalProfile,
+                        title: Strings.legalAndPrivacy,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.termsAndCondition);
+                        },
+                        image: Assets.imagesTermsProfile,
+                        title: Strings.termsAndConditions,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.feedbackPage);
+                        },
+                        image: Assets.imagesFeedBackProfile,
+                        title: Strings.feedBack,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          Get.toNamed(Routes.aboutUsPage);
+                        },
+                        image: Assets.imagesAboutProfile,
+                        title: Strings.aboutUs,
+                      ),
+                      SizedBox(height: 1.6.h),
+                      additionalSettingsWidgets(
+                        onTap: () {
+                          CustomDialog.showCustomDialog(
+                            context: context,
+                            message: Strings.logOutMessage,
+                            imageAsset: Assets.imagesLogOutIcon,
+                            buttonLabel: Strings.yes,
+                            changeEmailLabel: Strings.no,
+                            onResendPressed: () {
+                              // controller.deleteProperties();
+                            },
+                            onChangeEmailPressed: () {},
+                          );
+                        },
+                        image: Assets.imagesLogOutProfile,
+                        title: Strings.logOut,
+                      ),
+                      SizedBox(height: 1.6.h),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget headerProfile() {
+    return Container(
+      height: 197,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius24,
+          bottomRight: AppRadius.radius24,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(5.2.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  Strings.profile,
+                  style: FontManager.medium(20, color: AppColors.white),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Get.toNamed(Routes.editProfilePage);
+                  },
+                  child: Image.asset(
+                    Assets.imagesProfileEdit,
+                    height: 24,
+                    width: 24,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    Assets.imagesDefualtProfile,
+                    height: 70,
+                    width: 70,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Jhon Doe",
+                      style: FontManager.medium(16, color: AppColors.white),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "jhondoe123@gmail.com",
+                      style: FontManager.regular(12, color: AppColors.white),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      "9752348952",
+                      style: FontManager.regular(12, color: AppColors.white),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget additionalSettingsWidgets(
+      {String? image, String? title, final Function()? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.all(AppRadius.radius10),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 3.3.w),
+            Image.asset(
+              image!,
+              height: 20,
+              width: 20,
+            ),
+            SizedBox(width: 3.w),
+            Text(
+              title!,
+              style: FontManager.regular(16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key});
+
+  @override
+  State<FeedbackPage> createState() => _FeedbackPageState();
+}
+
+class _FeedbackPageState extends State<FeedbackPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.feedBack,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.h),
+            Expanded(
+                child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const ClipOval(
+                        child: Image(
+                          image: AssetImage(Assets.imagesProfile),
+                          height: 50,
+                          width: 50,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Kristin Martine",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "21 September 2023, 12:15 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 3.h),
+                  Text(Strings.feedBack, style: FontManager.regular(16)),
+                  SizedBox(height: 0.5.h),
+                  CustomTextField(
+                    // controller: controller.homeStayTitleController,
+                    hintText: Strings.enterFeedBack,
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return Strings.enterFeedBack;
+                      }
+                      return null;
+                    },
+                    // onSaved: (value) => controller.homestayTitle.value = value!,
+                    // onChanged: (value) => controller.setTitle(value),
+                  ),
+                  SizedBox(
+                    height: 3.5.h,
+                  ),
+                  Text(
+                    Strings.review,
+                    style: FontManager.medium(18,
+                        color: AppColors.textAddProreties),
+                  ),
+                  SizedBox(
+                    height: 2.5.h,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          Assets.imagesProfile,
+                          height: 40,
+                          width: 40,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Max",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "01 September 2023, 12:10 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
+                                    style: FontManager.regular(12,
+                                        color: AppColors.textAddProreties),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    height: 0.5,
+                    decoration: const BoxDecoration(
+                        color: AppColors.borderContainerGriedView),
+                  ),
+                  SizedBox(
+                    height: 2.h,
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          Assets.imagesProfile,
+                          height: 40,
+                          width: 40,
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Max",
+                                  style: FontManager.regular(18,
+                                      color: AppColors.textAddProreties),
+                                ),
+                                const Spacer(),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  "01 September 2023, 12:10 AM",
+                                  style: FontManager.regular(12,
+                                      color: AppColors.greyText),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
+                                    style: FontManager.regular(12,
+                                        color: AppColors.textAddProreties),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )),
+            CommonButton(
+              title: Strings.submit,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 6.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/utils/app_colors.dart';
+import 'package:travellery_mobile/utils/app_radius.dart';
+import 'package:travellery_mobile/utils/font_manager.dart';
+
+import '../../../../../../utils/app_string.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class FaqsPage extends StatefulWidget {
+  const FaqsPage({super.key});
+
+  @override
+  State<FaqsPage> createState() => _FaqsPageState();
+}
+
+class _FaqsPageState extends State<FaqsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          children: [
+          titleAndIcon(
+          title: Strings.fAQs,
+          onBackTap: () => Get.back(),
+        ),
+        SizedBox(height: 3.h),
+        Container(
+          decoration: BoxDecoration(
+              border: Border.all(color: AppColors.texFiledColor),
+              borderRadius: BorderRadius.all(AppRadius.radius10)),
+          child: Column(
+            children: [
+            ExpansionTile(
+            trailing: Icon(Icons.arrow_drop_down_outlined),
+            title: Text(
+              "What is a Travellery app?",
+              style: FontManager.regular(13, color: AppColors.black),
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  "A travel app is a mobile or web application designed to assist users in planning, booking, and managing their travel experiences.",
+                  style:
+                  FontManager.regular(10, color: AppColors.black),
+                ),
+              ),
+            ],
+          ),
+          ],
+        ),
+      )
+      ],
+    ),)
+    ,
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.editProfile,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Column(
+              children: [
+                Center(
+                  child: Stack(
+                    alignment: const Alignment(1.1, 1.1),
+                    children: [
+                      SizedBox(
+                        height: 100,
+                        width: 100,
+                        child: Image.asset(Assets.imagesDefualtProfile),
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: const CircleAvatar(
+                          radius: 15,
+                          backgroundImage:
+                              AssetImage(Assets.imagesEditcirculer),
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(Strings.nameLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.nameController,
+              hintText: Strings.nameHint,
+              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
+                  width: 20, height: 20),
+              validator: AppValidation.validateName,
+              // onSaved: (value) => controller.name.value = value!,
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.emailLabel,
+              style: FontManager.regular(14, color: Colors.black),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.emailController,
+              hintText: Strings.emailHint,
+              validator: AppValidation.validateEmail,
+              // onChanged: (value) => controller.email.value = value,
+              prefixIconImage: Image.asset(
+                Assets.imagesEmail,
+                height: 20,
+                width: 20,
+              ),
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.mobileNumberLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.mobileController,
+              keyboardType: TextInputType.number,
+              hintText: Strings.mobileNumberHint,
+              prefixIconImage:
+                  Image.asset(Assets.imagesPhone, width: 20, height: 20),
+              validator: AppValidation.validateMobile,
+              // onSaved: (value) => controller.mobile.value = value!,
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.update,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class ContactusPage extends StatefulWidget {
+  const ContactusPage({super.key});
+
+  @override
+  State<ContactusPage> createState() => _ContactusPageState();
+}
+
+class _ContactusPageState extends State<ContactusPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.contactUs,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Text(Strings.nameLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.nameController,
+              hintText: Strings.nameHint,
+              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
+                  width: 20, height: 20),
+              validator: AppValidation.validateName,
+              // onSaved: (value) => controller.name.value = value!,
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.emailLabel,
+              style: FontManager.regular(14, color: Colors.black),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.emailController,
+              hintText: Strings.emailHint,
+              validator: AppValidation.validateEmail,
+              // onChanged: (value) => controller.email.value = value,
+              prefixIconImage: Image.asset(
+                Assets.imagesEmail,
+                height: 20,
+                width: 20,
+              ),
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.message, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.homeStayTitleController,
+              hintText: Strings.enterYourMessage,
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return Strings.enterYourMessage;
+                }
+                return null;
+              },
+              // onSaved: (value) => controller.homestayTitle.value = value!,
+              // onChanged: (value) => controller.setTitle(value),
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.submit,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../common_widgets/common_button.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/app_validation.dart';
+import '../../../../../../utils/font_manager.dart';
+import '../../../../../../utils/textformfield.dart';
+import '../../common_widget/title_icon_widget.dart';
+
+class ChangePasswordPage extends StatefulWidget {
+  const ChangePasswordPage({super.key});
+
+  @override
+  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
+}
+
+class _ChangePasswordPageState extends State<ChangePasswordPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.changePassword,
+              onBackTap: () => Get.back(),
+            ),
+            SizedBox(height: 3.5.h),
+            Text(Strings.currentPassword, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetNewPasswordController,
+              hintText: Strings.enterYourCurrentPassword,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetPasswordVisible.value =
+                  // !controller.isResetPasswordVisible.value;
+                });
+              },
+            ),
+            SizedBox(height: 3.h),
+            Text(Strings.newPasswordLabel, style: FontManager.regular(14)),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetNewPasswordController,
+              hintText: Strings.passwordHint,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetPasswordVisible.value =
+                  // !controller.isResetPasswordVisible.value;
+                });
+              },
+            ),
+            SizedBox(height: 3.h),
+            Text(
+              Strings.confirmPassword,
+              style: FontManager.regular(14),
+            ),
+            SizedBox(height: 0.5.h),
+            CustomTextField(
+              // controller: controller.resetConfirmedNewPasswordController,
+              hintText: Strings.confirmPasswordHint,
+              prefixIconImage: Image.asset(
+                Assets.imagesPassword,
+                height: 20,
+                width: 20,
+              ),
+              // obscureText: controller.isResetConfirmPasswordVisible.value,
+              validator: AppValidation.validatePassword,
+              showSuffixIcon: true,
+              onSuffixIconPressed: () {
+                setState(() {
+                  // controller.isResetConfirmPasswordVisible.value =
+                  // !controller.isResetConfirmPasswordVisible.value;
+                });
+              },
+            ),
+            const Spacer(),
+            CommonButton(
+              title: Strings.save,
+              onPressed: () {},
+              backgroundColor: AppColors.buttonColor,
+            ),
+            SizedBox(
+              height: 11.h,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/profile_pages/common_widget/title_icon_widget.dart';
+import 'package:travellery_mobile/utils/app_colors.dart';
+import 'package:travellery_mobile/utils/font_manager.dart';
+import '../../../../../../generated/assets.dart';
+import '../../../../../../utils/app_string.dart';
+
+class AboutUsPage extends StatefulWidget {
+  const AboutUsPage({super.key});
+
+  @override
+  State<AboutUsPage> createState() => _AboutUsPageState();
+}
+
+class _AboutUsPageState extends State<AboutUsPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            titleAndIcon(
+              title: Strings.aboutUs,
+              onBackTap: () => Get.back(),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 2.h),
+              child: Text(
+                "Lorem ipsum dolor sit amet consectetur. Nisl a pellentesque id semper quam donec. Hendrerit eleifend at vel curabitur. Risus morbi adipiscing porttitor et facilisis. Ornare massa at ut morbi felis dui senectus. Cum ac varius sapien id nam nisl. Aliquet lacus vitae bibendum morbi. Id ornare ultricies sit sapien arcu auctor sed pretium. Non lectus egestas consectetur urna viverra tincidunt iaculis lacus donec. Mauris arcu gravida dui mauris nunc mauris blandit. Ut quam augue sodales nibh quis. Eu suspendisse aliquet sed blandit nullam libero. Nunc vivamus non id eleifend ullamcorper. Non malesuada consectetur ante ultrices morbi. Tortor maecenas sed scelerisque fermentum ut quam. Urna enim etiam fames gravida. Mi bibendum volutpat non eget. Ultrices semper sit enim tincidunt. Vitae purus sed in sapien feugiat ac a. Congue sit lacus nulla non nibh facilisi tempor justo. Porttitor augue enim diam netus aliquam ut. Cursus pretium in fringilla gravida. Id habitasse dictum proin feugiat amet elit. Ac gravida et quis diam elementum aliquet. Ante lorem id lacus sit arcu quam gravida in. Tellus mollis malesuada nulla phasellus vitae aliquet risus neque odio. Rhoncus condimentum sagittis at nisl pellentesque sed vitae id. ",
+                style: FontManager.regular(12, color: AppColors.black),
+              ),
+            ),
+            SizedBox(
+              height: 2.5.h,
+            ),
+            Text(Strings.ownerDetails,
+                style:
+                    FontManager.medium(18, color: AppColors.textAddProreties)),
+            SizedBox(height: 2.h),
+            Row(
+              children: [
+                Image.asset(Assets.imagesCallicon, height: 35, width: 35),
+                SizedBox(width: 2.w),
+                Text(Strings.defultCallNumber,
+                    style: FontManager.regular(14, color: AppColors.black)),
+              ],
+            ),
+            SizedBox(height: 1.2.h),
+            Row(
+              children: [
+                Image.asset(Assets.imagesEmailicon, height: 35, width: 35),
+                SizedBox(width: 2.w),
+                Text(Strings.defultEmail,
+                    style: FontManager.regular(14, color: AppColors.black)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
 import '../../../api_helper/api_helper.dart';
 import '../../../api_helper/getit_service.dart';
 import '../../../common_widgets/common_loading_process.dart';
 import '../../../routes_app/all_routes_app.dart';
 import '../../../services/storage_services.dart';
+import '../../../utils/app_string.dart';
 import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
 import '../data/model/home_properties_model.dart';
 
@@ -162,8 +1224,16 @@ class TravelingHomeController extends GetxController{
   var travelingRepository = getIt<TravelingRepository>();
   var apiHelper = getIt<ApiHelper>();
 
-  Future<void> getYourPropertiesData() async {
-    homeProperty = await travelingRepository.getYourProperties(limit: 5);
+  @override
+  void onInit() {
+    super.onInit();
+    if (propertiesList.isEmpty) {
+      getTravelingData();
+    }
+  }
+
+  Future<void> getTravelingData() async {
+    homeProperty = await travelingRepository.getTravelingProperties(limit: 5);
     if (homeProperty != null && homeProperty!.homestaysData != null) {
       propertiesList = homeProperty!.homestaysData!;
     } else {
@@ -180,7 +1250,7 @@ class TravelingHomeController extends GetxController{
     getSingleYourProperties().then(
           (value) {
         LoadingProcessCommon().hideLoading();
-        Get.toNamed(Routes.detailsYourProperties,
+        Get.toNamed(Routes.travelingDetailsPage,
         );
       },
     );
@@ -189,10 +1259,141 @@ class TravelingHomeController extends GetxController{
   late HomeStaySingleFetchResponse detailsProperty;
 
   Future<void> getSingleYourProperties() async {
-    detailsProperty =
-    await travelingRepository.getSingleFetchYourProperties();
+    detailsProperty = await travelingRepository.getSingleFetchProperties();
   }
 
+  // filter
+
+  RxDouble minValue = 100.0.obs;
+  TextEditingController minPriceController = TextEditingController();
+  TextEditingController maxPriceController = TextEditingController();
+  RxDouble maxValue = 10000.0.obs;
+  var showMore = false.obs;
+  RxString state = ''.obs;
+
+  void updateShowMore(var value) {
+    showMore.value = value;
+    update();
+  }
+
+  var maxGuestsCount = 0.obs;
+  var singleBedCount = 0.obs;
+  var bedroomsCount = 0.obs;
+  var doubleBedCount = 0.obs;
+  var extraFloorCount = 0.obs;
+  var bathRoomsCount = 0.obs;
+  var isKitchenAvailable = false.obs;
+
+  void increment(RxInt count) {
+    count.value++;
+  }
+
+  void decrement(RxInt count) {
+    if (count.value > 0) {
+      count.value--;
+    }
+  }
+
+  RxList<bool> selectedAmenities = <bool>[].obs;
+
+  List<String> allAmenities = [];
+
+  void toggleAmenity(int index) {
+    if (index >= 0 && index < selectedAmenities.length) {
+      selectedAmenities[index] = !selectedAmenities[index];
+    }
+    update();
+  }
+
+  RxList<bool> selectedRules = <bool>[].obs;
+
+  List<String> allRules = [];
+
+
+  void toggleRules(int index) {
+    if (index >= 0 && index < selectedRules.length) {
+      selectedRules[index] = !selectedRules[index];
+    }
+    update();
+  }
+
+  RxInt selectedIndex = 0.obs;
+
+  RxInt  selectedSorting = 1.obs;
+  var selectedTypeOfPlace = ''.obs;
+  var selectedHomeStayType = ''.obs;
+
+  void onSelectSoring(var index) {
+    selectedSorting.value = index;
+    update();
+  }
+
+  void onSelectHomeStayType(var index) {
+    selectedHomeStayType.value = index;
+  }
+
+  void selectType(String value) {
+    selectedTypeOfPlace.value = value;
+  }
+
+    Map<String, dynamic> getFilters() {
+      Map<String, dynamic> filters = {};
+
+      filters['minPrice'] = minPriceController.text;
+      filters['maxPrice'] = maxPriceController.text;
+      if (selectedHomeStayType.value.isNotEmpty) filters['homestayType'] = selectedHomeStayType.value;
+      if (selectedTypeOfPlace.value.isNotEmpty && selectedTypeOfPlace.value == 'entirePlace') filters['entirePlace'] = true;
+      if (selectedTypeOfPlace.value.isNotEmpty && selectedTypeOfPlace.value == 'privateRoom') filters['privatePlace'] = true;
+      if (maxGuestsCount.value != 0) filters['maxGuests'] = maxGuestsCount.value;
+      if (singleBedCount.value != 0) filters['singleBed'] = singleBedCount.value;
+      if (doubleBedCount.value != 0) filters['doubleBed'] = doubleBedCount.value;
+      if (extraFloorCount.value != 0) filters['extraFloorMattress'] = extraFloorCount.value;
+      if (bathRoomsCount.value != 0) filters['bathrooms'] = bathRoomsCount.value;
+      if (isKitchenAvailable.value != false) filters['kitchenAvailable'] = isKitchenAvailable.value;
+      if (allAmenities.isNotEmpty) filters['amenities'] = allAmenities.join(',');
+      filters['sortBy'] = selectedSorting.value == 1 ? 'Highest to Lowest' : 'Lowest to Highest';
+      if (allRules.isNotEmpty) filters['houseRules'] = allRules.join(',');
+      if (state.isNotEmpty) filters['city'] = 'Mumbai';
+
+      return filters;
+    }
+
+    Future<void> fetchFilteredProperties() async {
+      Map<String, dynamic> filters = getFilters();
+      homeProperty = await travelingRepository.getFilterParams(queryParams: filters);
+      if (homeProperty != null && homeProperty!.homestaysData != null) {
+        propertiesList = homeProperty!.homestaysData!;
+      } else {
+        propertiesList = [];
+      }
+      update();
+    }
+
+  void clearFilters() {
+    minPriceController.clear();
+    maxPriceController.clear();
+    minValue.value = 100.0;
+    maxValue.value = 10000.0;
+    maxGuestsCount.value = 0;
+    singleBedCount.value = 0;
+    bedroomsCount.value = 0;
+    doubleBedCount.value = 0;
+    extraFloorCount.value = 0;
+    bathRoomsCount.value = 0;
+    isKitchenAvailable.value = false;
+    selectedAmenities.clear();
+    allAmenities.clear();
+    selectedRules.clear();
+
+    selectedTypeOfPlace.value = '';
+    selectedHomeStayType.value = '';
+
+    selectedSorting.value = 1;
+    //
+    // state.value = '';
+
+    update();
+  }
 }import 'package:get/get.dart';
 import '../../../utils/app_colors.dart';
 import '../../../utils/app_string.dart';
@@ -362,29 +1563,44 @@ import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
 import 'package:dio/dio.dart' as dio;
 import '../model/home_properties_model.dart';
 
-class TravelingRepository{
-
+class TravelingRepository {
   var apiProvider = getIt<ApiHelper>();
   var apiURLs = getIt<APIUrls>();
 
-  Future<HomeTravelingPropertiesModel> getYourProperties(
+  Future<HomeTravelingPropertiesModel> getTravelingProperties(
       {int limit = 0, int skip = 0}) async {
     dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/?limit=$limit&skip=$skip",
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}/?limit=$limit&skip=$skip",
     );
     Map<String, dynamic> data = response!.data;
     return HomeTravelingPropertiesModel.fromJson(data);
   }
 
-  Future<HomeStaySingleFetchResponse> getSingleFetchYourProperties() async {
+  Future<HomeStaySingleFetchResponse> getSingleFetchProperties() async {
     String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
     dio.Response? response = await apiProvider.getData(
-      "${apiURLs.baseUrl}${apiURLs.homeStaySingleFetchUrl}/$yourPropertiesId",
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}/$yourPropertiesId",
     );
     Map<String, dynamic> data = response!.data;
     return HomeStaySingleFetchResponse.fromJson(data);
   }
-}import 'package:flutter/material.dart';
+
+  Future<HomeTravelingPropertiesModel> getFilterParams({
+    required Map<String, dynamic> queryParams,
+  }) async {
+    String queryString = queryParams.entries
+        .map((entry) =>
+            '${entry.key}=${Uri.encodeQueryComponent(entry.value.toString())}')
+        .join('&');
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}?$queryString",
+    );
+
+    Map<String, dynamic> data = response!.data;
+    return HomeTravelingPropertiesModel.fromJson(data);
+  }
+}
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import 'package:travellery_mobile/utils/app_radius.dart';
@@ -983,17 +2199,72 @@ class _CheckinoutdatePageState extends State<CheckinoutdatePage> {
   }
 }
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:travellery_mobile/utils/app_colors.dart';
+
+class CustomThumbShape extends SfThumbShape {
+  @override
+  void paint(PaintingContext context, Offset center,
+      {required RenderBox parentBox,
+      required RenderBox? child,
+      required SfSliderThemeData themeData,
+      SfRangeValues? currentValues,
+      dynamic currentValue,
+      required Paint? paint,
+      required Animation<double> enableAnimation,
+      required TextDirection textDirection,
+      required SfThumb? thumb}) {
+    final Path path = Path();
+    path.addOval(
+      Rect.fromCenter(
+        width: 18,
+        height: 18,
+        center: Offset(center.dx, center.dy),
+      ),
+    );
+    path.close();
+
+    context.canvas.drawPath(
+      path,
+      Paint()
+        ..color = AppColors.buttonColor
+        ..style = PaintingStyle.fill,
+    );
+
+    final Path path1 = Path();
+    path1.addOval(
+      Rect.fromCenter(
+        width: 10,
+        height: 10,
+        center: Offset(center.dx, center.dy),
+      ),
+    );
+    path1.close();
+
+    context.canvas.drawPath(
+      path1,
+      Paint()
+        ..color = AppColors.greyText
+        ..style = PaintingStyle.fill,
+    );
+  }
+}
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:travellery_mobile/screen/traveling_flow/controller/home_controller.dart';
+import 'package:travellery_mobile/screen/traveling_flow/view/filter/widget/custom_rage_silder_thumb.dart';
 import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_loading_process.dart';
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_radius.dart';
 import '../../../../utils/app_string.dart';
 import '../../../../common_widgets/accommondation_details.dart';
 import '../../../../utils/font_manager.dart';
-import '../../../add_properties_screen/add_properties_steps/controller/add_properties_controller.dart';
 import '../../../add_properties_screen/add_properties_steps/view/common_widget/amenities_and_houserules_custom.dart';
-import '../../controller/traveling_flow_controller.dart';
 
 class FilterPage extends StatefulWidget {
   const FilterPage({super.key});
@@ -1003,478 +2274,587 @@ class FilterPage extends StatefulWidget {
 }
 
 class _FilterPageState extends State<FilterPage> {
-  final AddPropertiesController addcontroller =
-  Get.put(AddPropertiesController());
-  final TravelingFlow controller = Get.put(TravelingFlow());
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 5.w),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 7.3.h,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 15.sp),
-                    child: Text(
-                      Strings.filter,
-                      style: FontManager.medium(19.4.sp,
-                          color: AppColors.textAddProreties),
-                    ),
-                  ),
-                  GestureDetector(onTap: () {
-                    Get.back();
-                  },
-                    child: Icon(
-                      Icons.clear,
-                      color: AppColors.greyText,
-                    ),
-                  )
-                ],
-              ),
-              SizedBox(
-                height: 3.9.h,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    Strings.priceRange,
-                    style: FontManager.medium(18,
-                        color: AppColors.textAddProreties),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 2.5.h,
-              ),
-              Container(
-                width: double.infinity,
-                height: 74,
-                decoration: BoxDecoration(
-                    image: DecorationImage(
-                  image: AssetImage(Assets.imagesDefultChart),
-                )),
-              ),
-              SizedBox(
-                height: 2.5.h,
-              ),
-              SizedBox(height: 2.5.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          Strings.minimum,
-                          style: FontManager.regular(16.1.sp,
-                              color: AppColors.textAddProreties),
-                        ),
-                        SizedBox(height: 0.5.h),
-                        Container(
-                          width: 110.w,
-                          height: 7.h,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10)),
-                            border: Border.all(
-                                color: AppColors.borderContainerGriedView),
-                          ),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                SizedBox(width: 5.w),
-                                Expanded(
-                                  child: TextFormField(
-                                    style: FontManager.regular(16,
-                                        color: AppColors.textAddProreties),
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "₹ 5,00"),
-                                    onFieldSubmitted: (value) {
-                                      // controller.amenities[index] = value;
-                                    },
-                                    onChanged: (value) {
-                                      // controller.amenities[index] = value;
-                                    },
-                                  ),
-                                ),
-                                SizedBox(width: 3.5.w),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          Strings.maximum,
-                          style: FontManager.regular(16.1.sp,
-                              color: AppColors.textAddProreties),
-                        ),
-                        SizedBox(height: 0.5.h),
-                        Container(
-                          width: 110.w,
-                          height: 7.h,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(10)),
-                            border: Border.all(
-                                color: AppColors.borderContainerGriedView),
-                          ),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                SizedBox(width: 5.w),
-                                Expanded(
-                                  child: TextFormField(
-                                    style: FontManager.regular(16,
-                                        color: AppColors.textAddProreties),
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "₹ 2,000"),
-                                    onFieldSubmitted: (value) {
-                                      // controller.amenities[index] = value;
-                                    },
-                                    onChanged: (value) {
-                                      // controller.amenities[index] = value;
-                                    },
-                                  ),
-                                ),
-                                SizedBox(width: 3.5.w),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-              SizedBox(
-                height: 3.h,
-              ),
-              Text(
-                Strings.sortByPrice,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
-              ),
-              SizedBox(
-                height: 2.h,
-              ),
-              Obx(
-                () => AmenityAndHouseRulesContainer(
-                  imageAsset: Assets.imagesAny,
-                  title: Strings.any,
-                  isSelected: controller.selectedSorting.value == 0,
-                  onSelect: () => controller.onSelectSoring(0),
+      body: GetBuilder(
+        init: TravelingHomeController(),
+        builder: (controller) => Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5.w),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 7.3.h,
                 ),
-              ),
-              SizedBox(height: 2.h),
-              Obx(
-                () => AmenityAndHouseRulesContainer(
-                  imageAsset: Assets.imagesLtohighest,
-                  title: Strings.lowestToHighest,
-                  isSelected: controller.selectedSorting.value == 1,
-                  onSelect: () => controller.onSelectSoring(1),
-                ),
-              ),
-              SizedBox(height: 2.h),
-              Obx(
-                () => AmenityAndHouseRulesContainer(
-                  imageAsset: Assets.imagesHToLowest,
-                  title: Strings.highestToLowest,
-                  isSelected: controller.selectedSorting.value == 2,
-                  onSelect: () => controller.onSelectSoring(2),
-                ),
-              ),
-              SizedBox(
-                height: 3.h,
-              ),
-              Text(
-                Strings.typeOfPlace,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
-              ),
-              SizedBox(
-                height: 2.h,
-              ),
-              buildTypeOfPlace(
-                title: Strings.entirePlace,
-                subtitle: Strings.wholePlacetoGuests,
-                imageAsset: Assets.imagesTraditional,
-                value: 'entirePlace',
-                controller: controller,
-              ),
-              const SizedBox(height: 20),
-              buildTypeOfPlace(
-                title: Strings.privateRoom,
-                subtitle: Strings.guestsSleepInPrivateRoomButSomeAreasAreShared,
-                imageAsset: Assets.imagesPrivateRoom,
-                value: 'privateRoom',
-                controller: controller,
-              ),
-              SizedBox(
-                height: 3.2.h,
-              ),
-              Text(
-                Strings.homestayType,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
-              ),
-              SizedBox(
-                height: 2.h,
-              ),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesTraditional,
-                title: Strings.traditional,
-                controller: controller,
-                value: 'traditional',
-                height: 7.6.h,
-              ),
-              SizedBox(height: 2.h),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesBedAndBreakfast2,
-                title: Strings.bedAndBreakfast,
-                controller: controller,
-                value: 'bedAndBreakfast',
-                height: 7.6.h,
-              ),
-              SizedBox(height: 2.h),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesUrban2,
-                title: Strings.urban,
-                controller: controller,
-                value: 'urban',
-                height: 7.6.h,
-              ),
-              SizedBox(height: 2.h),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesEcoFriendly2,
-                title: Strings.ecoFriendly,
-                controller: controller,
-                value: 'ecoFriendly',
-                height: 7.6.h,
-              ),
-              SizedBox(height: 2.h),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesAdvanture2,
-                title: Strings.adventure,
-                controller: controller,
-                value: 'adventure',
-                height: 7.6.h,
-              ),
-              SizedBox(height: 2.h),
-              buildTypeOfPlace(
-                imageAsset: Assets.imagesLuxury2,
-                title: Strings.luxury,
-                controller: controller,
-                value: 'luxury',
-                height: 7.6.h,
-              ),
-              SizedBox(
-                height: 3.2.h,
-              ),
-              Text(
-                Strings.accommodationDetails,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
-              ),
-              SizedBox(
-                height: 2.h,
-              ),
-              buildCustomContainer(Assets.imagesMaxGuests, Strings.maxGuests,
-                  addcontroller.maxGuestsCount),
-              SizedBox(height: 2.h),
-              buildCustomContainer(Assets.imagesBedRooms, Strings.singleBed,
-                  addcontroller.singleBedCount),
-              SizedBox(height: 2.h),
-              buildCustomContainer(Assets.imagesSingleBed, Strings.bedRooms,
-                  addcontroller.bedroomsCount),
-              SizedBox(height: 2.h),
-              buildCustomContainer(Assets.imagesDubleBed, Strings.doubleBed,
-                  addcontroller.doubleBedCount),
-              SizedBox(height: 2.h),
-              buildCustomContainer(Assets.imagesExtraFloor,
-                  Strings.extraFloorMattress, addcontroller.extraFloorCount),
-              SizedBox(height: 2.h),
-              buildCustomContainer(Assets.imagesBathRooms, Strings.bathRooms,
-                  addcontroller.bathRoomsCount),
-              SizedBox(height: 2.h),
-              Container(
-                width: 100.w,
-                height: 7.h,
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppColors.borderContainerGriedView,
-                  ),
-                ),
-                child: Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(width: 0.w),
-                    Image.asset(
-                      Assets.imagesKitchen,
-                      height: 26,
-                      width: 26,
-                      fit: BoxFit.cover,
-                    ),
-                    SizedBox(width: 3.w),
-                    Text(
-                      Strings.kitchenAvailable,
-                      style: FontManager.regular(14, color: AppColors.black),
-                      textAlign: TextAlign.start,
-                    ),
-                    Spacer(),
-                    Obx(() => Checkbox(
-                          activeColor: AppColors.buttonColor,
-                          value: addcontroller.isKitchenAvailable.value,
-                          onChanged: (bool? newValue) {
-                            addcontroller.isKitchenAvailable.value =
-                                newValue ?? false;
-                          },
-                          side:
-                              const BorderSide(color: AppColors.texFiledColor),
-                        )),
-                  ],
-                ),
-              ),
-              SizedBox(
-                height: 3.2.h,
-              ),
-              Text(
-                Strings.amenities,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties),
-              ),
-              SizedBox(
-                height: 2.h,
-              ),
-              Obx(
-                () {
-                  return Column(
-                    children: [
-                      AmenityAndHouseRulesContainer(
-                        imageAsset: Assets.imagesWiFi,
-                        title: Strings.wiFi,
-                        isSelected: addcontroller.selectedAmenities[0],
-                        onSelect: () => addcontroller.toggleAmenity(0),
-                      ),
-                      SizedBox(height: 2.h),
-                      AmenityAndHouseRulesContainer(
-                        imageAsset: Assets.imagesAirCondioner,
-                        title: Strings.airConditioner,
-                        isSelected: addcontroller.selectedAmenities[1],
-                        onSelect: () => addcontroller.toggleAmenity(1),
-                      ),
-                      SizedBox(height: 2.h),
-                      AmenityAndHouseRulesContainer(
-                        imageAsset: Assets.imagesFirAlarm,
-                        title: Strings.fireAlarm,
-                        isSelected: addcontroller.selectedAmenities[2],
-                        onSelect: () => addcontroller.toggleAmenity(2),
-                      ),
-                      SizedBox(height: 2.h),
-                     AmenityAndHouseRulesContainer(
-                          imageAsset: Assets.imagesHometherater,
-                          title: Strings.homeTheater,
-                          isSelected: addcontroller.selectedAmenities[3],
-                          onSelect: () => addcontroller.toggleAmenity(3),
-                        ),
-                      SizedBox(height: 2.h),
-                     AmenityAndHouseRulesContainer(
-                          imageAsset: Assets.imagesMastrSuite,
-                          title: Strings.masterSuiteBalcony,
-                          isSelected: addcontroller.selectedAmenities[4],
-                          onSelect: () => addcontroller.toggleAmenity(4),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: 2.4.h),
-              const Text(Strings.showMore,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                    decoration: TextDecoration.underline,
-                    decorationColor: AppColors.buttonColor,
-                    color: AppColors.buttonColor,
-                  )),
-              SizedBox(height: 4.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-
-                      },
-                      child: Container(
-                        height: 5.9.h,
-                        width: 20.w,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundColor,border: Border.all(color: AppColors.buttonColor),
-                          borderRadius: BorderRadius.all(AppRadius.radius10),
-                        ),
-                        child: Center(
-                          child: Text(
-                            Strings.clearAll,
-                            style: FontManager.medium(18, color: AppColors.buttonColor),
-                          ),
-                        ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 15.sp),
+                      child: Text(
+                        Strings.filter,
+                        style: FontManager.medium(19.4.sp,
+                            color: AppColors.textAddProreties),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 10,),
-                  Expanded(
-                    child: GestureDetector(
+                    GestureDetector(
                       onTap: () {
                         Get.back();
                       },
-                      child: Container(
-                        height: 5.9.h,
-                        width: 20.w,
-                        decoration: BoxDecoration(
-                          color: AppColors.buttonColor,border: Border.all(color: AppColors.buttonColor),
-                          borderRadius: BorderRadius.all(AppRadius.radius10),
+                      child: const Icon(
+                        Icons.clear,
+                        color: AppColors.greyText,
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(
+                  height: 3.9.h,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      Strings.priceRange,
+                      style: FontManager.medium(18,
+                          color: AppColors.textAddProreties),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 2.5.h,
+                ),
+                SfRangeSliderTheme(
+                  data: const SfRangeSliderThemeData(
+                    tooltipBackgroundColor: AppColors.buttonColor,
+                    activeTrackColor: AppColors.buttonColor,
+                    inactiveTrackColor: AppColors.greyText,
+                  ),
+                  child: Obx(
+                    () => SfRangeSlider(
+                      thumbShape: CustomThumbShape(),
+                      enableTooltip: true,
+                      min: 0,
+                      max: 10000,
+                      stepSize: 10,
+                      interval: 100,
+                      values: SfRangeValues(
+                          controller.minValue.value, controller.maxValue.value),
+                      onChanged: (dynamic values) {
+                        double start = values.start as double;
+                        double end = values.end as double;
+                        String startString = start.toInt().toString();
+                        String endString = end.toInt().toString();
+                        controller.minValue.value = start;
+                        controller.maxValue.value = end;
+                        controller.minPriceController.text = startString;
+                        controller.maxPriceController.text = endString;
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 2.5.h,
+                ),
+                SizedBox(height: 2.5.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.minimum,
+                            style: FontManager.regular(16.1.sp,
+                                color: AppColors.textAddProreties),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Container(
+                            width: 110.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              border: Border.all(
+                                  color: AppColors.borderContainerGriedView),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  SizedBox(width: 5.w),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: controller.minPriceController,
+                                      style: FontManager.regular(16,
+                                          color: AppColors.textAddProreties),
+                                      decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "\u{20B9}"),
+                                      onFieldSubmitted: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                      onChanged: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 3.5.w),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.maximum,
+                            style: FontManager.regular(16.1.sp,
+                                color: AppColors.textAddProreties),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Container(
+                            width: 110.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              border: Border.all(
+                                  color: AppColors.borderContainerGriedView),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  SizedBox(width: 5.w),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: controller.maxPriceController,
+                                      style: FontManager.regular(16,
+                                          color: AppColors.textAddProreties),
+                                      decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "\u{20B9}"),
+                                      onFieldSubmitted: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                      onChanged: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 3.5.w),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(
+                  height: 3.h,
+                ),
+                Text(
+                  Strings.sortByPrice,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesAny,
+                    title: Strings.any,
+                    isSelected: controller.selectedSorting.value == 0,
+                    onSelect: () => controller.onSelectSoring(0),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesLtohighest,
+                    title: Strings.lowestToHighest,
+                    isSelected: controller.selectedSorting.value == 1,
+                    onSelect: () => controller.onSelectSoring(1),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesHToLowest,
+                    title: Strings.highestToLowest,
+                    isSelected: controller.selectedSorting.value == 2,
+                    onSelect: () => controller.onSelectSoring(2),
+                  ),
+                ),
+                SizedBox(
+                  height: 3.h,
+                ),
+                Text(
+                  Strings.typeOfPlace,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildTypeOfPlace(
+                  title: Strings.entirePlace,
+                  subtitle: Strings.wholePlacetoGuests,
+                  imageAsset: Assets.imagesTraditional,
+                  value: Strings.entirePlaceValue,
+                  controller: controller,
+                ),
+                const SizedBox(height: 20),
+                buildTypeOfPlace(
+                  title: Strings.privateRoom,
+                  subtitle:
+                      Strings.guestsSleepInPrivateRoomButSomeAreasAreShared,
+                  imageAsset: Assets.imagesPrivateRoom,
+                  value: Strings.privateRoomValue,
+                  controller: controller,
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.homestayType,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesTraditional,
+                  title: Strings.traditional,
+                  controller: controller,
+                  value: 'traditional',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesBedAndBreakfast2,
+                  title: Strings.bedAndBreakfast,
+                  controller: controller,
+                  value: 'bedAndBreakfast',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesUrban2,
+                  title: Strings.urban,
+                  controller: controller,
+                  value: 'urban',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesEcoFriendly2,
+                  title: Strings.ecoFriendly,
+                  controller: controller,
+                  value: 'ecoFriendly',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesAdvanture2,
+                  title: Strings.adventure,
+                  controller: controller,
+                  value: 'adventure',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesLuxury2,
+                  title: Strings.luxury,
+                  controller: controller,
+                  value: 'luxury',
+                  height: 7.6.h,
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.accommodationDetails,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildCustomContainer(Assets.imagesMaxGuests, Strings.maxGuests,
+                    controller.maxGuestsCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesBedRooms, Strings.singleBed,
+                    controller.singleBedCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesSingleBed, Strings.bedRooms,
+                    controller.bedroomsCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesDubleBed, Strings.doubleBed,
+                    controller.doubleBedCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesExtraFloor,
+                    Strings.extraFloorMattress, controller.extraFloorCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesBathRooms, Strings.bathRooms,
+                    controller.bathRoomsCount),
+                SizedBox(height: 2.h),
+                Container(
+                  width: 100.w,
+                  height: 7.h,
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.borderContainerGriedView,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(width: 0.w),
+                      Image.asset(
+                        Assets.imagesKitchen,
+                        height: 26,
+                        width: 26,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(width: 3.w),
+                      Text(
+                        Strings.kitchenAvailable,
+                        style: FontManager.regular(14, color: AppColors.black),
+                        textAlign: TextAlign.start,
+                      ),
+                      const Spacer(),
+                      Obx(() => Checkbox(
+                            activeColor: AppColors.buttonColor,
+                            value: controller.isKitchenAvailable.value,
+                            onChanged: (bool? newValue) {
+                              controller.isKitchenAvailable.value =
+                                  newValue ?? false;
+                            },
+                            side: const BorderSide(
+                                color: AppColors.texFiledColor),
+                          )),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.amenities,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                Obx(
+                  () {
+                    if (controller.selectedAmenities.length < 5) {
+                      controller.selectedAmenities.value =
+                          List.generate(5, (_) => false);
+                    }
+                    return Column(
+                      children: [
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesWiFi,
+                          title: Strings.wiFi,
+                          isSelected: controller.selectedAmenities[0],
+                          onSelect: () => controller.toggleAmenity(0),
                         ),
-                        child: Center(
-                          child: Text(
-                            Strings.submit,
-                            style: FontManager.medium(18, color: AppColors.white),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesAirCondioner,
+                          title: Strings.airConditioner,
+                          isSelected: controller.selectedAmenities[1],
+                          onSelect: () => controller.toggleAmenity(1),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesFirAlarm,
+                          title: Strings.fireAlarm,
+                          isSelected: controller.selectedAmenities[2],
+                          onSelect: () => controller.toggleAmenity(2),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesHometherater,
+                          title: Strings.homeTheater,
+                          isSelected: controller.selectedAmenities[3],
+                          onSelect: () => controller.toggleAmenity(3),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesMastrSuite,
+                          title: Strings.masterSuiteBalcony,
+                          isSelected: controller.selectedAmenities[4],
+                          onSelect: () => controller.toggleAmenity(4),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                controller.showMore.value == true
+                    ? Obx(
+                        () {
+                          if (controller.selectedRules.length < 4) {
+                            controller.selectedRules.value =
+                                List.generate(4, (_) => false);
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                height: 3.2.h,
+                              ),
+                              Text(
+                                Strings.rules,
+                                style: FontManager.medium(18,
+                                    color: AppColors.textAddProreties),
+                              ),
+                              SizedBox(
+                                height: 2.h,
+                              ),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoSmoking,
+                                title: Strings.noSmoking,
+                                isSelected: controller.selectedRules[0],
+                                onSelect: () => controller.toggleRules(0),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoDrinking,
+                                title: Strings.noDrinking,
+                                isSelected: controller.selectedRules[1],
+                                onSelect: () => controller.toggleRules(1),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoPet,
+                                title: Strings.noPet,
+                                isSelected: controller.selectedRules[2],
+                                onSelect: () => controller.toggleRules(2),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesDamageToProretiy,
+                                title: Strings.damageToProperty,
+                                isSelected: controller.selectedRules[3],
+                                onSelect: () => controller.toggleRules(3),
+                              ),
+                            ],
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox(height: 2.4.h),
+                controller.showMore.value == false
+                    ? InkWell(
+                        onTap: () {
+                          controller.updateShowMore(true);
+                        },
+                        child: const Text(Strings.showMore,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.buttonColor,
+                              color: AppColors.buttonColor,
+                            )),
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          LoadingProcessCommon().showLoading();
+                          controller.clearFilters();
+                          controller.getTravelingData().then((value) {
+                            LoadingProcessCommon().hideLoading();
+                            Get.back();
+                          },);
+                        },
+                        child: Container(
+                          height: 5.9.h,
+                          width: 20.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundColor,
+                            border: Border.all(color: AppColors.buttonColor),
+                            borderRadius:
+                                const BorderRadius.all(AppRadius.radius10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              Strings.clearAll,
+                              style: FontManager.medium(18,
+                                  color: AppColors.buttonColor),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  )
-                ],
-              ),
-              SizedBox(height: 50,),
-            ],
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          LoadingProcessCommon().showLoading();
+                          controller.fetchFilteredProperties().then((value) {
+                            LoadingProcessCommon().hideLoading();
+                            Get.back();
+                          },);
+                        },
+                        child: Container(
+                          height: 5.9.h,
+                          width: 20.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.buttonColor,
+                            border: Border.all(color: AppColors.buttonColor),
+                            borderRadius:
+                                const BorderRadius.all(AppRadius.radius10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              Strings.submit,
+                              style: FontManager.medium(18,
+                                  color: AppColors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 50,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1494,11 +2874,17 @@ class _FilterPageState extends State<FilterPage> {
     String? subtitle,
     required String imageAsset,
     required String value,
-    required TravelingFlow controller,
+    required TravelingHomeController controller,
     double? height,
   }) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        if (height == null) {
+          controller.selectType(value);
+        } else {
+          controller.onSelectHomeStayType(value);
+        }
+      },
       child: Obx(() {
         bool isSelected;
         height == null
@@ -1533,10 +2919,10 @@ class _FilterPageState extends State<FilterPage> {
                 ),
               ),
               subtitle == null
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 2.5,
                     )
-                  : SizedBox.shrink(),
+                  : const SizedBox.shrink(),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1550,9 +2936,9 @@ class _FilterPageState extends State<FilterPage> {
                               ? AppColors.buttonColor
                               : AppColors.black),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     subtitle == null
-                        ? SizedBox.shrink()
+                        ? const SizedBox.shrink()
                         : Align(
                             alignment: Alignment.topLeft,
                             child: Text(
@@ -1577,7 +2963,7 @@ class _FilterPageState extends State<FilterPage> {
                     onChanged: (newValue) {
                       if (newValue != null) {
                         height == null
-                            ? controller.selectType(newValue, imageAsset)
+                            ? controller.selectType(newValue)
                             : controller.onSelectHomeStayType(newValue);
                       }
                     },
@@ -1781,7 +3167,7 @@ class _HomeTravelingPageState extends State<HomeTravelingPage> {
       ),
     );
   }
-
+//
   Widget buildHeader() {
     return Container(
       height: 190,
@@ -1904,6 +3290,120 @@ class Property {
   });
 }
 
+import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/simple/get_state.dart';
+
+import '../../../../common_widgets/common_propertis_widget.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_string.dart';
+import '../../controller/home_controller.dart';
+
+class HomeStayDetailsPage extends StatefulWidget {
+  const HomeStayDetailsPage({super.key});
+
+  @override
+  State<HomeStayDetailsPage> createState() => _HomeStayDetailsPageState();
+}
+
+class _HomeStayDetailsPageState extends State<HomeStayDetailsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double statusBarHeight = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: GetBuilder(
+        init: TravelingHomeController(),
+        builder: (controller) => PropertyCardWidget(
+          title: Strings.homeStayDetails,
+          homestayType:
+          controller.detailsProperty.homestayData!.homestayType ?? '',
+          accommodationType: controller.detailsProperty.homestayData!
+              .accommodationDetails!.entirePlace ==
+              true
+              ? Strings.entirePlace
+              : Strings.privateRoom,
+          address: controller.detailsProperty.homestayData!.address ?? '',
+          basePrice: controller.detailsProperty.homestayData!.basePrice ?? 0,
+          checkInTime:
+          controller.detailsProperty.homestayData!.checkInTime ?? '',
+          checkOutTime:
+          controller.detailsProperty.homestayData!.checkOutTime ?? '',
+          statusBarHeight: statusBarHeight,
+          homestayPhotos:
+          controller.detailsProperty.homestayData!.homestayPhotos ?? [],
+          status: controller.detailsProperty.homestayData!.status ?? '',
+          ownerContactNumber:
+          controller.detailsProperty.homestayData!.ownerContactNo ?? '',
+          ownerEmail:
+          controller.detailsProperty.homestayData!.ownerEmailId ?? '',
+          dataTitle: controller.detailsProperty.homestayData!.title ?? '',
+          description:
+          controller.detailsProperty.homestayData!.description ?? '',
+          flexibleCheckIn:
+          controller.detailsProperty.homestayData!.flexibleCheckIn ?? false,
+          flexibleCheckOut:
+          controller.detailsProperty.homestayData!.flexibleCheckOut ??
+              false,
+          homestayContactNoList:
+          controller.detailsProperty.homestayData!.homestayContactNo ?? [],
+          homestayEmailIdList:
+          controller.detailsProperty.homestayData!.homestayEmailId ?? [],
+          tabController: _tabController,
+          weekendPrice:
+          controller.detailsProperty.homestayData!.weekendPrice ?? 0,
+          bathrooms: controller.detailsProperty.homestayData!
+              .accommodationDetails!.bathrooms ??
+              0,
+          bedrooms: controller.detailsProperty.homestayData!
+              .accommodationDetails!.bedrooms ??
+              0,
+          city: controller.detailsProperty.homestayData!.city ?? '',
+          doubleBed: controller.detailsProperty.homestayData!
+              .accommodationDetails!.doubleBed ??
+              0,
+          extraFloorMattress: controller.detailsProperty.homestayData!
+              .accommodationDetails!.extraFloorMattress ??
+              0,
+          kitchenAvailable: controller.detailsProperty.homestayData!
+              .accommodationDetails!.kitchenAvailable ??
+              false,
+          landmark: controller.detailsProperty.homestayData!.landmark ?? '',
+          pinCode: controller.detailsProperty.homestayData!.pinCode ?? '',
+          state: controller.detailsProperty.homestayData!.state ?? '',
+          street: controller.detailsProperty.homestayData!.street ?? '',
+          maxGuests: controller.detailsProperty.homestayData!
+              .accommodationDetails!.maxGuests ??
+              0,
+          singleBed: controller.detailsProperty.homestayData!
+              .accommodationDetails!.singleBed ??
+              0,
+          showSpecificLocation:
+          controller.detailsProperty.homestayData!.showSpecificLocation ??
+              false,
+          onPressed: () {},
+          onDeleteDetails: () {
+            // controller.deleteProperties();
+          },
+        ),
+      ),
+    );
+  }
+}
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
@@ -3114,6 +4614,276 @@ class _SearchPageState extends State<SearchPage> {
 }
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+
+import '../../../../../generated/assets.dart';
+import '../../../../../utils/app_colors.dart';
+import '../../../../../utils/app_radius.dart';
+import '../../../../../utils/app_string.dart';
+import '../../../../../utils/font_manager.dart';
+
+class TripCard extends StatelessWidget {
+  final String name;
+  final String status;
+  final String bookingDate;
+  final String requestId;
+  final String totalAmount;
+  final String requestDate;
+  final String imageUrl;
+  final String description;
+  final String adults;
+  final String children;
+  final String infants;
+
+  const TripCard({
+    super.key,
+    required this.name,
+    required this.status,
+    required this.bookingDate,
+    required this.requestId,
+    required this.totalAmount,
+    required this.requestDate,
+    required this.imageUrl,
+    required this.description,
+    required this.adults,
+    required this.children,
+    required this.infants,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+      child: GestureDetector(
+        onTap: () {},
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundColor,
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 2.h),
+                ProfileSection(name: name, status: status),
+                SizedBox(height: 2.h),
+                Text(
+                  "Hilton View Villa",
+                  style: FontManager.medium(14),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  "P123456",
+                  style: FontManager.regular(10, color: AppColors.buttonColor),
+                ),
+                SizedBox(height: 2.h),
+                ImageSection(imageUrl: imageUrl),
+                SizedBox(height: 0.h),
+                DetailsSection(
+                  bookingDate: bookingDate,
+                  requestId: requestId,
+                  totalAmount: totalAmount,
+                  requestDate: requestDate,
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  "Free Cancellation upto 48 hours before check-in",
+                  style: FontManager.regular(12, color: AppColors.buttonColor),
+                ),
+                SizedBox(height: 1.h),
+                Text(
+                  description,
+                  style: FontManager.regular(10, color: AppColors.black),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileSection extends StatelessWidget {
+  final String name;
+  final String status;
+
+  const ProfileSection({super.key, required this.name, required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const ClipOval(
+          child: Image(
+            image: AssetImage(Assets.imagesProfile),
+            height: 40,
+            width: 40,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    name,
+                    style: FontManager.regular(12),
+                  ),
+                  const Spacer(),
+                  Text(
+                    status,
+                    style: FontManager.regular(10,
+                        color: status == "pending"
+                            ? AppColors.pendingColor
+                            : status == "Cancel"
+                                ? AppColors.redAccent
+                                : AppColors.buttonColor),
+                  ),
+                ],
+              ),
+              const Row(
+                children: [
+                  InfoText("2 ${Strings.adults}"),
+                  Divider(),
+                  InfoText("2 ${Strings.children}"),
+                  Divider(),
+                  InfoText("2 ${Strings.infants}"),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class InfoText extends StatelessWidget {
+  final String text;
+
+  const InfoText(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: FontManager.regular(10, color: AppColors.greyText),
+    );
+  }
+}
+
+class Divider extends StatelessWidget {
+  const Divider({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 1.3.h,
+      child: Container(
+        width: 1.5,
+        height: 1.5.h,
+        decoration: const BoxDecoration(
+          color: AppColors.buttonColor,
+        ),
+      ),
+    );
+  }
+}
+
+class ImageSection extends StatelessWidget {
+  final String imageUrl;
+
+  const ImageSection({super.key, required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 157,
+      width: 100.w,
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.all(AppRadius.radius10),
+        image: DecorationImage(
+          image: NetworkImage(imageUrl),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+}
+
+class DetailsSection extends StatelessWidget {
+  final String bookingDate;
+  final String requestId;
+  final String totalAmount;
+  final String requestDate;
+
+  const DetailsSection({
+    super.key,
+    required this.bookingDate,
+    required this.requestId,
+    required this.totalAmount,
+    required this.requestDate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        DetailsColumn(
+          title: "Booking Date",
+          value: bookingDate,
+        ),
+        DetailsColumn(
+          title: "Request ID",
+          value: requestId,
+        ),
+        DetailsColumn(
+          title: "Total Booking Amount",
+          value: totalAmount,
+        ),
+        DetailsColumn(
+          title: "Request Date",
+          value: requestDate,
+        ),
+      ],
+    );
+  }
+}
+
+class DetailsColumn extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const DetailsColumn({super.key, required this.title, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 2.h),
+        Text(
+          title,
+          style: FontManager.regular(12, color: AppColors.black),
+        ),
+        Text(
+          value,
+          style: FontManager.regular(10, color: AppColors.greyText),
+        ),
+        SizedBox(height: 1.5.h),
+      ],
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
 import '../../../../../../generated/assets.dart';
 import '../../../../../../utils/app_colors.dart';
 import '../../../../../../utils/app_radius.dart';
@@ -3439,6 +5209,302 @@ class _TripsPageState extends State<TripsPage>
   }
 }
 
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/hosting_flow/data/model/hosting_model.dart';
+import 'package:travellery_mobile/screen/hosting_flow/data/repository/hosting_repository.dart';
+import '../../../api_helper/api_helper.dart';
+import '../../../api_helper/getit_service.dart';
+import '../../../common_widgets/common_loading_process.dart';
+import '../../../routes_app/all_routes_app.dart';
+import '../../../services/storage_services.dart';
+import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+
+class HostingHomeController extends GetxController{
+  HomeHostingPropertiesModel? homeProperty;
+  List<HomestayData> propertiesList = [];
+  var hostingRepository = getIt<HostingRepository>();
+  var apiHelper = getIt<ApiHelper>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    if (propertiesList.isEmpty) {
+      getHostingData();
+    }
+  }
+
+  Future<void> getHostingData() async {
+    homeProperty = await hostingRepository.getHostingProperties();
+    print("aaaaaaaaa${homeProperty!.homestayData}");
+    if (homeProperty != null && homeProperty!.homestayData != null) {
+      propertiesList = homeProperty!.homestayData!;
+      print("zzzzzzzzzzzzzzzzzzzzzzzzzzz");
+    } else {
+      propertiesList = [];
+    }
+    update();
+  }
+
+  void getDetails(index) {
+    LoadingProcessCommon().showLoading();
+    final singleFetchUserModel = propertiesList[index].id;
+    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
+    getIt<StorageServices>().getYourPropertiesId();
+    getSingleYourProperties().then(
+          (value) {
+        LoadingProcessCommon().hideLoading();
+        Get.toNamed(Routes.hostingDetailsPage,
+        );
+      },
+    );
+  }
+
+  late HomeStaySingleFetchResponse detailsProperty;
+
+  Future<void> getSingleYourProperties() async {
+    detailsProperty = await hostingRepository.getSingleFetchProperties();
+  }
+
+  void deleteProperties() {
+    hostingRepository.deleteData().then(
+          (value) async {
+            // print("Delete=============");
+            homeProperty = await hostingRepository.getHostingProperties().then(
+              (value) {
+            Get.back();
+            Get.back();
+            return null;
+          },
+        );
+      },
+    );
+    update();
+  }
+}import '../../../reuseble_flow/data/model/homestay_reused_model.dart';
+
+class HomeHostingPropertiesModel {
+  String? message;
+  List<HomestayData>? homestayData;
+  int? totalHomestay;
+
+  HomeHostingPropertiesModel(
+      {this.message, this.homestayData, this.totalHomestay});
+
+  HomeHostingPropertiesModel.fromJson(Map<String, dynamic> json) {
+    message = json['message'];
+    if (json['HomestayData'] != null) {
+      homestayData = <HomestayData>[];
+      json['HomestayData'].forEach((v) {
+        homestayData!.add(HomestayData.fromJson(v));
+      });
+    }
+    totalHomestay = json['totalHomestay'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['message'] = message;
+    if (homestayData != null) {
+      data['HomestayData'] = homestayData!.map((v) => v.toJson()).toList();
+    }
+    data['totalHomestay'] = totalHomestay;
+    return data;
+  }
+}
+
+class HomestayData {
+  AccommodationDetails? accommodationDetails;
+  CoverPhoto? coverPhoto;
+  String? id;
+  String? title;
+  String? homestayType;
+  List<Amenities>? amenities;
+  List<HouseRules>? houseRules;
+  String? checkInTime;
+  String? checkOutTime;
+  bool? flexibleCheckIn;
+  bool? flexibleCheckOut;
+  double? longitude;
+  double? latitude;
+  String? address;
+  String? street;
+  String? landmark;
+  String? city;
+  String? pinCode;
+  String? state;
+  bool? showSpecificLocation;
+  List<HomestayPhotos>? homestayPhotos;
+  String? description;
+  int? basePrice;
+  int? weekendPrice;
+  String? ownerContactNo;
+  String? ownerEmailId;
+  List<HomestayContactNo>? homestayContactNo;
+  List<HomestayEmailId>? homestayEmailId;
+  String? status;
+  CreatedBy? createdBy;
+  String? createdAt;
+  String? updatedAt;
+  int? iV;
+
+  HomestayData(
+      {this.accommodationDetails,
+      this.coverPhoto,
+      this.id,
+      this.title,
+      this.homestayType,
+      this.amenities,
+      this.houseRules,
+      this.checkInTime,
+      this.checkOutTime,
+      this.flexibleCheckIn,
+      this.flexibleCheckOut,
+      this.longitude,
+      this.latitude,
+      this.address,
+      this.street,
+      this.landmark,
+      this.city,
+      this.pinCode,
+      this.state,
+      this.showSpecificLocation,
+      this.homestayPhotos,
+      this.description,
+      this.basePrice,
+      this.weekendPrice,
+      this.ownerContactNo,
+      this.ownerEmailId,
+      this.homestayContactNo,
+      this.homestayEmailId,
+      this.status,
+      this.createdBy,
+      this.createdAt,
+      this.updatedAt,
+      this.iV});
+
+  HomestayData.fromJson(Map<String, dynamic> json) {
+    accommodationDetails = json['accommodationDetails'] != null
+        ? AccommodationDetails.fromJson(json['accommodationDetails'])
+        : null;
+    coverPhoto = json['coverPhoto'] != null
+        ? CoverPhoto.fromJson(json['coverPhoto'])
+        : null;
+    id = json['_id'];
+    title = json['title'];
+    homestayType = json['homestayType'];
+    if (json['amenities'] != null) {
+      amenities = <Amenities>[];
+      json['amenities'].forEach((v) {
+        amenities!.add(Amenities.fromJson(v));
+      });
+    }
+    if (json['houseRules'] != null) {
+      houseRules = <HouseRules>[];
+      json['houseRules'].forEach((v) {
+        houseRules!.add(HouseRules.fromJson(v));
+      });
+    }
+    checkInTime = json['checkInTime'];
+    checkOutTime = json['checkOutTime'];
+    flexibleCheckIn = json['flexibleCheckIn'];
+    flexibleCheckOut = json['flexibleCheckOut'];
+    longitude = json['longitude'];
+    latitude = json['latitude'];
+    address = json['address'];
+    street = json['street'];
+    landmark = json['landmark'];
+    city = json['city'];
+    pinCode = json['pinCode'];
+    state = json['state'];
+    showSpecificLocation = json['showSpecificLocation'];
+    if (json['homestayPhotos'] != null) {
+      homestayPhotos = <HomestayPhotos>[];
+      json['homestayPhotos'].forEach((v) {
+        homestayPhotos!.add(HomestayPhotos.fromJson(v));
+      });
+    }
+    description = json['description'];
+    basePrice = json['basePrice'];
+    weekendPrice = json['weekendPrice'];
+    ownerContactNo = json['ownerContactNo'];
+    ownerEmailId = json['ownerEmailId'];
+    if (json['homestayContactNo'] != null) {
+      homestayContactNo = <HomestayContactNo>[];
+      json['homestayContactNo'].forEach((v) {
+        homestayContactNo!.add(HomestayContactNo.fromJson(v));
+      });
+    }
+    if (json['homestayEmailId'] != null) {
+      homestayEmailId = <HomestayEmailId>[];
+      json['homestayEmailId'].forEach((v) {
+        homestayEmailId!.add(HomestayEmailId.fromJson(v));
+      });
+    }
+    status = json['status'];
+    createdBy = json['createdBy'] != null
+        ? CreatedBy.fromJson(json['createdBy'])
+        : null;
+    createdAt = json['createdAt'];
+    updatedAt = json['updatedAt'];
+    iV = json['__v'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (accommodationDetails != null) {
+      data['accommodationDetails'] = accommodationDetails!.toJson();
+    }
+    if (coverPhoto != null) {
+      data['coverPhoto'] = coverPhoto!.toJson();
+    }
+    data['_id'] = id;
+    data['title'] = title;
+    data['homestayType'] = homestayType;
+    if (amenities != null) {
+      data['amenities'] = amenities!.map((v) => v.toJson()).toList();
+    }
+    if (houseRules != null) {
+      data['houseRules'] = houseRules!.map((v) => v.toJson()).toList();
+    }
+    data['checkInTime'] = checkInTime;
+    data['checkOutTime'] = checkOutTime;
+    data['flexibleCheckIn'] = flexibleCheckIn;
+    data['flexibleCheckOut'] = flexibleCheckOut;
+    data['longitude'] = longitude;
+    data['latitude'] = latitude;
+    data['address'] = address;
+    data['street'] = street;
+    data['landmark'] = landmark;
+    data['city'] = city;
+    data['pinCode'] = pinCode;
+    data['state'] = state;
+    data['showSpecificLocation'] = showSpecificLocation;
+    if (homestayPhotos != null) {
+      data['homestayPhotos'] = homestayPhotos!.map((v) => v.toJson()).toList();
+    }
+    data['description'] = description;
+    data['basePrice'] = basePrice;
+    data['weekendPrice'] = weekendPrice;
+    data['ownerContactNo'] = ownerContactNo;
+    data['ownerEmailId'] = ownerEmailId;
+    if (homestayContactNo != null) {
+      data['homestayContactNo'] =
+          homestayContactNo!.map((v) => v.toJson()).toList();
+    }
+    if (homestayEmailId != null) {
+      data['homestayEmailId'] =
+          homestayEmailId!.map((v) => v.toJson()).toList();
+    }
+    data['status'] = status;
+    if (createdBy != null) {
+      data['createdBy'] = createdBy!.toJson();
+    }
+    data['createdAt'] = createdAt;
+    data['updatedAt'] = updatedAt;
+    data['__v'] = iV;
+    return data;
+  }
+}
 
 class AccommodationDetails {
   bool? entirePlace;
@@ -3453,14 +5519,14 @@ class AccommodationDetails {
 
   AccommodationDetails(
       {this.entirePlace,
-        this.privateRoom,
-        this.maxGuests,
-        this.bedrooms,
-        this.singleBed,
-        this.doubleBed,
-        this.extraFloorMattress,
-        this.bathrooms,
-        this.kitchenAvailable});
+      this.privateRoom,
+      this.maxGuests,
+      this.bedrooms,
+      this.singleBed,
+      this.doubleBed,
+      this.extraFloorMattress,
+      this.bathrooms,
+      this.kitchenAvailable});
 
   AccommodationDetails.fromJson(Map<String, dynamic> json) {
     entirePlace = json['entirePlace'];
@@ -3489,6 +5555,25 @@ class AccommodationDetails {
   }
 }
 
+class CoverPhoto {
+  String? publicId;
+  String? url;
+
+  CoverPhoto({this.publicId, this.url});
+
+  CoverPhoto.fromJson(Map<String, dynamic> json) {
+    publicId = json['public_id'];
+    url = json['url'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['public_id'] = publicId;
+    data['url'] = url;
+    return data;
+  }
+}
+
 class Amenities {
   String? name;
   bool? isChecked;
@@ -3510,50 +5595,6 @@ class Amenities {
     data['isChecked'] = isChecked;
     data['isNewAdded'] = isNewAdded;
     data['_id'] = sId;
-    return data;
-  }
-}
-
-class HouseRules {
-  String? name;
-  bool? isChecked;
-  bool? isNewAdded;
-  String? sId;
-
-  HouseRules({this.name, this.isChecked, this.isNewAdded, this.sId});
-
-  HouseRules.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    isChecked = json['isChecked'];
-    isNewAdded = json['isNewAdded'];
-    sId = json['_id'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['name'] = name;
-    data['isChecked'] = isChecked;
-    data['isNewAdded'] = isNewAdded;
-    data['_id'] = sId;
-    return data;
-  }
-}
-
-class CoverPhoto {
-  String? publicId;
-  String? url;
-
-  CoverPhoto({this.publicId, this.url});
-
-  CoverPhoto.fromJson(Map<String, dynamic> json) {
-    publicId = json['public_id'];
-    url = json['url'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['public_id'] = publicId;
-    data['url'] = url;
     return data;
   }
 }
@@ -3618,30 +5659,46 @@ class HomestayEmailId {
   }
 }
 
-
 class CreatedBy {
-  ProfileImage? profileImage;
-  String? id;
+  CoverPhoto? profileImage;
+  String? sId;
   String? name;
   String? mobile;
   String? email;
+  String? password;
+  String? deviceToken;
+  String? userType;
+  String? createdAt;
+  String? updatedAt;
+  int? iV;
 
-  CreatedBy({
-    this.profileImage,
-    this.id,
-    this.name,
-    this.mobile,
-    this.email,
-  });
+  CreatedBy(
+      {this.profileImage,
+      this.sId,
+      this.name,
+      this.mobile,
+      this.email,
+      this.password,
+      this.deviceToken,
+      this.userType,
+      this.createdAt,
+      this.updatedAt,
+      this.iV});
 
   CreatedBy.fromJson(Map<String, dynamic> json) {
     profileImage = json['profileImage'] != null
-        ? ProfileImage.fromJson(json['profileImage'])
+        ? CoverPhoto.fromJson(json['profileImage'])
         : null;
-    id = json['_id'];
+    sId = json['_id'];
     name = json['name'];
     mobile = json['mobile'];
     email = json['email'];
+    password = json['password'];
+    deviceToken = json['deviceToken'];
+    userType = json['userType'];
+    createdAt = json['createdAt'];
+    updatedAt = json['updatedAt'];
+    iV = json['__v'];
   }
 
   Map<String, dynamic> toJson() {
@@ -3649,1410 +5706,698 @@ class CreatedBy {
     if (profileImage != null) {
       data['profileImage'] = profileImage!.toJson();
     }
-    data['_id'] = id;
+    data['_id'] = sId;
     data['name'] = name;
     data['mobile'] = mobile;
     data['email'] = email;
-    return data;
-  }
-}
-
-class ProfileImage {
-  String? publicId;
-  String? url;
-
-  ProfileImage({this.publicId, this.url});
-
-  ProfileImage.fromJson(Map<String, dynamic> json) {
-    publicId = json['public_id'];
-    url = json['url'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['public_id'] = publicId;
-    data['url'] = url;
-    return data;
-  }
-}
-import 'homestay_reused_model.dart';
-
-class HomeStaySingleFetchResponse {
-  String? message;
-  ReUsedDataModel? homestayData;
-
-  HomeStaySingleFetchResponse({this.message, this.homestayData});
-
-  HomeStaySingleFetchResponse.fromJson(Map<String, dynamic> json) {
-    message = json['message'];
-    homestayData = json['HomestayData'] != null
-        ? ReUsedDataModel.fromJson(json['HomestayData'])
-        : null;
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data =  <String, dynamic>{};
-    data['message'] = message;
-    if (homestayData != null) {
-      data['HomestayData'] = homestayData!.toJson();
-    }
-    return data;
-  }
-}
-
-
-class ReUsedDataModel {
-  AccommodationDetails? accommodationDetails;
-  CoverPhoto? coverPhoto;
-  String? id;
-  String? title;
-  String? homestayType;
-  List<Amenities>? amenities;
-  List<HouseRules>? houseRules;
-  String? checkInTime;
-  String? checkOutTime;
-  bool? flexibleCheckIn;
-  bool? flexibleCheckOut;
-  double? longitude;
-  double? latitude;
-  String? address;
-  String? street;
-  String? landmark;
-  String? city;
-  String? pinCode;
-  String? state;
-  bool? showSpecificLocation;
-  List<HomestayPhotos>? homestayPhotos;
-  String? description;
-  int? basePrice;
-  int? weekendPrice;
-  String? ownerContactNo;
-  String? ownerEmailId;
-  List<HomestayContactNo>? homestayContactNo;
-  List<HomestayEmailId>? homestayEmailId;
-  String? status;
-  CreatedBy? createdBy;
-  String? createdAt;
-  String? updatedAt;
-
-  ReUsedDataModel({
-    this.accommodationDetails,
-    this.coverPhoto,
-    this.id,
-    this.title,
-    this.homestayType,
-    this.amenities,
-    this.houseRules,
-    this.checkInTime,
-    this.checkOutTime,
-    this.flexibleCheckIn,
-    this.flexibleCheckOut,
-    this.longitude,
-    this.latitude,
-    this.address,
-    this.street,
-    this.landmark,
-    this.city,
-    this.pinCode,
-    this.state,
-    this.showSpecificLocation,
-    this.homestayPhotos,
-    this.description,
-    this.basePrice,
-    this.weekendPrice,
-    this.ownerContactNo,
-    this.ownerEmailId,
-    this.homestayContactNo,
-    this.homestayEmailId,
-    this.status,
-    this.createdBy,
-    this.createdAt,
-    this.updatedAt,
-  });
-
-  ReUsedDataModel.fromJson(Map<String, dynamic> json) {
-    accommodationDetails = json['accommodationDetails'] != null
-        ? AccommodationDetails.fromJson(json['accommodationDetails'])
-        : null;
-    coverPhoto = json['coverPhoto'] != null
-        ? CoverPhoto.fromJson(json['coverPhoto'])
-        : null;
-    id = json['_id'];
-    title = json['title'];
-    homestayType = json['homestayType'];
-    if (json['amenities'] != null) {
-      amenities = <Amenities>[];
-      json['amenities'].forEach((v) {
-        amenities!.add(Amenities.fromJson(v));
-      });
-    }
-    if (json['houseRules'] != null) {
-      houseRules = <HouseRules>[];
-      json['houseRules'].forEach((v) {
-        houseRules!.add(HouseRules.fromJson(v));
-      });
-    }
-    checkInTime = json['checkInTime'];
-    checkOutTime = json['checkOutTime'];
-    flexibleCheckIn = json['flexibleCheckIn'];
-    flexibleCheckOut = json['flexibleCheckOut'];
-    longitude = json['longitude'];
-    latitude = json['latitude'];
-    address = json['address'];
-    street = json['street'];
-    landmark = json['landmark'];
-    city = json['city'];
-    pinCode = json['pinCode'];
-    state = json['state'];
-    showSpecificLocation = json['showSpecificLocation'];
-    if (json['homestayPhotos'] != null) {
-      homestayPhotos = <HomestayPhotos>[];
-      json['homestayPhotos'].forEach((v) {
-        homestayPhotos!.add(HomestayPhotos.fromJson(v));
-      });
-    }
-    description = json['description'];
-    basePrice = json['basePrice'];
-    weekendPrice = json['weekendPrice'];
-    ownerContactNo = json['ownerContactNo'];
-    ownerEmailId = json['ownerEmailId'];
-    if (json['homestayContactNo'] != null) {
-      homestayContactNo = <HomestayContactNo>[];
-      json['homestayContactNo'].forEach((v) {
-        homestayContactNo!.add(HomestayContactNo.fromJson(v));
-      });
-    }
-    if (json['homestayEmailId'] != null) {
-      homestayEmailId = <HomestayEmailId>[];
-      json['homestayEmailId'].forEach((v) {
-        homestayEmailId!.add(HomestayEmailId.fromJson(v));
-      });
-    }
-    status = json['status'];
-    createdBy = json['createdBy'] != null
-        ? CreatedBy.fromJson(json['createdBy'])
-        : null;
-    createdAt = json['createdAt'];
-    updatedAt = json['updatedAt'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    if (accommodationDetails != null) {
-      data['accommodationDetails'] = accommodationDetails!.toJson();
-    }
-    if (coverPhoto != null) {
-      data['coverPhoto'] = coverPhoto!.toJson();
-    }
-    data['_id'] = id;
-    data['title'] = title;
-    data['homestayType'] = homestayType;
-    if (amenities != null) {
-      data['amenities'] = amenities!.map((v) => v.toJson()).toList();
-    }
-    if (houseRules != null) {
-      data['houseRules'] = houseRules!.map((v) => v.toJson()).toList();
-    }
-    data['checkInTime'] = checkInTime;
-    data['checkOutTime'] = checkOutTime;
-    data['flexibleCheckIn'] = flexibleCheckIn;
-    data['flexibleCheckOut'] = flexibleCheckOut;
-    data['longitude'] = longitude;
-    data['latitude'] = latitude;
-    data['address'] = address;
-    data['street'] = street;
-    data['landmark'] = landmark;
-    data['city'] = city;
-    data['pinCode'] = pinCode;
-    data['state'] = state;
-    data['showSpecificLocation'] = showSpecificLocation;
-    if (homestayPhotos != null) {
-      data['homestayPhotos'] = homestayPhotos!.map((v) => v.toJson()).toList();
-    }
-    data['description'] = description;
-    data['basePrice'] = basePrice;
-    data['weekendPrice'] = weekendPrice;
-    data['ownerContactNo'] = ownerContactNo;
-    data['ownerEmailId'] = ownerEmailId;
-    if (homestayContactNo != null) {
-      data['homestayContactNo'] =
-          homestayContactNo!.map((v) => v.toJson()).toList();
-    }
-    if (homestayEmailId != null) {
-      data['homestayEmailId'] =
-          homestayEmailId!.map((v) => v.toJson()).toList();
-    }
-    data['status'] = status;
-    if (createdBy != null) {
-      data['createdBy'] = createdBy!.toJson();
-    }
+    data['password'] = password;
+    data['deviceToken'] = deviceToken;
+    data['userType'] = userType;
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
+    data['__v'] = iV;
     return data;
   }
 }
-import 'package:flutter/material.dart';
-import 'package:sizer/sizer.dart';
-import '../../../../../utils/app_colors.dart';
-import '../../../../../utils/font_manager.dart';
 
-Widget titleAndIcon({
-  required String title,
-  required Function() onBackTap,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SizedBox(height: 6.h),
-      Row(
-        children: [
-          GestureDetector(
-            onTap: onBackTap,
-            child: const Icon(
-              Icons.keyboard_arrow_left,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: FontManager.medium(
-              20,
-              color: AppColors.black,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+import 'package:travellery_mobile/screen/hosting_flow/data/model/hosting_model.dart';
+import 'package:dio/dio.dart' as dio;
+import '../../../../api_helper/api_helper.dart';
+import '../../../../api_helper/api_uri.dart';
+import '../../../../api_helper/getit_service.dart';
+import '../../../../services/storage_services.dart';
+import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+
+class HostingRepository{
+
+  var apiProvider = getIt<ApiHelper>();
+  var apiURLs = getIt<APIUrls>();
+
+  Future<Map<String, dynamic>> homeStayDataCreate(
+      {required dio.FormData formData}) async {
+    dio.Response? response = await apiProvider.postFormData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayCreateUrl}",
+      data: formData,
+    );
+    Map<String, dynamic> data = response?.data;
+    return data;
+  }
+
+  Future<HomeHostingPropertiesModel> getHostingProperties() async {
+
+    String? getUserId = getIt<StorageServices>().getUserId();
+    print("aaaaaaaaaa$getUserId");
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.hostingGetDataUrl}/$getUserId",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeHostingPropertiesModel.fromJson(data);
+  }
+
+  Future<HomeStaySingleFetchResponse> getSingleFetchProperties() async {
+    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}/$yourPropertiesId",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeStaySingleFetchResponse.fromJson(data);
+  }
+
+  Future<Map<String, dynamic>> deleteData() async {
+    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.propertiesDelete}/$yourPropertiesId",
+    );
+    Map<String, dynamic> data = response!.data;
+    return data;
+  }
+
+}import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/hosting_flow/controller/home_controller.dart';
+import 'package:travellery_mobile/screen/your_properties_screen/controller/your_properties_controller.dart';
+import '../../../../common_widgets/common_propertis_widget.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_string.dart';
+
+class HostingDetailsPage extends StatefulWidget {
+  const HostingDetailsPage({super.key});
+
+  @override
+  State<HostingDetailsPage> createState() => _DetailsPageState();
+}
+
+class _DetailsPageState extends State<HostingDetailsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double statusBarHeight = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: GetBuilder(
+        init: HostingHomeController(),
+        builder: (controller) => PropertyCardWidget(
+          title: Strings.details,
+          homestayType:
+          controller.detailsProperty.homestayData!.homestayType ?? '',
+          accommodationType: controller.detailsProperty.homestayData!
+              .accommodationDetails!.entirePlace ==
+              true
+              ? Strings.entirePlace
+              : Strings.privateRoom,
+          address: controller.detailsProperty.homestayData!.address ?? '',
+          basePrice: controller.detailsProperty.homestayData!.basePrice ?? 0,
+          checkInTime:
+          controller.detailsProperty.homestayData!.checkInTime ?? '',
+          checkOutTime:
+          controller.detailsProperty.homestayData!.checkOutTime ?? '',
+          statusBarHeight: statusBarHeight,
+          homestayPhotos:
+          controller.detailsProperty.homestayData!.homestayPhotos ?? [],
+          status: controller.detailsProperty.homestayData!.status ?? '',
+          ownerContactNumber:
+          controller.detailsProperty.homestayData!.ownerContactNo ?? '',
+          ownerEmail:
+          controller.detailsProperty.homestayData!.ownerEmailId ?? '',
+          dataTitle: controller.detailsProperty.homestayData!.title ?? '',
+          description:
+          controller.detailsProperty.homestayData!.description ?? '',
+          flexibleCheckIn:
+          controller.detailsProperty.homestayData!.flexibleCheckIn ?? false,
+          flexibleCheckOut:
+          controller.detailsProperty.homestayData!.flexibleCheckOut ??
+              false,
+          homestayContactNoList:
+          controller.detailsProperty.homestayData!.homestayContactNo ?? [],
+          homestayEmailIdList:
+          controller.detailsProperty.homestayData!.homestayEmailId ?? [],
+          tabController: _tabController,
+          weekendPrice:
+          controller.detailsProperty.homestayData!.weekendPrice ?? 0,
+          bathrooms: controller.detailsProperty.homestayData!
+              .accommodationDetails!.bathrooms ??
+              0,
+          bedrooms: controller.detailsProperty.homestayData!
+              .accommodationDetails!.bedrooms ??
+              0,
+          city: controller.detailsProperty.homestayData!.city ?? '',
+          doubleBed: controller.detailsProperty.homestayData!
+              .accommodationDetails!.doubleBed ??
+              0,
+          extraFloorMattress: controller.detailsProperty.homestayData!
+              .accommodationDetails!.extraFloorMattress ??
+              0,
+          kitchenAvailable: controller.detailsProperty.homestayData!
+              .accommodationDetails!.kitchenAvailable ??
+              false,
+          landmark: controller.detailsProperty.homestayData!.landmark ?? '',
+          pinCode: controller.detailsProperty.homestayData!.pinCode ?? '',
+          state: controller.detailsProperty.homestayData!.state ?? '',
+          street: controller.detailsProperty.homestayData!.street ?? '',
+          maxGuests: controller.detailsProperty.homestayData!
+              .accommodationDetails!.maxGuests ??
+              0,
+          singleBed: controller.detailsProperty.homestayData!
+              .accommodationDetails!.singleBed ??
+              0,
+          showSpecificLocation:
+          controller.detailsProperty.homestayData!.showSpecificLocation ??
+              false,
+          onPressed: () {},
+          onDeleteDetails: () {
+            controller.deleteProperties();
+          },
+          detailsHosting: true,
+        ),
       ),
-    ],
-  );
+    );
+  }
 }
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
-import '../../../../../common_widgets/common_dialog.dart';
-import '../../../../../generated/assets.dart';
-import '../../../../../routes_app/all_routes_app.dart';
-import '../../../../../utils/app_colors.dart';
-import '../../../../../utils/app_radius.dart';
-import '../../../../../utils/app_string.dart';
-import '../../../../../utils/font_manager.dart';
+import '../../../../common_widgets/common_properti_card.dart';
+import '../../../../generated/assets.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import '../../controller/home_controller.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+class HomeHostingPage extends StatefulWidget {
+  const HomeHostingPage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<HomeHostingPage> createState() => _HomeHostingPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  bool isTraveling = true;
+class _HomeHostingPageState extends State<HomeHostingPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: GetBuilder(
+        init: HostingHomeController(),
+        builder: (controller) => Column(
+          children: [
+            buildHeader(),
+            const SizedBox(height: 26),
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Text(
+                    Strings.properties,
+                    style: FontManager.semiBold(20.sp, color: AppColors.black),
+                  ),
+                ),
+              ],
+            ),
+            controller.propertiesList.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : Flexible(
+                    child: ListView.builder(
+                      itemCount: controller.propertiesList.length,
+                      itemBuilder: (context, index) {
+                        return PropertyCard(
+                          coverPhotoUrl:
+                              controller.propertiesList[index].coverPhoto!.url!,
+                          homestayType:
+                              controller.propertiesList[index].homestayType!,
+                          title: controller.propertiesList[index].title!,
+                          onTap: () => controller.getDetails(index),
+                          location: Strings.newYorkUSA,
+                          status: controller.propertiesList[index].status!,
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildHeader() {
+    return Container(
+      height: 190,
+      width: 100.w,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius16,
+          bottomRight: AppRadius.radius16,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 5.2.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    Strings.helloJhon,
+                    style: FontManager.medium(20, color: AppColors.white),
+                  ),
+                  Text(
+                    Strings.welcomeToTravelbud,
+                    style: FontManager.regular(14,
+                        color: AppColors.greyWelcomeToTravelbud),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Image.asset(
+                Assets.imagesTv,
+                width: 42,
+                height: 36,
+              ),
+              SizedBox(width: 4.6.w),
+            ],
+          ),
+          SizedBox(height: 4.5.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Spacer(),
+              Container(
+                height: 6.h,
+                width: 75.w,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(AppRadius.radius10),
+                  color: AppColors.white,
+                ),
+                child: Center(
+                  child: TextField(
+                    onTap: () {
+                      Get.toNamed(Routes.search);
+                    },
+                    cursorColor: AppColors.greyText,
+                    decoration: InputDecoration(
+                      hintText: Strings.search,
+                      hintStyle: FontManager.regular(16.sp,
+                          color: AppColors.searchTextColor),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.searchIconColor,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Get.toNamed(Routes.filterPage);
+                },
+                child: Container(
+                  height: 6.h,
+                  width: 15.w,
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      Assets.imagesFilterslines,
+                      height: 30,
+                      width: 30,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+        ],
+      ),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../../utils/app_colors.dart';
+import '../../../../../../utils/app_radius.dart';
+import '../../../../../../utils/app_string.dart';
+import '../../../../../../utils/font_manager.dart';
+
+class ListingPage extends StatefulWidget {
+  const ListingPage({super.key});
+
+  @override
+  State<ListingPage> createState() => _ListingPageState();
+}
+
+class _ListingPageState extends State<ListingPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundYourPropertiesPage,
-      body: Column(
-        children: [
-          headerProfile(),
-          SizedBox(height: 3.h),
-          Container(
-            height: 39,
-            width: 70.w,
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              border: Border.all(color: AppColors.buttonColor),
-              borderRadius: const BorderRadius.all(AppRadius.radius10),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isTraveling = true;
-                    });
-                  },
-                  child: Container(
-                    width: 34.8.w,
-                    decoration: BoxDecoration(
-                      color:
-                          isTraveling ? AppColors.buttonColor : AppColors.white,
-                      borderRadius: isTraveling
-                          ? const BorderRadius.all(AppRadius.radius10)
-                          : const BorderRadius.only(
-                              bottomLeft: Radius.circular(10),
-                              topLeft: Radius.circular(10)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        Strings.traveling,
-                        style: FontManager.regular(
-                          16,
-                          color: isTraveling
-                              ? AppColors.white
-                              : AppColors.buttonColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isTraveling = false;
-                    });
-                  },
-                  child: Container(
-                    width: 34.6.w,
-                    decoration: BoxDecoration(
-                      color: !isTraveling
-                          ? AppColors.buttonColor
-                          : AppColors.white,
-                      borderRadius: !isTraveling
-                          ? const BorderRadius.all(AppRadius.radius10)
-                          : const BorderRadius.only(
-                              bottomRight: Radius.circular(10),
-                              topRight: Radius.circular(10)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        Strings.hosting,
-                        style: FontManager.regular(
-                          16,
-                          color: !isTraveling
-                              ? AppColors.white
-                              : AppColors.buttonColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          Strings.additinalSettings,
-                          style: FontManager.medium(18,
-                              color: AppColors.textAddProreties),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 2.5.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.contactusPage);
-                      },
-                      image: Assets.imagesPhoneProfile,
-                      title: Strings.contactUs,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.changePasswordPage);
-                      },
-                      image: Assets.imagesPasswordProfile,
-                      title: Strings.changePassword,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.faqsPage);
-                      },
-                      image: Assets.imagesFaqsProfile,
-                      title: Strings.fAQs,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.faqsPage);
-                      },
-                      image: Assets.imagesLegalProfile,
-                      title: Strings.legalAndPrivacy,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.termsAndCondition);
-                      },
-                      image: Assets.imagesTermsProfile,
-                      title: Strings.termsAndConditions,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.feedbackPage);
-                      },
-                      image: Assets.imagesFeedBackProfile,
-                      title: Strings.feedBack,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        Get.toNamed(Routes.aboutUsPage);
-                      },
-                      image: Assets.imagesAboutProfile,
-                      title: Strings.aboutUs,
-                    ),
-                    SizedBox(height: 1.6.h),
-                    additionalSettingsWidgets(
-                      onTap: () {
-                        CustomDialog.showCustomDialog(
-                          context: context,
-                          message: Strings.logOutMessage,
-                          imageAsset: Assets.imagesLogOutIcon,
-                          buttonLabel: Strings.yes,
-                          changeEmailLabel: Strings.no,
-                          onResendPressed: () {
-                            print("xxzzzzzzzzzzzz");
-                            // controller.deleteProperties();
-                          },
-                          onChangeEmailPressed: () {},
-                        );
-                      },
-                      image: Assets.imagesLogOutProfile,
-                      title: Strings.logOut,
-                    ),
-                    SizedBox(height: 1.6.h),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget headerProfile() {
-    return Container(
-      height: 197,
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.buttonColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: AppRadius.radius24,
-          bottomRight: AppRadius.radius24,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(5.2.w),
+      body: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  Strings.profile,
-                  style: FontManager.medium(20, color: AppColors.white),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Get.toNamed(Routes.editProfilePage);
-                  },
-                  child: Image.asset(
-                    Assets.imagesProfileEdit,
-                    height: 24,
-                    width: 24,
+            headerTrip(),
+            const SizedBox(height: 26),
+            TabBar(
+              unselectedLabelColor: AppColors.black,
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                  borderSide: BorderSide(
+                    width: 2.0,
+                    color: AppColors.buttonColor,
                   ),
-                ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                  )),
+              unselectedLabelStyle: FontManager.regular(14),
+              indicatorPadding: const EdgeInsets.only(left: 10, right: 10),
+              labelStyle: FontManager.regular(14, color: AppColors.buttonColor),
+              indicatorWeight: 0.5.w,
+              tabs: const [
+                Tab(text: Strings.properties),
+                Tab(text: Strings.payoutDetails),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    Assets.imagesDefualtProfile,
-                    height: 70,
-                    width: 70,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Jhon Doe",
-                      style: FontManager.medium(16, color: AppColors.white),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "jhondoe123@gmail.com",
-                      style: FontManager.regular(12, color: AppColors.white),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      "9752348952",
-                      style: FontManager.regular(12, color: AppColors.white),
-                    ),
-                  ],
-                ),
-              ],
+            SizedBox(
+              height: 2.h,
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget additionalSettingsWidgets(
-      {String? image, String? title, final Function()? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 52,
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.all(AppRadius.radius10),
-        ),
-        child: Row(
-          children: [
-            SizedBox(width: 3.3.w),
-            Image.asset(
-              image!,
-              height: 20,
-              width: 20,
-            ),
-            SizedBox(width: 3.w),
-            Text(
-              title!,
-              style: FontManager.regular(16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import '../../../../../../common_widgets/common_button.dart';
-import '../../../../../../generated/assets.dart';
-import '../../../../../../utils/app_colors.dart';
-import '../../../../../../utils/app_string.dart';
-import '../../../../../../utils/font_manager.dart';
-import '../../../../../../utils/textformfield.dart';
-import '../../common_widget/title_icon_widget.dart';
-
-class FeedbackPage extends StatefulWidget {
-  const FeedbackPage({super.key});
-
-  @override
-  State<FeedbackPage> createState() => _FeedbackPageState();
-}
-
-class _FeedbackPageState extends State<FeedbackPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            titleAndIcon(
-              title: Strings.feedBack,
-              onBackTap: () => Get.back(),
-            ),
-            SizedBox(height: 3.h),
-            Expanded(
-                child: SingleChildScrollView(
-              child: Column(
+            SizedBox(
+              height: 530,
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  Row(
-                    children: [
-                      const ClipOval(
-                        child: Image(
-                          image: AssetImage(Assets.imagesProfile),
-                          height: 50,
-                          width: 50,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Kristin Martine",
-                                  style: FontManager.regular(18,
-                                      color: AppColors.textAddProreties),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  "21 September 2023, 12:15 AM",
-                                  style: FontManager.regular(12,
-                                      color: AppColors.greyText),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    child: Column(
+                      children: List.generate(2, (index) => customCardTrip()),
+                    ),
                   ),
-                  SizedBox(height: 3.h),
-                  Text(Strings.feedBack, style: FontManager.regular(16)),
-                  SizedBox(height: 0.5.h),
-                  CustomTextField(
-                    // controller: controller.homeStayTitleController,
-                    hintText: Strings.enterFeedBack,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return Strings.enterFeedBack;
-                      }
-                      return null;
-                    },
-                    // onSaved: (value) => controller.homestayTitle.value = value!,
-                    // onChanged: (value) => controller.setTitle(value),
-                  ),
-                  SizedBox(
-                    height: 3.5.h,
-                  ),
-                  Text(
-                    Strings.review,
-                    style: FontManager.medium(18,
-                        color: AppColors.textAddProreties),
-                  ),
-                  SizedBox(
-                    height: 2.5.h,
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipOval(
-                        child: Image.asset(
-                          Assets.imagesProfile,
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Max",
-                                  style: FontManager.regular(18,
-                                      color: AppColors.textAddProreties),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  "01 September 2023, 12:10 AM",
-                                  style: FontManager.regular(12,
-                                      color: AppColors.greyText),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
-                                    style: FontManager.regular(12,
-                                        color: AppColors.textAddProreties),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    height: 0.5,
-                    decoration: const BoxDecoration(
-                        color: AppColors.borderContainerGriedView),
-                  ),
-                  SizedBox(
-                    height: 2.h,
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipOval(
-                        child: Image.asset(
-                          Assets.imagesProfile,
-                          height: 40,
-                          width: 40,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.center,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Max",
-                                  style: FontManager.regular(18,
-                                      color: AppColors.textAddProreties),
-                                ),
-                                const Spacer(),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Text(
-                                  "01 September 2023, 12:10 AM",
-                                  style: FontManager.regular(12,
-                                      color: AppColors.greyText),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    "Lorem ipsum dolor sit amet consectetur. Porta eget at molestie lobortis consectetur lacus massa.",
-                                    style: FontManager.regular(12,
-                                        color: AppColors.textAddProreties),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    child: paymentCard(),
                   ),
                 ],
               ),
-            )),
-            CommonButton(
-              title: Strings.submit,
-              onPressed: () {},
-              backgroundColor: AppColors.buttonColor,
-            ),
-            SizedBox(
-              height: 6.h,
             ),
           ],
         ),
       ),
     );
   }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/utils/app_colors.dart';
-import 'package:travellery_mobile/utils/app_radius.dart';
-import 'package:travellery_mobile/utils/font_manager.dart';
 
-import '../../../../../../utils/app_string.dart';
-import '../../common_widget/title_icon_widget.dart';
-
-class FaqsPage extends StatefulWidget {
-  const FaqsPage({super.key});
-
-  @override
-  State<FaqsPage> createState() => _FaqsPageState();
-}
-
-class _FaqsPageState extends State<FaqsPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          children: [
-          titleAndIcon(
-          title: Strings.fAQs,
-          onBackTap: () => Get.back(),
-        ),
-        SizedBox(height: 3.h),
-        Container(
-          decoration: BoxDecoration(
-              border: Border.all(color: AppColors.texFiledColor),
-              borderRadius: BorderRadius.all(AppRadius.radius10)),
-          child: Column(
-            children: [
-            ExpansionTile(
-            trailing: Icon(Icons.arrow_drop_down_outlined),
-            title: Text(
-              "What is a Travellery app?",
-              style: FontManager.regular(13, color: AppColors.black),
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  "A travel app is a mobile or web application designed to assist users in planning, booking, and managing their travel experiences.",
-                  style:
-                  FontManager.regular(10, color: AppColors.black),
-                ),
-              ),
-            ],
-          ),
-          ],
-        ),
-      )
-      ],
-    ),)
-    ,
-    );
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import '../../../../../../common_widgets/common_button.dart';
-import '../../../../../../generated/assets.dart';
-import '../../../../../../utils/app_colors.dart';
-import '../../../../../../utils/app_string.dart';
-import '../../../../../../utils/app_validation.dart';
-import '../../../../../../utils/font_manager.dart';
-import '../../../../../../utils/textformfield.dart';
-import '../../common_widget/title_icon_widget.dart';
-
-class EditProfilePage extends StatefulWidget {
-  const EditProfilePage({super.key});
-
-  @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
-}
-
-class _EditProfilePageState extends State<EditProfilePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            titleAndIcon(
-              title: Strings.editProfile,
-              onBackTap: () => Get.back(),
-            ),
-            SizedBox(height: 3.5.h),
-            Column(
-              children: [
-                Center(
-                  child: Stack(
-                    alignment: const Alignment(1.1, 1.1),
-                    children: [
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: Image.asset(Assets.imagesDefualtProfile),
-                      ),
-                      InkWell(
-                        onTap: () {},
-                        child: const CircleAvatar(
-                          radius: 15,
-                          backgroundImage:
-                              AssetImage(Assets.imagesEditcirculer),
-                        ),
-                      )
-                    ],
-                  ),
-                )
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(Strings.nameLabel, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.nameController,
-              hintText: Strings.nameHint,
-              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
-                  width: 20, height: 20),
-              validator: AppValidation.validateName,
-              // onSaved: (value) => controller.name.value = value!,
-            ),
-            SizedBox(height: 3.h),
-            Text(
-              Strings.emailLabel,
-              style: FontManager.regular(14, color: Colors.black),
-            ),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.emailController,
-              hintText: Strings.emailHint,
-              validator: AppValidation.validateEmail,
-              // onChanged: (value) => controller.email.value = value,
-              prefixIconImage: Image.asset(
-                Assets.imagesEmail,
-                height: 20,
-                width: 20,
-              ),
-            ),
-            SizedBox(height: 3.h),
-            Text(Strings.mobileNumberLabel, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.mobileController,
-              keyboardType: TextInputType.number,
-              hintText: Strings.mobileNumberHint,
-              prefixIconImage:
-                  Image.asset(Assets.imagesPhone, width: 20, height: 20),
-              validator: AppValidation.validateMobile,
-              // onSaved: (value) => controller.mobile.value = value!,
-            ),
-            const Spacer(),
-            CommonButton(
-              title: Strings.update,
-              onPressed: () {},
-              backgroundColor: AppColors.buttonColor,
-            ),
-            SizedBox(
-              height: 11.h
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import '../../../../../../common_widgets/common_button.dart';
-import '../../../../../../generated/assets.dart';
-import '../../../../../../utils/app_colors.dart';
-import '../../../../../../utils/app_string.dart';
-import '../../../../../../utils/app_validation.dart';
-import '../../../../../../utils/textformfield.dart';
-import '../../../../../../utils/font_manager.dart';
-import '../../common_widget/title_icon_widget.dart';
-
-class ContactusPage extends StatefulWidget {
-  const ContactusPage({super.key});
-
-  @override
-  State<ContactusPage> createState() => _ContactusPageState();
-}
-
-class _ContactusPageState extends State<ContactusPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            titleAndIcon(
-              title: Strings.contactUs,
-              onBackTap: () => Get.back(),
-            ),
-            SizedBox(height: 3.5.h),
-            Text(Strings.nameLabel, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.nameController,
-              hintText: Strings.nameHint,
-              prefixIconImage: Image.asset(Assets.imagesSignupProfile,
-                  width: 20, height: 20),
-              validator: AppValidation.validateName,
-              // onSaved: (value) => controller.name.value = value!,
-            ),
-            SizedBox(height: 3.h),
-            Text(
-              Strings.emailLabel,
-              style: FontManager.regular(14, color: Colors.black),
-            ),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.emailController,
-              hintText: Strings.emailHint,
-              validator: AppValidation.validateEmail,
-              // onChanged: (value) => controller.email.value = value,
-              prefixIconImage: Image.asset(
-                Assets.imagesEmail,
-                height: 20,
-                width: 20,
-              ),
-            ),
-            SizedBox(height: 3.h),
-            Text(Strings.message, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.homeStayTitleController,
-              hintText: Strings.enterYourMessage,
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return Strings.enterYourMessage;
-                }
-                return null;
-              },
-              // onSaved: (value) => controller.homestayTitle.value = value!,
-              // onChanged: (value) => controller.setTitle(value),
-            ),
-            const Spacer(),
-            CommonButton(
-              title: Strings.submit,
-              onPressed: () {},
-              backgroundColor: AppColors.buttonColor,
-            ),
-            SizedBox(
-              height: 11.h,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import '../../../../../../common_widgets/common_button.dart';
-import '../../../../../../generated/assets.dart';
-import '../../../../../../utils/app_colors.dart';
-import '../../../../../../utils/app_string.dart';
-import '../../../../../../utils/app_validation.dart';
-import '../../../../../../utils/font_manager.dart';
-import '../../../../../../utils/textformfield.dart';
-import '../../common_widget/title_icon_widget.dart';
-
-class ChangePasswordPage extends StatefulWidget {
-  const ChangePasswordPage({super.key});
-
-  @override
-  State<ChangePasswordPage> createState() => _ChangePasswordPageState();
-}
-
-class _ChangePasswordPageState extends State<ChangePasswordPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            titleAndIcon(
-              title: Strings.changePassword,
-              onBackTap: () => Get.back(),
-            ),
-            SizedBox(height: 3.5.h),
-            Text(Strings.currentPassword, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.resetNewPasswordController,
-              hintText: Strings.enterYourCurrentPassword,
-              prefixIconImage: Image.asset(
-                Assets.imagesPassword,
-                height: 20,
-                width: 20,
-              ),
-              // obscureText: controller.isResetPasswordVisible.value,
-              validator: AppValidation.validatePassword,
-              showSuffixIcon: true,
-              onSuffixIconPressed: () {
-                setState(() {
-                  // controller.isResetPasswordVisible.value =
-                  // !controller.isResetPasswordVisible.value;
-                });
-              },
-            ),
-            SizedBox(height: 3.h),
-            Text(Strings.newPasswordLabel, style: FontManager.regular(14)),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.resetNewPasswordController,
-              hintText: Strings.passwordHint,
-              prefixIconImage: Image.asset(
-                Assets.imagesPassword,
-                height: 20,
-                width: 20,
-              ),
-              // obscureText: controller.isResetPasswordVisible.value,
-              validator: AppValidation.validatePassword,
-              showSuffixIcon: true,
-              onSuffixIconPressed: () {
-                setState(() {
-                  // controller.isResetPasswordVisible.value =
-                  // !controller.isResetPasswordVisible.value;
-                });
-              },
-            ),
-            SizedBox(height: 3.h),
-            Text(
-              Strings.confirmPassword,
-              style: FontManager.regular(14),
-            ),
-            SizedBox(height: 0.5.h),
-            CustomTextField(
-              // controller: controller.resetConfirmedNewPasswordController,
-              hintText: Strings.confirmPasswordHint,
-              prefixIconImage: Image.asset(
-                Assets.imagesPassword,
-                height: 20,
-                width: 20,
-              ),
-              // obscureText: controller.isResetConfirmPasswordVisible.value,
-              validator: AppValidation.validatePassword,
-              showSuffixIcon: true,
-              onSuffixIconPressed: () {
-                setState(() {
-                  // controller.isResetConfirmPasswordVisible.value =
-                  // !controller.isResetConfirmPasswordVisible.value;
-                });
-              },
-            ),
-            const Spacer(),
-            CommonButton(
-              title: Strings.save,
-              onPressed: () {},
-              backgroundColor: AppColors.buttonColor,
-            ),
-            SizedBox(
-              height: 11.h,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
-import 'package:travellery_mobile/screen/profile_pages/common_widget/title_icon_widget.dart';
-import 'package:travellery_mobile/utils/app_colors.dart';
-import 'package:travellery_mobile/utils/font_manager.dart';
-import '../../../../../../generated/assets.dart';
-import '../../../../../../utils/app_string.dart';
-
-class AboutUsPage extends StatefulWidget {
-  const AboutUsPage({super.key});
-
-  @override
-  State<AboutUsPage> createState() => _AboutUsPageState();
-}
-
-class _AboutUsPageState extends State<AboutUsPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            titleAndIcon(
-              title: Strings.aboutUs,
-              onBackTap: () => Get.back(),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 2.h),
-              child: Text(
-                "Lorem ipsum dolor sit amet consectetur. Nisl a pellentesque id semper quam donec. Hendrerit eleifend at vel curabitur. Risus morbi adipiscing porttitor et facilisis. Ornare massa at ut morbi felis dui senectus. Cum ac varius sapien id nam nisl. Aliquet lacus vitae bibendum morbi. Id ornare ultricies sit sapien arcu auctor sed pretium. Non lectus egestas consectetur urna viverra tincidunt iaculis lacus donec. Mauris arcu gravida dui mauris nunc mauris blandit. Ut quam augue sodales nibh quis. Eu suspendisse aliquet sed blandit nullam libero. Nunc vivamus non id eleifend ullamcorper. Non malesuada consectetur ante ultrices morbi. Tortor maecenas sed scelerisque fermentum ut quam. Urna enim etiam fames gravida. Mi bibendum volutpat non eget. Ultrices semper sit enim tincidunt. Vitae purus sed in sapien feugiat ac a. Congue sit lacus nulla non nibh facilisi tempor justo. Porttitor augue enim diam netus aliquam ut. Cursus pretium in fringilla gravida. Id habitasse dictum proin feugiat amet elit. Ac gravida et quis diam elementum aliquet. Ante lorem id lacus sit arcu quam gravida in. Tellus mollis malesuada nulla phasellus vitae aliquet risus neque odio. Rhoncus condimentum sagittis at nisl pellentesque sed vitae id. ",
-                style: FontManager.regular(12, color: AppColors.black),
-              ),
-            ),
-            SizedBox(
-              height: 2.5.h,
-            ),
-            Text(Strings.ownerDetails,
-                style:
-                    FontManager.medium(18, color: AppColors.textAddProreties)),
-            SizedBox(height: 2.h),
-            Row(
-              children: [
-                Image.asset(Assets.imagesCallicon, height: 35, width: 35),
-                SizedBox(width: 2.w),
-                Text(Strings.defultCallNumber,
-                    style: FontManager.regular(14, color: AppColors.black)),
-              ],
-            ),
-            SizedBox(height: 1.2.h),
-            Row(
-              children: [
-                Image.asset(Assets.imagesEmailicon, height: 35, width: 35),
-                SizedBox(width: 2.w),
-                Text(Strings.defultEmail,
-                    style: FontManager.regular(14, color: AppColors.black)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-import 'package:flutter/material.dart';
-import 'package:sizer/sizer.dart';
-import '../utils/app_colors.dart';
-import '../utils/app_radius.dart';
-import '../utils/font_manager.dart';
-
-class PropertyCard extends StatelessWidget {
-  final String coverPhotoUrl;
-  final String homestayType;
-  final String status;
-  final String title;
-  final String location;
-  final void Function()? onTap;
-
-  const PropertyCard({
-    super.key,
-    required this.coverPhotoUrl,
-    required this.homestayType,
-    required this.status,
-    required this.title,
-    required this.location,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget customCardTrip() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {},
         child: Container(
-          height: 259,
           width: double.infinity,
           decoration: const BoxDecoration(
             color: AppColors.backgroundColor,
             borderRadius: BorderRadius.all(AppRadius.radius10),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 2.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "P123456",
+                      style:
+                          FontManager.regular(10, color: AppColors.buttonColor),
+                    ),
+                    Text(
+                      "Calendar Availability",
+                      style:
+                          FontManager.regular(10, color: AppColors.buttonColor),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                Container(
                   height: 157,
                   width: 100.w,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.all(AppRadius.radius10),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
                     image: DecorationImage(
-                      image: NetworkImage(coverPhotoUrl),
+                      image: NetworkImage(
+                          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      homestayType,
-                      style:
-                          FontManager.regular(12, color: AppColors.buttonColor),
-                    ),
-                    Text(
-                      status,
-                      style: FontManager.regular(
-                        12,
-                        color: status == "Pending Approval"
-                            ? AppColors.pendingColor
-                            : status == "Approved"
-                                ? AppColors.approvedColor
-                                : AppColors.greyText,
+                SizedBox(
+                  height: 1.h,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Eco - Friendly",
+                        style: FontManager.regular(12,
+                            color: AppColors.buttonColor),
                       ),
-                    ),
-                  ],
+                      Text(
+                        "Pending",
+                        style: FontManager.regular(
+                          10,
+                          color: AppColors.pendingColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0, top: 7.0),
-                child: Text(
-                  title,
-                  style:
-                      FontManager.medium(16, color: AppColors.textAddProreties),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                  child: Text(
+                    "Hilton View Villa",
+                    style: FontManager.medium(16,
+                        color: AppColors.textAddProreties),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 6, left: 4.0, bottom: 8.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on, color: AppColors.buttonColor),
-                    SizedBox(width: 1.4.w),
-                    Text(
-                      location,
-                      style: FontManager.regular(12, color: AppColors.greyText),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, left: 4.0),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on,
+                          color: AppColors.buttonColor),
+                      SizedBox(width: 1.4.w),
+                      Text(
+                        "New York, USA",
+                        style:
+                            FontManager.regular(12, color: AppColors.greyText),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 0.6.h),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '\$ 12,000 night',
+                              style: FontManager.medium(14,
+                                  color: AppColors.buttonColor),
+                            ),
+                            TextSpan(
+                              style: FontManager.regular(12,
+                                  color: AppColors.buttonColor),
+                              text: '( Base Price )',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+                  child: Text(
+                    "Located in this sahyadri mountain range within the 320-acre shillim Estate, Hilton shillim Estate Ratreat...",
+                    style: FontManager.regular(10, color: AppColors.black),
+                  ),
+                ),
+                SizedBox(height: 1.h),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-}
-import 'package:dio/dio.dart';
-import 'package:get_it/get_it.dart';
-import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
-import '../screen/add_properties_screen/add_properties_steps/data/repository/homestay_repository.dart';
-import '../screen/your_properties_screen/data/repository/your_properties_repository.dart';
-import '../services/storage_services.dart';
-import 'api_helper.dart';
-import 'api_uri.dart';
-import 'dio_interceptors.dart';
-import '../screen/auth_flow/data/repository/auth_repository.dart';
 
-final getIt = GetIt.instance;
+  Widget paymentCard() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 1.5.w),
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.all(AppRadius.radius10)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 1.2.h,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 5.w),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: Strings.totalEarnings,
+                            style:
+                                FontManager.medium(14, color: AppColors.black),
+                          ),
+                          TextSpan(
+                            style: FontManager.regular(12,
+                                color: AppColors.buttonColor),
+                            text: '  \$50,000',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.h,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: 5.w),
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: Strings.pendingPayoutes,
+                            style:
+                                FontManager.medium(14, color: AppColors.black),
+                          ),
+                          TextSpan(
+                            style: FontManager.regular(12,
+                                color: AppColors.buttonColor),
+                            text: '  \$30,000',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.2.h,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 2.h,
+          ),
+          Text(
+            Strings.payout,
+            style: FontManager.semiBold(20),
+          )
+        ],
+      ),
+    );
+  }
 
-Future<void> initGetIt() async {
-  getIt.registerLazySingleton<Dio>(() => Dio());
-  getIt.registerLazySingleton<APIUrls>(() => APIUrls());
-  getIt.registerLazySingleton<ApiHelper>(() => ApiHelper(getDioInstance()));
-  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository());
-  getIt.registerLazySingleton<HomeStayRepository>(() => HomeStayRepository());
-  getIt.registerLazySingleton<StorageServices>(() => StorageServices());
-  getIt.registerLazySingleton<YourPropertiesRepository>(() => YourPropertiesRepository());
-  getIt.registerLazySingleton<TravelingRepository>(() => TravelingRepository());
-
+  Widget headerTrip() {
+    return Container(
+      height: 99,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius16,
+          bottomRight: AppRadius.radius16,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 5.2.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    Strings.listing,
+                    style: FontManager.medium(20, color: AppColors.white),
+                  ),
+                ],
+              ),
+              Spacer(),
+              GestureDetector(
+                onTap: () {
+                  // Get.toNamed(Routes.addPropertiesScreen);
+                },
+                child: const Icon(
+                  Icons.add_circle,
+                  size: 26,
+                  color: AppColors.white,
+                ),
+              ),
+              SizedBox(width: 4.6.w),
+            ],
+          ),
+          SizedBox(height: 2.h),
+        ],
+      ),
+    );
+  }
 }
 import 'package:get/get.dart';
 import 'package:travellery_mobile/screen/splash_screen/view/splash_page.dart';
@@ -5067,6 +6412,7 @@ import '../screen/auth_flow/view/forget_password_pages/verification_page/verific
 import '../screen/auth_flow/view/forget_password_pages/forget_page/forget_password.dart';
 import '../screen/auth_flow/view/login_page/login_page.dart';
 import '../screen/auth_flow/view/signup_page/signup_page.dart';
+import '../screen/hosting_flow/view/details_page/details_page.dart';
 import '../screen/preview_properties_screen/view/preview_page.dart';
 import '../screen/preview_properties_screen/view/terms_and_condition_page.dart';
 import '../screen/onboarding_pages/view/onboarding_page.dart';
@@ -5080,6 +6426,7 @@ import '../screen/traveling_flow/view/booking_request/booking_request_page.dart'
 import '../screen/bottom_navigation_bar/view/bottom_view.dart';
 import '../screen/traveling_flow/view/checkIn_outedate/checkInOutDate_page.dart';
 import '../screen/traveling_flow/view/filter/filter_page.dart';
+import '../screen/traveling_flow/view/homestay_details/homestay_details_page.dart';
 import '../screen/traveling_flow/view/search/search_page.dart';
 import '../screen/your_properties_screen/view/your_properties_page.dart';
 
@@ -5111,6 +6458,8 @@ class Routes {
   static const String feedbackPage = '/feedbackPage';
   static const String aboutUsPage = '/aboutUsPage';
   static const String faqsPage = '/faqsPage';
+  static const String travelingDetailsPage = '/travelingDetailsPage';
+  static const String hostingDetailsPage = '/hostingDetailsPage';
 
   static List<GetPage> get routes {
     return [
@@ -5135,9 +6484,12 @@ class Routes {
       GetPage(name: yourPropertiesPage, page: () => const YourPropertiesPage()),
       GetPage(name: detailsYourProperties, page: () => const DetailsPage()),
       GetPage(name: bottomPages, page: () => const BottomNavigationPage()),
+      GetPage(
+          name: travelingDetailsPage, page: () => const HomeStayDetailsPage()),
       GetPage(name: filterPage, page: () => const FilterPage()),
       GetPage(name: search, page: () => const SearchPage()),
       GetPage(name: checkInOutDatePage, page: () => const CheckinoutdatePage()),
+      GetPage(name: hostingDetailsPage, page: () => const HostingDetailsPage()),
       GetPage(name: bookingRequestPage, page: () => const BookingRequestPage()),
       GetPage(name: editProfilePage, page: () => const EditProfilePage()),
       GetPage(name: contactusPage, page: () => const ContactusPage()),
@@ -5148,6 +6500,32 @@ class Routes {
     ];
   }
 }
+import 'package:dio/dio.dart';
+import 'package:get_it/get_it.dart';
+import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
+import '../screen/add_properties_screen/add_properties_steps/data/repository/homestay_repository.dart';
+import '../screen/hosting_flow/data/repository/hosting_repository.dart';
+import '../screen/your_properties_screen/data/repository/your_properties_repository.dart';
+import '../services/storage_services.dart';
+import 'api_helper.dart';
+import 'api_uri.dart';
+import 'dio_interceptors.dart';
+import '../screen/auth_flow/data/repository/auth_repository.dart';
+
+final getIt = GetIt.instance;
+
+Future<void> initGetIt() async {
+  getIt.registerLazySingleton<Dio>(() => Dio());
+  getIt.registerLazySingleton<APIUrls>(() => APIUrls());
+  getIt.registerLazySingleton<ApiHelper>(() => ApiHelper(getDioInstance()));
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepository());
+  getIt.registerLazySingleton<HomeStayRepository>(() => HomeStayRepository());
+  getIt.registerLazySingleton<StorageServices>(() => StorageServices());
+  getIt.registerLazySingleton<YourPropertiesRepository>(() => YourPropertiesRepository());
+  getIt.registerLazySingleton<TravelingRepository>(() => TravelingRepository());
+  getIt.registerLazySingleton<HostingRepository>(() => HostingRepository());
+}
+
 
 class Strings {
   // Onboarding Titles
