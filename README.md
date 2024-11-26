@@ -3403,4 +3403,2018 @@ class _FilterPageState extends State<FilterPage> {
     );
   }
 }
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/traveling_flow/controller/home_controller.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_properti_card.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+
+class HomeTravelingPage extends StatefulWidget {
+  const HomeTravelingPage({super.key});
+
+  @override
+  State<HomeTravelingPage> createState() => _HomeTravelingPageState();
+}
+
+class _HomeTravelingPageState extends State<HomeTravelingPage> {
+  final List<Property> properties = [
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.hiltonViewVilla,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.ecoFriendly,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller1,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller2,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller3,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller4,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller5,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.urban,
+      tagColor: AppColors.buttonColor,
+    ),
+    Property(
+      imageUrl:
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      title: Strings.evolveBackCoorg,
+      location: Strings.newYorkUSA,
+      status: Strings.defultDoller6,
+      statusColor: AppColors.buttonColor,
+      tag: Strings.luxury,
+      tagColor: AppColors.buttonColor,
+    ),
+  ];
+
+  final destinations = [
+    {
+      'image':
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.mumbai,
+    },
+    {
+      'image':
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.goa,
+    },
+    {
+      'image':
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.jaipur,
+    },
+    {
+      'image':
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.kerela,
+    },
+    {
+      'image':
+          "https://plus.unsplash.com/premium_photo-1661964071015-d97428970584?q=80&w=1920&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      'label': Strings.uttarakhand,
+    },
+  ];
+// today's update:- city and searching According filter done and profile contact us api called and started set location
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: GetBuilder(
+        init: TravelingHomeController(),
+        builder: (controller) => Column(
+          children: [
+            buildHeader(controller),
+            const SizedBox(height: 26),
+            controller.cityProperty == null
+                ? const SizedBox.shrink()
+                : SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    child: Row(
+                      children: controller.cityPropertiesList.map((data) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 14, bottom: 14),
+                          child: GestureDetector(
+                            onTap: () async {
+                              controller.searchController.text = data.city;
+                              controller.state.value = true;
+                                await controller.fetchFilteredProperties(isSearchPage: true).catchError((error){
+                                  print("Error fetching data: $error");
+                                  Get.toNamed(Routes.search);
+                                  controller.isNoDataFound.value = true;
+                                });
+                                  Get.toNamed(Routes.search);
+
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  height: 9.4.h,
+                                  width: 20.w,
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.all(
+                                        AppRadius.radius10),
+                                    image: DecorationImage(
+                                      image: NetworkImage(data.image.url),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 14,
+                                ),
+                                Text(
+                                  data.city,
+                                  style: FontManager.regular(12,
+                                      color: AppColors.black),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+            SizedBox(height: 1.h),
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Text(
+                    Strings.properties,
+                    style: FontManager.semiBold(20.sp, color: AppColors.black),
+                  ),
+                ),
+              ],
+            ),
+            controller.homeProperty == null
+                ? const Center(child: CircularProgressIndicator())
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: controller.propertiesList.length,
+                      itemBuilder: (context, index) {
+                        return PropertyCard(
+                          coverPhotoUrl:
+                              controller.propertiesList[index].coverPhoto!.url!,
+                          homestayType:
+                              controller.propertiesList[index].homestayType!,
+                          title: controller.propertiesList[index].title!,
+                          onTap: () => controller.getDetails(index),
+                          location: Strings.newYorkUSA,
+                          status: controller.propertiesList[index].status!,
+                          basePrice:
+                              controller.propertiesList[index].basePrice!,
+                          weekendPrice:
+                              controller.propertiesList[index].weekendPrice!,
+                          traveling: true,
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildHeader(TravelingHomeController controller) {
+    return Container(
+      height: 190,
+      width: 100.w,
+      decoration: const BoxDecoration(
+        color: AppColors.buttonColor,
+        borderRadius: BorderRadius.only(
+          bottomLeft: AppRadius.radius16,
+          bottomRight: AppRadius.radius16,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 5.2.w),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    Strings.helloJhon,
+                    style: FontManager.medium(20, color: AppColors.white),
+                  ),
+                  Text(
+                    Strings.welcomeToTravelbud,
+                    style: FontManager.regular(14,
+                        color: AppColors.greyWelcomeToTravelbud),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Image.asset(
+                Assets.imagesTv,
+                width: 42,
+                height: 36,
+              ),
+              SizedBox(width: 4.6.w),
+            ],
+          ),
+          SizedBox(height: 4.5.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Spacer(),
+              Container(
+                height: 6.h,
+                width: 75.w,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(AppRadius.radius10),
+                  color: AppColors.white,
+                ),
+                child: Center(
+                  child: TextField(
+                    onTap: () {
+                      FocusScope.of(context).requestFocus(FocusNode());
+                      controller.searchController.clear();
+                      controller.isLocation.value = false;
+                      controller.isNoDataFound.value = false;
+                      controller.state.value = false;
+                      Get.toNamed(Routes.search);
+                    },
+                    cursorColor: AppColors.greyText,
+                    decoration: InputDecoration(
+                      hintText: Strings.search,
+                      hintStyle: FontManager.regular(16.sp,
+                          color: AppColors.searchTextColor),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.searchIconColor,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Get.toNamed(Routes.filterPage);
+                },
+                child: Container(
+                  height: 6.h,
+                  width: 15.w,
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.all(AppRadius.radius10),
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      Assets.imagesFilterslines,
+                      height: 30,
+                      width: 30,
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+          SizedBox(height: 2.h),
+        ],
+      ),
+    );
+  }
+}
+
+class Property {
+  final String imageUrl;
+  final String title;
+  final String location;
+  final String status;
+  final Color statusColor;
+  final String tag;
+  final Color tagColor;
+
+  Property({
+    required this.imageUrl,
+    required this.title,
+    required this.location,
+    required this.status,
+    required this.statusColor,
+    required this.tag,
+    required this.tagColor,
+  });
+}
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:travellery_mobile/screen/traveling_flow/controller/home_controller.dart';
+import 'package:travellery_mobile/screen/traveling_flow/view/filter/widget/custom_rage_silder_thumb.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_loading_process.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../common_widgets/accommondation_details.dart';
+import '../../../../utils/font_manager.dart';
+import '../../../add_properties_screen/add_properties_steps/view/common_widget/amenities_and_houserules_custom.dart';
+
+class FilterPage extends StatefulWidget {
+  const FilterPage({super.key});
+
+  @override
+  State<FilterPage> createState() => _FilterPageState();
+}
+
+class _FilterPageState extends State<FilterPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: GetBuilder(
+        init: TravelingHomeController(),
+        builder: (controller) => Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5.w),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 7.3.h,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 15.sp),
+                      child: Text(
+                        Strings.filter,
+                        style: FontManager.medium(19.4.sp,
+                            color: AppColors.textAddProreties),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Get.back();
+                      },
+                      child: const Icon(
+                        Icons.clear,
+                        color: AppColors.greyText,
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(
+                  height: 3.9.h,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      Strings.priceRange,
+                      style: FontManager.medium(18,
+                          color: AppColors.textAddProreties),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 2.5.h,
+                ),
+                SfRangeSliderTheme(
+                  data: const SfRangeSliderThemeData(
+                    tooltipBackgroundColor: AppColors.buttonColor,
+                    activeTrackColor: AppColors.buttonColor,
+                    inactiveTrackColor: AppColors.greyText,
+                  ),
+                  child: Obx(
+                    () => SfRangeSlider(
+                      thumbShape: CustomThumbShape(),
+                      enableTooltip: true,
+                      min: 0,
+                      max: 30000,
+                      stepSize: 10,
+                      interval: 100,
+                      values: SfRangeValues(
+                          controller.minValue.value, controller.maxValue.value),
+                      onChanged: (dynamic values) {
+                        double start = values.start as double;
+                        double end = values.end as double;
+                        String startString = start.toInt().toString();
+                        String endString = end.toInt().toString();
+                        controller.minValue.value = start;
+                        controller.maxValue.value = end;
+                        controller.minPriceController.text = startString;
+                        controller.maxPriceController.text = endString;
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 2.5.h,
+                ),
+                SizedBox(height: 2.5.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.minimum,
+                            style: FontManager.regular(16.1.sp,
+                                color: AppColors.textAddProreties),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Container(
+                            width: 110.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              border: Border.all(
+                                  color: AppColors.borderContainerGriedView),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  SizedBox(width: 5.w),
+                                  Expanded(
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.number,
+                                      controller: controller.minPriceController,
+                                      style: FontManager.regular(16,
+                                          color: AppColors.textAddProreties),
+                                      decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "\u{20B9}"),
+                                      onFieldSubmitted: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                      onChanged: (value) {
+                                        if (value.isNotEmpty) {
+                                          double newValue = double.tryParse(value) ?? 0.0;
+                                          controller.minValue.value = newValue;
+                                          // Update the slider when the user changes the text input
+                                          controller.updateSliderValues();
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 3.5.w),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.maximum,
+                            style: FontManager.regular(16.1.sp,
+                                color: AppColors.textAddProreties),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Container(
+                            width: 110.w,
+                            height: 7.h,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                              border: Border.all(
+                                  color: AppColors.borderContainerGriedView),
+                            ),
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  SizedBox(width: 5.w),
+                                  Expanded(
+                                    child: TextFormField(
+                                      keyboardType: TextInputType.number,
+
+                                      controller: controller.maxPriceController,
+                                      style: FontManager.regular(16,
+                                          color: AppColors.textAddProreties),
+                                      decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "\u{20B9}"),
+                                      onFieldSubmitted: (value) {
+                                        // controller.amenities[index] = value;
+                                      },
+                                      onChanged: (value) {
+                                        if (value.isNotEmpty) {
+                                          double newValue = double.tryParse(value) ?? 30000.0;
+                                          controller.maxValue.value = newValue;
+                                          // Update the slider when the user changes the text input
+                                          controller.updateSliderValues();
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 3.5.w),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                SizedBox(
+                  height: 3.h,
+                ),
+                Text(
+                  Strings.sortByPrice,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesAny,
+                    title: Strings.any,
+                    isSelected: controller.selectedSorting.value == 0,
+                    onSelect: () => controller.onSelectSoring(0),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesLtohighest,
+                    title: Strings.lowestToHighest,
+                    isSelected: controller.selectedSorting.value == 1,
+                    onSelect: () => controller.onSelectSoring(1),
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Obx(
+                  () => AmenityAndHouseRulesContainer(
+                    imageAsset: Assets.imagesHToLowest,
+                    title: Strings.highestToLowest,
+                    isSelected: controller.selectedSorting.value == 2,
+                    onSelect: () => controller.onSelectSoring(2),
+                  ),
+                ),
+                SizedBox(
+                  height: 3.h,
+                ),
+                Text(
+                  Strings.typeOfPlace,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildTypeOfPlace(
+                  title: Strings.entirePlace,
+                  subtitle: Strings.wholePlacetoGuests,
+                  imageAsset: Assets.imagesTraditional,
+                  value: Strings.entirePlaceValue,
+                  controller: controller,
+                ),
+                const SizedBox(height: 20),
+                buildTypeOfPlace(
+                  title: Strings.privateRoom,
+                  subtitle:
+                      Strings.guestsSleepInPrivateRoomButSomeAreasAreShared,
+                  imageAsset: Assets.imagesPrivateRoom,
+                  value: Strings.privateRoomValue,
+                  controller: controller,
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.homestayType,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesTraditional,
+                  title: Strings.traditional,
+                  controller: controller,
+                  value: 'traditional',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesBedAndBreakfast2,
+                  title: Strings.bedAndBreakfast,
+                  controller: controller,
+                  value: 'bedAndBreakfast',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesUrban2,
+                  title: Strings.urban,
+                  controller: controller,
+                  value: 'urban',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesEcoFriendly2,
+                  title: Strings.ecoFriendly,
+                  controller: controller,
+                  value: 'ecoFriendly',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesAdvanture2,
+                  title: Strings.adventure,
+                  controller: controller,
+                  value: 'adventure',
+                  height: 7.6.h,
+                ),
+                SizedBox(height: 2.h),
+                buildTypeOfPlace(
+                  imageAsset: Assets.imagesLuxury2,
+                  title: Strings.luxury,
+                  controller: controller,
+                  value: 'luxury',
+                  height: 7.6.h,
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.accommodationDetails,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                buildCustomContainer(Assets.imagesMaxGuests, Strings.maxGuests,
+                    controller.maxGuestsCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesBedRooms, Strings.singleBed,
+                    controller.singleBedCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesSingleBed, Strings.bedRooms,
+                    controller.bedroomsCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesDubleBed, Strings.doubleBed,
+                    controller.doubleBedCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesExtraFloor,
+                    Strings.extraFloorMattress, controller.extraFloorCount),
+                SizedBox(height: 2.h),
+                buildCustomContainer(Assets.imagesBathRooms, Strings.bathRooms,
+                    controller.bathRoomsCount),
+                SizedBox(height: 2.h),
+                Container(
+                  width: 100.w,
+                  height: 7.h,
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.borderContainerGriedView,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(width: 0.w),
+                      Image.asset(
+                        Assets.imagesKitchen,
+                        height: 26,
+                        width: 26,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(width: 3.w),
+                      Text(
+                        Strings.kitchenAvailable,
+                        style: FontManager.regular(14, color: AppColors.black),
+                        textAlign: TextAlign.start,
+                      ),
+                      const Spacer(),
+                      Obx(() => Checkbox(
+                            activeColor: AppColors.buttonColor,
+                            value: controller.isKitchenAvailable.value,
+                            onChanged: (bool? newValue) {
+                              controller.isKitchenAvailable.value =
+                                  newValue ?? false;
+                            },
+                            side: const BorderSide(
+                                color: AppColors.texFiledColor),
+                          )),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 3.2.h,
+                ),
+                Text(
+                  Strings.amenities,
+                  style:
+                      FontManager.medium(18, color: AppColors.textAddProreties),
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                Obx(
+                  () {
+                    if (controller.selectedAmenities.length < 5) {
+                      controller.selectedAmenities.value =
+                          List.generate(5, (_) => false);
+                    }
+                    return Column(
+                      children: [
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesWiFi,
+                          title: Strings.wiFi,
+                          isSelected: controller.selectedAmenities[0],
+                          onSelect: () => controller.toggleAmenity(0),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesAirCondioner,
+                          title: Strings.airConditioner,
+                          isSelected: controller.selectedAmenities[1],
+                          onSelect: () => controller.toggleAmenity(1),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesFirAlarm,
+                          title: Strings.fireAlarm,
+                          isSelected: controller.selectedAmenities[2],
+                          onSelect: () => controller.toggleAmenity(2),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesHometherater,
+                          title: Strings.homeTheater,
+                          isSelected: controller.selectedAmenities[3],
+                          onSelect: () => controller.toggleAmenity(3),
+                        ),
+                        SizedBox(height: 2.h),
+                        AmenityAndHouseRulesContainer(
+                          imageAsset: Assets.imagesMastrSuite,
+                          title: Strings.masterSuiteBalcony,
+                          isSelected: controller.selectedAmenities[4],
+                          onSelect: () => controller.toggleAmenity(4),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                controller.showMore.value == true
+                    ? Obx(
+                        () {
+                          if (controller.selectedRules.length < 4) {
+                            controller.selectedRules.value =
+                                List.generate(4, (_) => false);
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                height: 3.2.h,
+                              ),
+                              Text(
+                                Strings.rules,
+                                style: FontManager.medium(18,
+                                    color: AppColors.textAddProreties),
+                              ),
+                              SizedBox(
+                                height: 2.h,
+                              ),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoSmoking,
+                                title: Strings.noSmoking,
+                                isSelected: controller.selectedRules[0],
+                                onSelect: () => controller.toggleRules(0),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoDrinking,
+                                title: Strings.noDrinking,
+                                isSelected: controller.selectedRules[1],
+                                onSelect: () => controller.toggleRules(1),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesNoPet,
+                                title: Strings.noPet,
+                                isSelected: controller.selectedRules[2],
+                                onSelect: () => controller.toggleRules(2),
+                              ),
+                              SizedBox(height: 2.h),
+                              AmenityAndHouseRulesContainer(
+                                imageAsset: Assets.imagesDamageToProretiy,
+                                title: Strings.damageToProperty,
+                                isSelected: controller.selectedRules[3],
+                                onSelect: () => controller.toggleRules(3),
+                              ),
+                            ],
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox(height: 2.4.h),
+                controller.showMore.value == false
+                    ? InkWell(
+                        onTap: () {
+                          controller.updateShowMore(true);
+                        },
+                        child: const Text(Strings.showMore,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppColors.buttonColor,
+                              color: AppColors.buttonColor,
+                            )),
+                      )
+                    : const SizedBox.shrink(),
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          LoadingProcessCommon().showLoading();
+                          controller.clearFilters();
+                          controller.getTravelingData().then((value) {
+                            LoadingProcessCommon().hideLoading();
+                            Get.back();
+                          },);
+                        },
+                        child: Container(
+                          height: 5.9.h,
+                          width: 20.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundColor,
+                            border: Border.all(color: AppColors.buttonColor),
+                            borderRadius:
+                                const BorderRadius.all(AppRadius.radius10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              Strings.clearAll,
+                              style: FontManager.medium(18,
+                                  color: AppColors.buttonColor),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          LoadingProcessCommon().showLoading();
+                          controller.fetchFilteredProperties().then((value) {
+                            LoadingProcessCommon().hideLoading();
+                            Get.back();
+                          },);
+                        },
+                        child: Container(
+                          height: 5.9.h,
+                          width: 20.w,
+                          decoration: BoxDecoration(
+                            color: AppColors.buttonColor,
+                            border: Border.all(color: AppColors.buttonColor),
+                            borderRadius:
+                                const BorderRadius.all(AppRadius.radius10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              Strings.submit,
+                              style: FontManager.medium(18,
+                                  color: AppColors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 50,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildCustomContainer(String imageAsset, String title, RxInt count) {
+    return CusttomContainer(
+      imageAsset: imageAsset,
+      title: title,
+      count: count,
+    );
+  }
+
+  Widget buildTypeOfPlace({
+    required String title,
+    String? subtitle,
+    required String imageAsset,
+    required String value,
+    required TravelingHomeController controller,
+    double? height,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        if (height == null) {
+          controller.selectType(value);
+        } else {
+          controller.onSelectHomeStayType(value);
+        }
+      },
+      child: Obx(() {
+        bool isSelected;
+        height == null
+            ? isSelected = controller.selectedTypeOfPlace.value == value
+            : isSelected = controller.selectedHomeStayType.value == value;
+
+        return Container(
+          width: double.infinity,
+          height: height ?? 9.3.h,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.selectContainerColor : Colors.white,
+            borderRadius: const BorderRadius.all(AppRadius.radius10),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.buttonColor
+                  : AppColors.borderContainerGriedView,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  imageAsset,
+                  height: 24,
+                  width: 24,
+                  fit: BoxFit.cover,
+                  color:
+                      isSelected ? AppColors.buttonColor : AppColors.greyText,
+                ),
+              ),
+              subtitle == null
+                  ? const SizedBox(
+                      width: 2.5,
+                    )
+                  : const SizedBox.shrink(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 1.h),
+                    Text(
+                      title,
+                      style: FontManager.regular(16,
+                          color: isSelected
+                              ? AppColors.buttonColor
+                              : AppColors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    subtitle == null
+                        ? const SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              subtitle,
+                              style: FontManager.regular(12,
+                                  color: AppColors.greyText),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Obx(
+                  () => Radio(
+                    value: value,
+                    groupValue: height == null
+                        ? controller.selectedTypeOfPlace.value
+                        : controller.selectedHomeStayType.value,
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        height == null
+                            ? controller.selectType(newValue)
+                            : controller.onSelectHomeStayType(newValue);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_button.dart';
+import '../../../../common_widgets/common_properti_card.dart';
+import '../../../../common_widgets/custom_circle_thumb_shape.dart';
+import '../../../../common_widgets/custom_track_shape.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_radius.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import '../../../../common_widgets/accommondation_details.dart';
+import '../../../your_properties_screen/view/your_properties_page.dart';
+import '../../controller/home_controller.dart';
+import '../../controller/traveling_flow_controller.dart';
+
+class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final TravelingHomeController controller = Get.put(TravelingHomeController());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundYourPropertiesPage,
+      body: PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, result) {
+          controller.searchFilterList.clear();
+          controller.isSearchingPage.value = false;
+
+          controller.update();
+          SystemChannels.textInput.invokeMethod('TextInput.hide');
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(height: 7.3.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                      onTap: () {
+                        FocusScope.of(context).unfocus();
+                        controller.isSearchingPage.value = false;
+                        controller.searchFilterList.clear();
+                        controller.update();
+                        Get.back();
+                      },
+                      child: const Icon(Icons.keyboard_arrow_left_rounded,
+                          size: 30)),
+                  SizedBox(width: 1.w),
+                  Flexible(
+                    flex: 20,
+                    child: Container(
+                      height: 6.h,
+                      width: 100.w,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(AppRadius.radius10),
+                        color: AppColors.white,
+                      ),
+                      child: Center(
+                        child: TextField(
+                          controller: controller.searchController,
+                          onChanged: (value) {
+                            if (value.isNotEmpty) {
+                              controller.state.value = false;
+                              if(controller.searchController.text.isEmpty){
+
+                              }
+                              controller.searchFilterList.clear();
+                              controller.update();
+                            }else{
+                              controller.isNoDataFound.value = false;
+                              print("nxbncmbxcnvb");
+                            }
+                          },
+                          cursorColor: AppColors.greyText,
+                          decoration: InputDecoration(
+                            hintText: Strings.search,
+                            hintStyle: FontManager.regular(16.sp,
+                                color: AppColors.searchTextColor),
+                            border: InputBorder.none,
+                            prefixIcon: IconButton(
+                              icon: Image.asset(
+                                Assets.imagesSearchIcon,
+                                height: 15,
+                                width: 15,
+                              ),
+                              onPressed: () {},
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Image.asset(
+                                Assets.imagesCloseIcon,
+                                height: 22,
+                                width: 22,
+                              ),
+                              onPressed: () {
+                                controller.state.value = false;
+                                controller.isNoDataFound.value = false;
+                                controller.searchController.clear();
+                                controller.searchFilterList.clear();
+                                controller.update();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Obx(
+              () => controller.isNoDataFound.value
+                  ? Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "No Homestay Data Found",
+                            style: FontManager.regular(15,
+                                color: AppColors.greyText),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Obx(
+                      () => controller.isLocation.value == true
+                          ? Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 5.w),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: 2.h),
+                                  Text(Strings.radius,
+                                      style: FontManager.medium(18,
+                                          color: AppColors.black)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                      "${Strings.within} ${controller.sliderValue.value.toInt()} ${Strings.kms}",
+                                      style: FontManager.regular(14,
+                                          color: AppColors.black)),
+                                  Obx(() {
+                                    return SliderTheme(
+                                      data: SliderThemeData(
+                                        trackShape: CustomTrackShape(),
+                                        thumbShape: const CircleThumbShape(
+                                            thumbRadius: 6.5),
+                                        trackHeight: 2.5,
+                                      ),
+                                      child: Slider(
+                                          value: controller.sliderValue.value,
+                                          min: 1,
+                                          max: 20,
+                                          activeColor: AppColors.buttonColor,
+                                          inactiveColor:
+                                              AppColors.sliderInactiveColor,
+                                          onChanged: (double newValue) {
+                                            controller.sliderValue.value =
+                                                newValue;
+                                          },
+                                          semanticFormatterCallback:
+                                              (double newValue) {
+                                            return '${newValue.round()}';
+                                          }),
+                                    );
+                                  }),
+                                  const SizedBox(height: 10),
+                                  CommonButton(
+                                    onPressed: () {},
+                                    title: Strings.search,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Expanded(
+                                  //   child: ClipRRect(
+                                  //     borderRadius: const BorderRadius.all(
+                                  //       Radius.circular(10),
+                                  //     ),
+                                  //     child: Obx(
+                                  //       () => controller.mapLoading.value
+                                  //           ? const Center(
+                                  //               child: CircularProgressIndicator(),
+                                  //             )
+                                  //           : Container(),
+                                  //     ),
+                                  //   ),
+                                  // )
+                                ],
+                              ),
+                            )
+                          : controller.state.value == true
+                              ? controller.searchFilterList.isEmpty
+                                  ? const Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          CircularProgressIndicator(),
+                                        ],
+                                      ),
+                                    )
+                                  : Expanded(
+                                      child: ListView.builder(
+                                        itemCount:
+                                            controller.searchFilterList.length,
+                                        itemBuilder: (context, index) {
+                                          return PropertyCard(
+                                            coverPhotoUrl: controller
+                                                .searchFilterList[index]
+                                                .coverPhoto!
+                                                .url!,
+                                            homestayType: controller
+                                                .searchFilterList[index]
+                                                .homestayType!,
+                                            title: controller
+                                                .searchFilterList[index].title!,
+                                            onTap: () =>
+                                                controller.getDetails(index),
+                                            location: Strings.newYorkUSA,
+                                            status: controller
+                                                .searchFilterList[index]
+                                                .status!,
+                                            basePrice: controller
+                                                .searchFilterList[index]
+                                                .basePrice!,
+                                            weekendPrice: controller
+                                                .searchFilterList[index]
+                                                .weekendPrice!,
+                                            traveling: true,
+                                          );
+                                        },
+                                      ),
+                                    )
+                              : Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 5.w),
+                                  child: Column(
+                                    children: [
+                                      SizedBox(height: 2.h),
+                                      GestureDetector(
+                                        onTap: () {
+                                          controller.isLocation.value = true;
+                                        },
+                                        child: Row(
+                                          children: [
+                                            Image.asset(
+                                                Assets.imagesLocationIcon,
+                                                height: 22,
+                                                width: 22,
+                                                fit: BoxFit.contain),
+                                            SizedBox(width: 2.w),
+                                            Text(Strings.orUseMyCurrentLocation,
+                                                style: FontManager.regular(
+                                                    15.sp,
+                                                    color:
+                                                        AppColors.buttonColor)),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(Strings.recentSearch,
+                                              style: FontManager.regular(14,
+                                                  color: AppColors
+                                                      .greyWelcomeToTravelbud)),
+                                        ],
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      const SizedBox(height: 15.3),
+                                    ],
+                                  ),
+                                ),
+                      // Obx(
+                      //   () => controller.isSearching.value == false
+                      //       ? Expanded(
+                      //           child: Padding(
+                      //             padding: const EdgeInsets.symmetric(horizontal: 8),
+                      //             child: Column(
+                      //               mainAxisAlignment: MainAxisAlignment.center,
+                      //               children: [
+                      //                 Image.asset(
+                      //                   Assets.imagesLocationsearchicon,
+                      //                   height: 112,
+                      //                   width: 112,
+                      //                 ),
+                      //                 SizedBox(height: 2.h),
+                      //                 Text(
+                      //                   Strings.sorryWeCouldnFindAnyStaysNearLocation,
+                      //                   style: FontManager.regular(14,
+                      //                       color: AppColors.textAddProreties),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //                 SizedBox(height: 1.h),
+                      //                 Text(
+                      //                   Strings.locationHelpYou,
+                      //                   style: FontManager.regular(14,
+                      //                       color: AppColors.greyText),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ],
+                      //             ),
+                      //           ),
+                      //         )
+                      //
+                      // ),
+                    ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildPropertyCard(Property property, int index) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 1.h),
+      child: GestureDetector(
+        onTap: () {},
+        child: Container(
+          height: 35.h,
+          width: 100.w,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundColor,
+            borderRadius: BorderRadius.all(AppRadius.radius10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Padding(
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: Container(
+              //     height: 21.h,
+              //     width: 100.w,
+              //     decoration: BoxDecoration(
+              //       borderRadius: const BorderRadius.all(AppRadius.radius10),
+              //       image: DecorationImage(
+              //         image: controller.imagePaths[index] != null
+              //             ? FileImage(File(controller.imagePaths[index]!))
+              //             : NetworkImage(property.imageUrl),
+              //         fit: BoxFit.cover,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      property.tag,
+                      style: FontManager.regular(12, color: property.tagColor),
+                    ),
+                    Text(
+                      property.status,
+                      style: FontManager.semiBold(14.sp,
+                          color: property.statusColor),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, top: 7.0),
+                child: Text(
+                  property.title,
+                  style:
+                      FontManager.medium(16, color: AppColors.textAddProreties),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6, left: 4.0, bottom: 8.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on, color: AppColors.buttonColor),
+                    SizedBox(width: 1.4.w),
+                    Text(
+                      property.location,
+                      style: FontManager.regular(12, color: AppColors.greyText),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTypeOfPlace({
+    required String title,
+    String? subtitle,
+    required String imageAsset,
+    required String value,
+    required TravelingFlow controller,
+    double? height,
+  }) {
+    return GestureDetector(
+      onTap: () {},
+      child: Obx(() {
+        bool isSelected;
+        height == null
+            ? isSelected = controller.selectedTypeOfPlace.value == value
+            : isSelected = controller.selectedHomeStayType.value == value;
+
+        return Container(
+          width: double.infinity,
+          height: height ?? 9.3.h,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.selectContainerColor : Colors.white,
+            borderRadius: const BorderRadius.all(AppRadius.radius10),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.buttonColor
+                  : AppColors.borderContainerGriedView,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Image.asset(
+                  imageAsset,
+                  height: 24,
+                  width: 24,
+                  fit: BoxFit.cover,
+                  color:
+                      isSelected ? AppColors.buttonColor : AppColors.greyText,
+                ),
+              ),
+              subtitle == null
+                  ? const SizedBox(
+                      width: 2.5,
+                    )
+                  : const SizedBox.shrink(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 1.h),
+                    Text(
+                      title,
+                      style: FontManager.regular(16,
+                          color: isSelected
+                              ? AppColors.buttonColor
+                              : AppColors.black),
+                    ),
+                    const SizedBox(height: 2),
+                    subtitle == null
+                        ? const SizedBox.shrink()
+                        : Align(
+                            alignment: Alignment.topLeft,
+                            child: Text(
+                              subtitle,
+                              style: FontManager.regular(12,
+                                  color: AppColors.greyText),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Obx(
+                  () => Radio(
+                    value: value,
+                    groupValue: height == null
+                        ? controller.selectedTypeOfPlace.value
+                        : controller.selectedHomeStayType.value,
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        height == null
+                            ? controller.selectType(newValue, imageAsset)
+                            : controller.onSelectHomeStayType(newValue);
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget buildCustomContainer(String imageAsset, String title, RxInt count) {
+    return CusttomContainer(
+      imageAsset: imageAsset,
+      title: title,
+      count: count,
+    );
+  }
+}
+import 'dart:convert';
+
+CityModel cityModelFromJson(String str) => CityModel.fromJson(json.decode(str));
+
+String cityModelToJson(CityModel data) => json.encode(data.toJson());
+
+class CityModel {
+  String message;
+  List<HomestayCity> homestayCity;
+  List<dynamic> homestayCityData;
+  int totalHomestayCityData;
+
+  CityModel({
+    required this.message,
+    required this.homestayCity,
+    required this.homestayCityData,
+    required this.totalHomestayCityData,
+  });
+
+  factory CityModel.fromJson(Map<String, dynamic> json) => CityModel(
+    message: json["message"],
+    homestayCity: List<HomestayCity>.from(json["homestayCity"].map((x) => HomestayCity.fromJson(x))),
+    homestayCityData: List<dynamic>.from(json["homestayCityData"].map((x) => x)),
+    totalHomestayCityData: json["totalHomestayCityData"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "message": message,
+    "homestayCity": List<dynamic>.from(homestayCity.map((x) => x.toJson())),
+    "homestayCityData": List<dynamic>.from(homestayCityData.map((x) => x)),
+    "totalHomestayCityData": totalHomestayCityData,
+  };
+}
+
+class HomestayCity {
+  Image image;
+  String id;
+  String city;
+  DateTime createdAt;
+  DateTime updatedAt;
+  int v;
+
+  HomestayCity({
+    required this.image,
+    required this.id,
+    required this.city,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.v,
+  });
+
+  factory HomestayCity.fromJson(Map<String, dynamic> json) => HomestayCity(
+    image: Image.fromJson(json["image"]),
+    id: json["_id"],
+    city: json["city"],
+    createdAt: DateTime.parse(json["createdAt"]),
+    updatedAt: DateTime.parse(json["updatedAt"]),
+    v: json["__v"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "image": image.toJson(),
+    "_id": id,
+    "city": city,
+    "createdAt": createdAt.toIso8601String(),
+    "updatedAt": updatedAt.toIso8601String(),
+    "__v": v,
+  };
+}
+
+class Image {
+  String publicId;
+  String url;
+
+  Image({
+    required this.publicId,
+    required this.url,
+  });
+
+  factory Image.fromJson(Map<String, dynamic> json) => Image(
+    publicId: json["public_id"],
+    url: json["url"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "public_id": publicId,
+    "url": url,
+  };
+}import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/traveling_flow/data/repository/traveling_repository.dart';
+import '../../../api_helper/api_helper.dart';
+import '../../../api_helper/getit_service.dart';
+import '../../../common_widgets/common_loading_process.dart';
+import '../../../routes_app/all_routes_app.dart';
+import '../../../services/storage_services.dart';
+import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+import '../data/model/city_model.dart';
+import '../data/model/home_properties_model.dart';
+
+class TravelingHomeController extends GetxController {
+  HomeTravelingPropertiesModel? homeProperty;
+  List<ReUsedDataModel> propertiesList = [];
+  Rx<HomeTravelingPropertiesModel?> searchFilterProperty =
+      Rx<HomeTravelingPropertiesModel?>(null);
+  RxList<ReUsedDataModel> searchFilterList = RxList<ReUsedDataModel>([]);
+  CityModel? cityProperty;
+  RxBool isNoDataFound = false.obs;
+  List<HomestayCity> cityPropertiesList = [];
+  var travelingRepository = getIt<TravelingRepository>();
+  var apiHelper = getIt<ApiHelper>();
+  RxBool isLocation = false.obs;
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void onInit() {
+    super.onInit();
+    if (propertiesList.isEmpty || cityPropertiesList.isEmpty) {
+      getTravelingData();
+      getCityData();
+    }
+  }
+
+  Future<void> getTravelingData() async {
+    homeProperty = await travelingRepository.getTravelingProperties(limit: 5);
+    if (homeProperty != null && homeProperty!.homestaysData != null) {
+      propertiesList = homeProperty!.homestaysData!;
+    } else {
+      propertiesList = [];
+    }
+    update();
+  }
+
+  void getDetails(index) {
+    LoadingProcessCommon().showLoading();
+    final String? singleFetchUserModel;
+    isSearchingPage.value
+        ? singleFetchUserModel = searchFilterList[index].id
+        : singleFetchUserModel = propertiesList[index].id;
+    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
+    getIt<StorageServices>().getYourPropertiesId();
+    getSingleYourProperties().then(
+      (value) {
+        LoadingProcessCommon().hideLoading();
+        Get.toNamed(
+          Routes.travelingDetailsPage,
+        );
+      },
+    );
+  }
+
+  Future<void> getCityData() async {
+    cityProperty = await travelingRepository.getCity();
+    if (cityProperty != null) {
+      cityPropertiesList = cityProperty!.homestayCity;
+    } else {
+      cityPropertiesList = [];
+    }
+    update();
+  }
+
+  late HomeStaySingleFetchResponse detailsProperty;
+
+  Future<void> getSingleYourProperties() async {
+    detailsProperty = await travelingRepository.getSingleFetchProperties();
+  }
+
+  // search location
+  RxDouble sliderValue = 6.0.obs;
+  RxBool isSearchingPage = false.obs;
+  RxBool mapLoading = true.obs;
+
+  // filter
+
+  RxDouble minValue = 100.0.obs;
+  TextEditingController minPriceController = TextEditingController();
+  TextEditingController maxPriceController = TextEditingController();
+  RxDouble maxValue = 30000.0.obs;
+  var showMore = false.obs;
+  RxBool state = false.obs;
+
+  void updateShowMore(var value) {
+    showMore.value = value;
+    update();
+  }
+
+  void updateSliderValues() {
+    print("sdfsdfsd${maxValue.value}");
+    minValue.value = double.tryParse(minPriceController.text) ?? 0.0;
+    maxValue.value = double.tryParse(maxPriceController.text) ?? 30000.0;
+  }
+
+  var maxGuestsCount = 0.obs;
+  var singleBedCount = 0.obs;
+  var bedroomsCount = 0.obs;
+  var doubleBedCount = 0.obs;
+  var extraFloorCount = 0.obs;
+  var bathRoomsCount = 0.obs;
+  var isKitchenAvailable = false.obs;
+
+  void increment(RxInt count) {
+    count.value++;
+  }
+
+  void decrement(RxInt count) {
+    if (count.value > 0) {
+      count.value--;
+    }
+  }
+
+  RxList<bool> selectedAmenities = <bool>[].obs;
+
+  List<String> allAmenities = [];
+
+  void toggleAmenity(int index) {
+    if (index >= 0 && index < selectedAmenities.length) {
+      selectedAmenities[index] = !selectedAmenities[index];
+    }
+    update();
+  }
+
+  RxList<bool> selectedRules = <bool>[].obs;
+
+  List<String> allRules = [];
+
+  void toggleRules(int index) {
+    if (index >= 0 && index < selectedRules.length) {
+      selectedRules[index] = !selectedRules[index];
+    }
+    update();
+  }
+
+  RxInt selectedIndex = 0.obs;
+
+  RxInt selectedSorting = 0.obs;
+  var selectedTypeOfPlace = ''.obs;
+  var selectedHomeStayType = ''.obs;
+
+  void onSelectSoring(var index) {
+    selectedSorting.value = index;
+    update();
+  }
+
+  void onSelectHomeStayType(var index) {
+    selectedHomeStayType.value = index;
+  }
+
+  void selectType(String value) {
+    selectedTypeOfPlace.value = value;
+  }
+
+  Map<String, dynamic> getFilters({bool isSearchPage = false}) {
+    Map<String, dynamic> filters = {};
+
+    if (isSearchPage) {
+      if (state.value == true) filters['city'] = searchController.text;
+    } else {
+      filters['minPrice'] = minPriceController.text;
+      filters['maxPrice'] = maxPriceController.text;
+      if (selectedHomeStayType.value.isNotEmpty) {
+        filters['homestayType'] = selectedHomeStayType.value;
+      }
+      if (selectedTypeOfPlace.value.isNotEmpty &&
+          selectedTypeOfPlace.value == 'entirePlace') {
+        filters['entirePlace'] = true;
+      }
+      if (selectedTypeOfPlace.value.isNotEmpty &&
+          selectedTypeOfPlace.value == 'privateRoom') {
+        filters['privatePlace'] = true;
+      }
+      if (maxGuestsCount.value != 0) {
+        filters['maxGuests'] = maxGuestsCount.value;
+      }
+      if (singleBedCount.value != 0) {
+        filters['singleBed'] = singleBedCount.value;
+      }
+      if (doubleBedCount.value != 0) {
+        filters['doubleBed'] = doubleBedCount.value;
+      }
+      if (extraFloorCount.value != 0) {
+        filters['extraFloorMattress'] = extraFloorCount.value;
+      }
+      if (bathRoomsCount.value != 0) {
+        filters['bathrooms'] = bathRoomsCount.value;
+      }
+      if (isKitchenAvailable.value != false) {
+        filters['kitchenAvailable'] = isKitchenAvailable.value;
+      }
+      if (allAmenities.isNotEmpty) {
+        filters['amenities'] = allAmenities.join(',');
+      }
+      // filters['sortBy'] = selectedSorting.value == 1
+      //     ? 'Highest to Lowest'
+      //     : 'Lowest to Highest';
+      if (allRules.isNotEmpty) filters['houseRules'] = allRules.join(',');
+      if (state.value == true) filters['city'] = state.value;
+    }
+    return filters;
+  }
+
+  Future<void> fetchFilteredProperties({bool isSearchPage = false}) async {
+    Map<String, dynamic> filters = getFilters(isSearchPage: isSearchPage);
+    isSearchPage == true
+        ? searchFilterProperty.value =
+            await travelingRepository.getFilterParams(queryParams: filters)
+        : homeProperty =
+            await travelingRepository.getFilterParams(queryParams: filters);
+    if (isSearchPage) {
+      if (searchFilterProperty.value != null &&
+          searchFilterProperty.value!.homestaysData != null) {
+        searchFilterList.value = searchFilterProperty.value!.homestaysData!;
+        isSearchingPage.value = true;
+      } else {
+        searchFilterList.value = [];
+      }
+      update();
+    } else {
+      if (homeProperty != null && homeProperty!.homestaysData != null) {
+        propertiesList = homeProperty!.homestaysData!;
+        isSearchingPage.value = false;
+      } else {
+        propertiesList = [];
+      }
+    }
+    update();
+  }
+
+  void clearFilters() {
+    minPriceController.clear();
+    maxPriceController.clear();
+    minValue.value = 100.0;
+    maxValue.value = 10000.0;
+    maxGuestsCount.value = 0;
+    singleBedCount.value = 0;
+    bedroomsCount.value = 0;
+    doubleBedCount.value = 0;
+    extraFloorCount.value = 0;
+    bathRoomsCount.value = 0;
+    isKitchenAvailable.value = false;
+    selectedAmenities.clear();
+    allAmenities.clear();
+    selectedRules.clear();
+    selectedTypeOfPlace.value = '';
+    selectedHomeStayType.value = '';
+    selectedSorting.value = 1;
+    //
+    // state.value = '';
+
+    update();
+  }
+}
+import '../../../../api_helper/api_helper.dart';
+import '../../../../api_helper/api_uri.dart';
+import '../../../../api_helper/getit_service.dart';
+import '../../../../services/storage_services.dart';
+import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+import 'package:dio/dio.dart' as dio;
+import '../model/city_model.dart';
+import '../model/home_properties_model.dart';
+
+class TravelingRepository {
+  var apiProvider = getIt<ApiHelper>();
+  var apiURLs = getIt<APIUrls>();
+
+  Future<HomeTravelingPropertiesModel> getTravelingProperties(
+      {int limit = 0, int skip = 0}) async {
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}/?limit=$limit&skip=$skip",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeTravelingPropertiesModel.fromJson(data);
+  }
+
+  Future<HomeStaySingleFetchResponse> getSingleFetchProperties() async {
+    String? yourPropertiesId = getIt<StorageServices>().getYourPropertiesId();
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}/$yourPropertiesId",
+    );
+    Map<String, dynamic> data = response!.data;
+    return HomeStaySingleFetchResponse.fromJson(data);
+  }
+
+  Future<HomeTravelingPropertiesModel> getFilterParams({
+    required Map<String, dynamic> queryParams,
+  }) async {
+    String queryString = queryParams.entries
+        .map((entry) =>
+            '${entry.key}=${Uri.encodeQueryComponent(entry.value.toString())}')
+        .join('&');
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.homeStayUrl}?$queryString",
+    );
+
+    Map<String, dynamic> data = response!.data;
+    return HomeTravelingPropertiesModel.fromJson(data);
+  }
+
+  Future<CityModel> getCity() async {
+    dio.Response? response = await apiProvider.getData(
+      "${apiURLs.baseUrl}${apiURLs.cityGetUrl}",
+    );
+    Map<String, dynamic> data = response!.data;
+    return CityModel.fromJson(data);
+  }
+}
 
