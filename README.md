@@ -18,6 +18,1056 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220397599-f5b30425-689b-459b-a885-142f62cde580.png" height="50%" width="30%">
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/hosting_flow/controller/home_controller.dart';
+import '../../../../common_widgets/common_propertis_widget.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_string.dart';
+
+class HostingDetailsPage extends StatefulWidget {
+  const HostingDetailsPage({super.key});
+
+  @override
+  State<HostingDetailsPage> createState() => _DetailsPageState();
+}
+
+class _DetailsPageState extends State<HostingDetailsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double statusBarHeight = MediaQuery.of(context).padding.top;
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: GetBuilder(
+        init: HostingHomeController(),
+        builder: (controller) => PropertyCardWidget(
+          title: Strings.details,
+          homestayType:
+              controller.detailsProperty.homestayData!.homestayType ?? '',
+          accommodationType: controller.detailsProperty.homestayData!
+                      .accommodationDetails!.entirePlace ==
+                  true
+              ? Strings.entirePlace
+              : Strings.privateRoom,
+          address: controller.detailsProperty.homestayData!.address ?? '',
+          basePrice: controller.detailsProperty.homestayData!.basePrice ?? 0,
+          checkInTime:
+              controller.detailsProperty.homestayData!.checkInTime ?? '',
+          checkOutTime:
+              controller.detailsProperty.homestayData!.checkOutTime ?? '',
+          statusBarHeight: statusBarHeight,
+          homestayPhotos:
+              controller.detailsProperty.homestayData!.homestayPhotos ?? [],
+          status: controller.detailsProperty.homestayData!.status ?? '',
+          ownerContactNumber:
+              controller.detailsProperty.homestayData!.ownerContactNo ?? '',
+          ownerEmail:
+              controller.detailsProperty.homestayData!.ownerEmailId ?? '',
+          dataTitle: controller.detailsProperty.homestayData!.title ?? '',
+          description:
+              controller.detailsProperty.homestayData!.description ?? '',
+          flexibleCheckIn:
+              controller.detailsProperty.homestayData!.flexibleCheckIn ?? false,
+          flexibleCheckOut:
+              controller.detailsProperty.homestayData!.flexibleCheckOut ??
+                  false,
+          homestayContactNoList:
+              controller.detailsProperty.homestayData!.homestayContactNo ?? [],
+          homestayEmailIdList:
+              controller.detailsProperty.homestayData!.homestayEmailId ?? [],
+          tabController: _tabController,
+          weekendPrice:
+              controller.detailsProperty.homestayData!.weekendPrice ?? 0,
+          bathrooms: controller.detailsProperty.homestayData!
+                  .accommodationDetails!.bathrooms ??
+              0,
+          bedrooms: controller.detailsProperty.homestayData!
+                  .accommodationDetails!.bedrooms ??
+              0,
+          city: controller.detailsProperty.homestayData!.city ?? '',
+          doubleBed: controller.detailsProperty.homestayData!
+                  .accommodationDetails!.doubleBed ??
+              0,
+          extraFloorMattress: controller.detailsProperty.homestayData!.accommodationDetails!.extraFloorMattress ?? 0,
+          kitchenAvailable: controller.detailsProperty.homestayData!.accommodationDetails!.kitchenAvailable ?? false,
+          landmark: controller.detailsProperty.homestayData!.landmark ?? '',
+          pinCode: controller.detailsProperty.homestayData!.pinCode ?? '',
+          state: controller.detailsProperty.homestayData!.state ?? '',
+          street: controller.detailsProperty.homestayData!.street ?? '',
+          maxGuests: controller.detailsProperty.homestayData!.accommodationDetails!.maxGuests ?? 0,
+          singleBed: controller.detailsProperty.homestayData!.accommodationDetails!.singleBed ?? 0,
+          showSpecificLocation: controller.detailsProperty.homestayData!.showSpecificLocation ?? false,
+          onPressed: () {},
+          onDeleteDetails: () {
+            controller.deleteProperties();
+          },
+          detailsHosting: true,
+          onPressedEdit: () {
+            controller.homeStayAddDataLocally();
+          },
+        ),
+      ),
+    );
+  }
+}
+import 'package:get/get.dart';
+import 'package:travellery_mobile/screen/hosting_flow/data/model/hosting_model.dart';
+import 'package:travellery_mobile/screen/hosting_flow/data/repository/hosting_repository.dart';
+import '../../../api_helper/api_helper.dart';
+import '../../../api_helper/getit_service.dart';
+import '../../../common_widgets/common_loading_process.dart';
+import '../../../routes_app/all_routes_app.dart';
+import '../../../services/storage_services.dart';
+import '../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+
+class HostingHomeController extends GetxController {
+  HomeHostingPropertiesModel? homeProperty;
+  List<HomestayData> propertiesList = [];
+  var hostingRepository = getIt<HostingRepository>();
+  var apiHelper = getIt<ApiHelper>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    if (propertiesList.isEmpty) {
+      getHostingData();
+    }
+  }
+
+  Future<void> getHostingData() async {
+    homeProperty = await hostingRepository.getHostingProperties();
+    if (homeProperty != null && homeProperty!.homestayData != null) {
+      propertiesList = homeProperty!.homestayData!;
+    } else {
+      propertiesList = [];
+    }
+    update();
+  }
+
+  void getDetails(index) {
+    LoadingProcessCommon().showLoading();
+    final singleFetchUserModel = propertiesList[index].id;
+    getIt<StorageServices>().setYourPropertiesId(singleFetchUserModel!);
+    getIt<StorageServices>().getYourPropertiesId();
+    getSingleYourProperties().then(
+          (value) {
+        LoadingProcessCommon().hideLoading();
+        Get.toNamed(
+          Routes.hostingDetailsPage,
+        );
+      },
+    );
+  }
+
+  late HomeStaySingleFetchResponse detailsProperty;
+
+  Future<void> getSingleYourProperties() async {
+    detailsProperty = await hostingRepository.getSingleFetchProperties();
+  }
+
+  void deleteProperties() {
+    hostingRepository.deleteData().then(
+      (value) async {
+        homeProperty = await hostingRepository.getHostingProperties().then(
+          (value) {
+            Get.back();
+            Get.back();
+            return null;
+          },
+        );
+      },
+    );
+    update();
+  }
+
+  void homeStayAddDataLocally() async {
+    var homestayData = ReUsedDataModel(
+      title: detailsProperty.homestayData?.title ?? '',
+      homestayType: detailsProperty.homestayData?.homestayType ?? '',
+      description: detailsProperty.homestayData?.description ?? '',
+      basePrice: detailsProperty.homestayData?.basePrice ?? 0,
+      weekendPrice: detailsProperty.homestayData?.weekendPrice ?? 0,
+      ownerContactNo: detailsProperty.homestayData?.ownerContactNo ?? '',
+      ownerEmailId: detailsProperty.homestayData?.ownerEmailId ?? '',
+      homestayContactNo: detailsProperty.homestayData?.homestayContactNo,
+      homestayEmailId: detailsProperty.homestayData?.homestayEmailId,
+      accommodationDetails: detailsProperty.homestayData?.accommodationDetails!,
+      // status: detailsProperty.homestayData?.status ?? 'Pending Appr                                       oval',
+      // accommodationDetails: AccommodationDetails(
+      //   entirePlace: detailsProperty.homestayData?.accommodationDetails?.entirePlace ?? false,
+      //   privateRoom: detailsProperty.homestayData?.accommodationDetails?.privateRoom ?? false,
+      //   maxGuests: detailsProperty.homestayData?.accommodationDetails?.maxGuests ?? 0,
+      //   bedrooms: detailsProperty.homestayData?.accommodationDetails?.bedrooms ?? 0,
+      //   singleBed: detailsProperty.homestayData?.accommodationDetails?.singleBed ?? 0,
+      //   doubleBed: detailsProperty.homestayData?.accommodationDetails?.doubleBed ?? 0,
+      //   extraFloorMattress: detailsProperty.homestayData?.accommodationDetails?.extraFloorMattress ?? 0,
+      //   bathrooms: detailsProperty.homestayData?.accommodationDetails?.bathrooms ?? 0,
+      //   kitchenAvailable: detailsProperty.homestayData?.accommodationDetails?.kitchenAvailable ?? false,
+      // ),
+      address: detailsProperty.homestayData?.address ?? '',
+      street: detailsProperty.homestayData?.street ?? '',
+      landmark: detailsProperty.homestayData?.landmark ?? '',
+      city: detailsProperty.homestayData?.city ?? '',
+      pinCode: detailsProperty.homestayData?.pinCode ?? '',
+      state: detailsProperty.homestayData?.state ?? '',
+      showSpecificLocation:
+          detailsProperty.homestayData?.showSpecificLocation ?? false,
+      coverPhoto: detailsProperty.homestayData!.coverPhoto,
+      homestayPhotos: detailsProperty.homestayData!.homestayPhotos ?? [],
+      checkInTime: detailsProperty.homestayData?.checkInTime ?? '',
+      checkOutTime: detailsProperty.homestayData?.checkOutTime ?? '',
+      flexibleCheckIn: detailsProperty.homestayData?.flexibleCheckIn ?? false,
+      flexibleCheckOut: detailsProperty.homestayData?.flexibleCheckOut ?? false,
+    );
+
+    print("zzzzzzzzzzzzzzzzzzzz${homestayData.title}");
+
+    Get.toNamed(
+      Routes.addPropertiesScreen,
+      arguments: {'index': 1, 'homestayData': homestayData},
+    );
+  }
+}
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import '../../../../api_helper/api_helper.dart';
+import '../../../../api_helper/getit_service.dart';
+import '../../../../common_widgets/common_image_picker.dart';
+import '../../../../common_widgets/common_loading_process.dart';
+import '../../../../routes_app/all_routes_app.dart';
+import '../../../../services/storage_services.dart';
+import 'package:dio/dio.dart' as dio;
+import '../../../../utils/app_string.dart';
+import '../../../reuseble_flow/data/model/homestay_reused_model.dart';
+import '../../../reuseble_flow/data/model/single_fetch_homestay_model.dart';
+import '../data/model/homestay_model.dart';
+import '../data/repository/homestay_repository.dart';
+
+class AddPropertiesController extends GetxController {
+  final int? index;
+  final ReUsedDataModel? homestayData;
+
+  AddPropertiesController({this.index, this.homestayData});
+
+  var currentPage = 1.obs;
+  RxString homestayTitle = ''.obs;
+  var selectedType = ''.obs;
+  var selectedTypeImage = ''.obs;
+  var selectedAccommodation = ''.obs;
+  var selectedAccommodationImage = ''.obs;
+  RxBool isLoading = false.obs;
+  final PageController pageController = PageController();
+  var homeStayRepository = getIt<HomeStayRepository>();
+  var apiHelper = getIt<ApiHelper>();
+
+  List<String> pageTitles = [
+    Strings.homestayTitle,
+    Strings.homestayType,
+    Strings.accommodationDetails,
+    Strings.amenities,
+    Strings.houseRules,
+    Strings.checkInOutDetails,
+    Strings.address,
+    Strings.photos,
+    Strings.homeStayDescription,
+    Strings.priceAndContactDetailsPage,
+    Strings.preview,
+    Strings.termsAndConditions
+  ];
+
+  void nextPage() {
+    // print("nnnnnnnnnooopppppeeeeeeennnnnnnnn");
+    if (currentPage.value < 10) {
+      if (currentPage.value == 7) {
+        if (formKey.currentState!.validate()) {
+          formKey.currentState!.save();
+          isValidation.value = false;
+          FocusManager.instance.primaryFocus?.unfocus();
+
+          pageController.nextPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeIn,
+          );
+        } else {
+          return;
+        }
+      }
+      if (currentPage.value == 6) {
+        Get.toNamed(Routes.location);
+        return;
+      }
+      FocusManager.instance.primaryFocus?.unfocus();
+      pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    } else {
+      if (formKey.currentState!.validate()) {
+        formKey.currentState!.save();
+        homeStayAddDataLocally();
+      } else {
+        return;
+      }
+    }
+  }
+
+  void backPage() {
+    if (currentPage.value > 1) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    } else {
+      Get.back();
+    }
+  }
+
+  // homestayTitle Page Logic
+  TextEditingController homeStayTitleController = TextEditingController();
+
+  void setTitle(String title) {
+    homestayTitle.value = title;
+    update();
+  }
+
+  // homestayType Page Logic
+  void selectHomeStayType(String index, String image) {
+    selectedType.value = index;
+    selectedTypeImage.value = image;
+    update();
+  }
+
+  bool isHomeStayTypeSelected(String index) {
+    return selectedType.value == index;
+  }
+
+  // Accommodation Page Logic
+  void selectAccommodation(String value, String image) {
+    selectedAccommodation.value = value;
+    selectedAccommodationImage.value = image;
+  }
+
+  var maxGuestsCount = 0.obs;
+  var singleBedCount = 0.obs;
+  var bedroomsCount = 0.obs;
+  var doubleBedCount = 0.obs;
+  var extraFloorCount = 0.obs;
+  var bathRoomsCount = 0.obs;
+  var isKitchenAvailable = false.obs;
+
+  void increment(RxInt count) {
+    count.value++;
+  }
+
+  void decrement(RxInt count) {
+    if (count.value > 0) {
+      count.value--;
+    }
+  }
+
+  // Amenities and New Amenities Page Logic
+  final List<String> customAmenities = [
+    Strings.wiFi,
+    Strings.airConditioner,
+    Strings.fireAlarm,
+    Strings.homeTheater,
+    Strings.masterSuiteBalcony
+  ];
+
+  RxList<bool> selectedAmenities = <bool>[].obs;
+
+  TextEditingController amenitiesName = TextEditingController();
+  List<TextEditingController> textControllers = [];
+  var addAmenities = <String>[].obs;
+  List<String> allAmenities = [];
+
+  void createAllAmenities() {
+    allAmenities = [...customAmenities, ...addAmenities];
+  }
+
+  void addAmenity(String amenityName) {
+    addAmenities.add(amenityName);
+    selectedAmenities.add(true);
+    textControllers.add(TextEditingController());
+    createAllAmenities();
+    update();
+  }
+
+  void removeAmenity(int index) {
+    if (index < addAmenities.length) {
+      if (index < textControllers.length) {
+        textControllers[index].dispose();
+        textControllers.removeAt(index);
+      }
+      addAmenities.removeAt(index);
+      createAllAmenities();
+    }
+
+    int selectedIndex = customAmenities.length + index;
+    if (selectedIndex < selectedAmenities.length) {
+      selectedAmenities.removeAt(selectedIndex);
+    }
+  }
+
+  void toggleAmenity(int index) {
+    if (index >= 0 && index < selectedAmenities.length) {
+      selectedAmenities[index] = !selectedAmenities[index];
+    }
+    update();
+  }
+
+  // House Rules and New Rules Logic
+  final List<String> customRules = [
+    Strings.noSmoking,
+    Strings.noDrinking,
+    Strings.noPet,
+    Strings.damageToProperty,
+  ];
+
+  RxList<bool> selectedRules = <bool>[].obs;
+  TextEditingController rulesName = TextEditingController();
+  List<TextEditingController> rulesTextControllers = [];
+  var addRules = <String>[].obs;
+  List<String> allRules = [];
+
+  void createAllRules() {
+    allRules = [...customRules, ...addRules];
+  }
+
+  void addRulesMethod(String rulesName) {
+    addRules.add(rulesName);
+    selectedRules.add(true);
+    rulesTextControllers.add(TextEditingController());
+    createAllRules();
+    update();
+  }
+
+  void removeRules(int index) {
+    if (index < addRules.length) {
+      if (index < rulesTextControllers.length) {
+        rulesTextControllers[index].dispose();
+        rulesTextControllers.removeAt(index);
+      }
+      addRules.removeAt(index);
+      createAllRules();
+    }
+
+    int selectedIndex = customRules.length + index;
+    if (selectedIndex < customRules.length) {
+      customRules.removeAt(selectedIndex);
+    }
+  }
+
+  void toggleRules(int index) {
+    if (index >= 0 && index < selectedRules.length) {
+      selectedRules[index] = !selectedRules[index];
+    }
+    update();
+  }
+
+  // today's update
+
+  @override
+  void onInit() {
+    if (index != 0) {
+      editGetData();
+    }
+    super.onInit();
+    selectedAmenities
+        .addAll(List.generate(customAmenities.length, (_) => false));
+    selectedRules.addAll(List.generate(customRules.length, (_) => false));
+    createAllAmenities();
+    createAllRules();
+  }
+
+  // Check - in/ut details page logic
+  var flexibleWithCheckInTime = false.obs;
+  var flexibleWithCheckInOut = false.obs;
+  Rx<DateTime> checkInTime = DateTime.now().obs;
+  Rx<DateTime> checkOutTime = DateTime.now().obs;
+
+  void checkInTimeUpdate(DateTime newTime) {
+    checkInTime.value = newTime;
+    update();
+  }
+
+  void checkOutTimeUpdate(DateTime newTime) {
+    checkOutTime.value = newTime;
+    update();
+  }
+
+  void toggleCheckInFlexibility(bool value) {
+    flexibleWithCheckInTime.value = value;
+    update();
+  }
+
+  void toggleCheckOutFlexibility(bool value) {
+    flexibleWithCheckInOut.value = value;
+    update();
+  }
+
+  // location page add logic
+
+  // Address page add logic
+  var address = ''.obs;
+  var streetAddress = ''.obs;
+  var landmark = ''.obs;
+  var city = ''.obs;
+  var pinCode = ''.obs;
+  var state = ''.obs;
+  var isSpecificLocation = false.obs;
+  RxBool isValidation = false.obs;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  TextEditingController addressController = TextEditingController();
+  TextEditingController streetAddressController = TextEditingController();
+  TextEditingController landmarkController = TextEditingController();
+  TextEditingController cityTownController = TextEditingController();
+  TextEditingController pinCodeController = TextEditingController();
+  TextEditingController stateController = TextEditingController();
+
+  void saveAddress(String? value) {
+    if (value != null) {
+      address.value = value;
+      update();
+    }
+  }
+
+  void saveStreetAddress(String? value) {
+    if (value != null) {
+      streetAddress.value = value;
+      update();
+    }
+  }
+
+  void saveLandmark(String? value) {
+    if (value != null) {
+      landmark.value = value;
+      update();
+    }
+  }
+
+  void saveCity(String? value) {
+    if (value != null) {
+      city.value = value;
+      update();
+    }
+  }
+
+  void savePinCode(String? value) {
+    if (value != null) {
+      pinCode.value = value;
+      update();
+    }
+  }
+
+  void saveState(String? value) {
+    if (value != null) {
+      state.value = value;
+      update();
+    }
+  }
+
+  // Photos pade add logic
+  var coverImagePaths = <String?>[null].obs;
+  var imagePaths = RxList<String?>.filled(6, null);
+
+  // var imagePaths = List<List<String?>>.filled(6, []).obs;
+
+  var imagePickerCommon = ImagePickerCommon();
+
+  Future<void> pickPropertyImage(int index,
+      {required bool isSingleSelect}) async {
+    final croppedFile = await imagePickerCommon.pickImage(
+      source: ImageSource.gallery,
+      isSingleSelect: isSingleSelect,
+      index: index,
+    );
+    if (croppedFile != null) {
+      if (isSingleSelect) {
+        coverImagePaths.value = [croppedFile.path];
+      } else {
+        imagePaths[index] = croppedFile.path;
+      }
+    }
+    update();
+  }
+
+  // description Page add logic
+  var description = ''.obs;
+  TextEditingController descriptionController = TextEditingController();
+
+  void setDescription(String value) {
+    description.value = value;
+    update();
+  }
+
+  // Price and Contact details page logic
+
+  var basePrice = ''.obs;
+  var weekendPrice = ''.obs;
+  var ownerContactNumber = ''.obs;
+  var ownerEmail = ''.obs;
+  TextEditingController basePriceController = TextEditingController();
+  TextEditingController weekendPriceController = TextEditingController();
+  TextEditingController ownerContactNumberController = TextEditingController();
+  TextEditingController ownerEmailController = TextEditingController();
+  var homeStayContactNumbers = <String>[].obs;
+  TextEditingController homeStayContactNumbersController =
+      TextEditingController();
+
+  void addHomeStayContactNumber(String newAdd) {
+    homeStayContactNumbers.add(newAdd);
+    update();
+  }
+
+  void removeHomeStayContactNumber(int index) {
+    if (index < homeStayContactNumbers.length) {
+      homeStayContactNumbers.removeAt(index);
+    }
+    update();
+  }
+
+  var homeStayEmails = <String>[].obs;
+  TextEditingController homeStayEmailsController = TextEditingController();
+
+  void addHomeStayEmails(String newAdd) {
+    homeStayEmails.add(newAdd);
+    update();
+  }
+
+  void removeHomeStayEmails(int index) {
+    if (index < homeStayEmails.length) {
+      homeStayEmails.removeAt(index);
+    }
+    update();
+  }
+
+  RxBool isEditing = false.obs;
+
+  void editGetData() {
+    print("homestayData?.homestayType ${homestayData?.homestayType}");
+    homeStayTitleController.text = homestayData?.title ?? "";
+    homestayTitle.value = homestayData?.title ?? "";
+    selectedType.value = homestayData?.homestayType ?? "";
+    selectedAccommodation.value =
+        homestayData?.accommodationDetails!.privateRoom == true
+            ? Strings.privateRoomValue
+            : Strings.entirePlaceValue;
+    print("homestayData?.homestayType ${selectedType.value}");
+  }
+
+  // api add data
+
+  Future<void> saveAndExitData() async {
+    LoadingProcessCommon().showLoading();
+    String? userId = getIt<StorageServices>().getUserId();
+    dio.FormData formData = dio.FormData.fromMap({
+      "title": homestayTitle.value,
+      "homestayType": selectedType.value,
+      "accommodationDetails": jsonEncode({
+        "entirePlace": selectedAccommodation.value == Strings.entirePlaceValue,
+        "privateRoom": selectedAccommodation.value == Strings.privateRoomValue,
+        "maxGuests": maxGuestsCount.value,
+        "bedrooms": bedroomsCount.value,
+        "singleBed": singleBedCount.value,
+        "doubleBed": doubleBedCount.value,
+        "extraFloorMattress": extraFloorCount.value,
+        "bathrooms": bathRoomsCount.value,
+        "kitchenAvailable": isKitchenAvailable.value,
+      }),
+      "amenities": jsonEncode(allAmenities.map((amenity) {
+        int index = allAmenities.indexOf(amenity);
+        return {
+          "name": amenity,
+          "isChecked": selectedAmenities[index],
+          "isNewAdded": selectedAmenities.length > customAmenities.length &&
+              index >= customAmenities.length,
+        };
+      }).toList()),
+      "houseRules": jsonEncode(allRules.map((rules) {
+        int index = allRules.indexOf(rules);
+        return {
+          "name": rules,
+          "isChecked": selectedRules[index],
+          "isNewAdded": selectedRules.length > customRules.length &&
+              index >= customRules.length,
+        };
+      }).toList()),
+      "checkInTime": DateFormat('hh:mm a').format(checkInTime.value),
+      "checkOutTime": DateFormat('hh:mm a').format(checkOutTime.value),
+      "flexibleCheckIn": flexibleWithCheckInTime.value,
+      "flexibleCheckOut": flexibleWithCheckInOut.value,
+      "longitude": "72.88692069643963",
+      "latitude": "21.245049600735083",
+      "address": address.value,
+      "street": streetAddress.value,
+      "landmark": landmark.value,
+      "city": city.value,
+      "pinCode": pinCode.value,
+      "state": state.value,
+      "showSpecificLocation": isSpecificLocation,
+      "coverPhoto": await dio.MultipartFile.fromFile(coverImagePaths[0]!,
+          filename: "coverPhoto.jpg"),
+      "description": description.value,
+      "basePrice": basePrice.value,
+      "weekendPrice": weekendPrice.value,
+      "ownerContactNo": ownerContactNumber.value,
+      "ownerEmailId": ownerEmail.value,
+      "homestayContactNo": jsonEncode(homeStayContactNumbers
+          .map((contact) => {
+                "contactNo": contact,
+              })
+          .toList()),
+      "homestayEmailId": jsonEncode(homeStayEmails
+          .map((email) => {
+                "EmailId": email,
+              })
+          .toList()),
+      "status": "Draft",
+      "createdBy": userId,
+    });
+
+    for (int index = 0; index < imagePaths.length; index++) {
+      if (imagePaths[index] != null) {
+        formData.files.add(MapEntry(
+          "homestayPhotos",
+          await dio.MultipartFile.fromFile(imagePaths[index]!,
+              filename: "photo.jpg"),
+        ));
+      }
+    }
+
+    homeStayRepository.homeStayData(formData: formData).then(
+      (value) {
+        LoadingProcessCommon().hideLoading();
+        Get.snackbar('', 'Homestay Data saved exit!');
+        Get.toNamed(
+          Routes.bottomPages,
+        );
+      },
+    );
+  }
+
+  Future<void> homeStayAddDataLocally() async {
+    List<HomestayPhotos> homestayPhotosList = imagePaths
+        .where((path) => path != null)
+        .map((path) => HomestayPhotos(url: path))
+        .toList();
+
+    Homestay homestayData = Homestay(
+      title: homestayTitle.value,
+      homestayType: selectedType.value,
+      accommodationDetails: AccommodationDetails(
+        entirePlace: selectedAccommodation.value == Strings.entirePlaceValue,
+        privateRoom: selectedAccommodation.value == Strings.privateRoomValue,
+        maxGuests: maxGuestsCount.value,
+        bedrooms: bedroomsCount.value,
+        singleBed: singleBedCount.value,
+        doubleBed: doubleBedCount.value,
+        extraFloorMattress: extraFloorCount.value,
+        bathrooms: bathRoomsCount.value,
+        kitchenAvailable: isKitchenAvailable.value,
+      ),
+      amenities: allAmenities.map((amenity) {
+        int index = allAmenities.indexOf(amenity);
+        return Amenities(
+          name: amenity,
+          isChecked: selectedAmenities[index],
+          isNewAdded: selectedAmenities.length > customAmenities.length &&
+              index >= customAmenities.length,
+        );
+      }).toList(),
+      houseRules: allRules.map((rules) {
+        int index = allRules.indexOf(rules);
+        return HouseRules(
+          name: rules,
+          isChecked: selectedRules[index],
+          isNewAdded: selectedRules.length > customRules.length &&
+              index >= customRules.length,
+        );
+      }).toList(),
+      checkInTime: DateFormat('hh:mm a').format(checkInTime.value),
+      checkOutTime: DateFormat('hh:mm a').format(checkOutTime.value),
+      flexibleCheckIn: flexibleWithCheckInTime.value,
+      flexibleCheckOut: flexibleWithCheckInOut.value,
+      longitude: double.parse("72.88692069643963"),
+      latitude: double.parse("21.245049600735083"),
+      address: address.value,
+      street: streetAddress.value,
+      landmark: landmark.value,
+      city: city.value,
+      pinCode: pinCode.value,
+      state: state.value,
+      showSpecificLocation: isSpecificLocation.value,
+      coverPhoto: coverImagePaths.isNotEmpty
+          ? CoverPhoto(url: coverImagePaths[0])
+          : null,
+      homestayPhotos: homestayPhotosList.isNotEmpty ? homestayPhotosList : null,
+      description: description.value,
+      basePrice: int.parse(basePrice.value),
+      weekendPrice: int.parse(weekendPrice.value),
+      ownerContactNo: ownerContactNumber.value,
+      ownerEmailId: ownerEmail.value,
+      homestayContactNo: homeStayContactNumbers
+          .map((contact) => HomestayContactNo(contactNo: contact))
+          .toList(),
+      homestayEmailId: homeStayEmails
+          .map((email) => HomestayEmailId(emailId: email))
+          .toList(),
+      status: isEditing.value ? "Draft" : "Pending Approval",
+    );
+
+    Get.snackbar('Success', 'Homestay data saved locally');
+    Get.toNamed(Routes.previewPage, arguments: homestayData);
+  }
+
+  bool isCurrentPageValid() {
+    switch (currentPage.value) {
+      case 1:
+        return homestayTitle.value.isNotEmpty;
+      case 2:
+        return selectedType.value.isNotEmpty;
+      case 3:
+        return selectedAccommodation.value.isNotEmpty;
+      case 4:
+        return selectedAmenities.contains(true);
+      case 5:
+        return selectedRules.contains(true);
+      case 6:
+        return flexibleWithCheckInTime.value ||
+            flexibleWithCheckInOut.value == true;
+      case 7:
+        return address.value.isNotEmpty &&
+            streetAddress.value.isNotEmpty &&
+            landmark.value.isNotEmpty &&
+            city.value.isNotEmpty &&
+            pinCode.value.isNotEmpty &&
+            state.value.isNotEmpty;
+      case 8:
+        return coverImagePaths[0] != null;
+      case 9:
+        return description.value.isNotEmpty;
+      case 10:
+        return basePrice.value.isNotEmpty &&
+            weekendPrice.value.isNotEmpty &&
+            ownerContactNumber.value.isNotEmpty &&
+            ownerEmail.value.isNotEmpty &&
+            homeStayContactNumbers.isNotEmpty &&
+            homeStayEmails.isNotEmpty;
+      default:
+        return false;
+    }
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:sizer/sizer.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/address_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/amenities_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/check_in_out_details_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/homestay_type.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/homestaydescription_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/house_rules_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/photo_page.dart';
+import 'package:travellery_mobile/screen/add_properties_screen/add_properties_steps/view/widget_view/price_and_contact_details_page.dart';
+import 'package:travellery_mobile/utils/app_radius.dart';
+import '../../../../../generated/assets.dart';
+import '../../../../common_widgets/common_button.dart';
+import '../../../../common_widgets/common_dialog.dart';
+import '../../../../common_widgets/common_homestay_title_widget.dart';
+import '../../../../utils/app_colors.dart';
+import '../../../../utils/app_string.dart';
+import '../../../../utils/font_manager.dart';
+import 'widget_view/accommodation_details_page.dart';
+import '../controller/add_properties_controller.dart';
+
+class AddPropertiesScreen extends StatelessWidget {
+  final int index;
+  const AddPropertiesScreen({super.key, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    final args = Get.arguments;
+    final homestayData = args['homestayData'];
+    return GetBuilder(
+      init: AddPropertiesController(index: index,homestayData: homestayData),
+      builder: (controller) {
+        return PopScope(
+          canPop: true,
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: Form(
+              key: controller.formKey,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 7.w),
+                child: Column(
+                  children: [
+                    SizedBox(height: 7.2.h),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: controller.backPage,
+                          child:
+                              const Icon(Icons.keyboard_arrow_left, size: 30),
+                        ),
+                        const SizedBox(width: 8),
+                        Obx(
+                          () => Text(
+                            index == 1
+                                ? "Edit ${controller.pageTitles[controller.currentPage.value - 1]}"
+                                : controller.pageTitles[
+                                    controller.currentPage.value - 1],
+                            style: FontManager.medium(
+                              20,
+                              color: AppColors.black,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 3.h),
+                    Obx(() => buildTitleStep(
+                        controller.currentPage.value.toString())),
+                    Expanded(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: PageView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          controller: controller.pageController,
+                          onPageChanged: (index) {
+                            controller.currentPage.value = index + 1;
+                          },
+                          children: [
+                            CommonHomestayTitleWidget(
+                              controller: controller.homeStayTitleController,
+                              onChanged: (value) => controller.setTitle(value),
+                              onSaved: (value) =>
+                                  controller.homestayTitle.value = value!,
+                              titleLabel: Strings.titleLabel,
+                            ),
+                            HomeStayTypeScreen(controller: controller),
+                            AccommodationDetailsPage(controller: controller),
+                            AmenitiesPage(controller: controller),
+                            HouseRulesPage(controller: controller),
+                            CheckInOutDetailsPage(controller: controller),
+                            AddressPage(controller: controller),
+                            PhotoPage(controller: controller),
+                            HomeStayDescriptionPage(controller: controller),
+                            PriceAndContactDetailsPage(controller: controller),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Obx(() => Padding(
+                          padding: const EdgeInsets.only(left: 60, right: 60),
+                          child: LinearProgressIndicator(
+                            value: controller.currentPage.value / 10,
+                            backgroundColor: AppColors.greyText,
+                            color: AppColors.buttonColor,
+                            minHeight: 3,
+                            borderRadius:
+                                const BorderRadius.all(AppRadius.radius4),
+                          ),
+                        )),
+                    SizedBox(height: 2.h),
+                    Obx(() => CommonButton(
+                          title: Strings.nextStep,
+                          onPressed: controller.isCurrentPageValid()
+                              ? controller.nextPage
+                              : null,
+                          backgroundColor: controller.isCurrentPageValid()
+                              ? AppColors.buttonColor
+                              : AppColors.lightPerpul,
+                        )),
+                    Obx(
+                      () => (controller.currentPage.value == 3 ||
+                              controller.currentPage.value == 4)
+                          ? SizedBox(height: 1.h)
+                          : const SizedBox(
+                              height: 0,
+                            ),
+                    ),
+                    Obx(
+                      () => (controller.currentPage.value == 3 ||
+                              controller.currentPage.value == 4)
+                          ? GestureDetector(
+                              onTap: () {
+                                CustomDialog.showCustomDialog(
+                                  context: context,
+                                  title: Strings.saveAndExit,
+                                  message: Strings.questionDialogText,
+                                  imageAsset: Assets.imagesQuestionDialog,
+                                  buttonLabel: Strings.yes,
+                                  changeEmailLabel: Strings.no,
+                                  onResendPressed: () {
+                                    controller.saveAndExitData();
+                                  },
+                                );
+                              },
+                              child: Text(
+                                index == 1
+                                    ? Strings.updateAndExit
+                                    : Strings.saveAndExit,
+                                style: FontManager.medium(18,
+                                    color: AppColors.buttonColor),
+                              ))
+                          : SizedBox(height: 5.h),
+                    ),
+                    Obx(
+                      () => (controller.currentPage.value == 3 ||
+                              controller.currentPage.value == 4)
+                          ? SizedBox(height: 1.5.h)
+                          : const SizedBox(
+                              height: 0,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildTitleStep(String stepCount) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "${Strings.stepCount} $stepCount/10",
+          style: FontManager.regular(18, color: AppColors.black),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
 
 class APIUrls{
 
