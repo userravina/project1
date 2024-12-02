@@ -202,39 +202,6 @@ class PropertyCard extends StatelessWidget {
 
 // shimeer add travellery home page
 
-class CustomShimmer extends StatelessWidget {
-  final double height;
-  final double width;
-  final double borderRadius;
-  final EdgeInsetsGeometry? margin;
-
-  const CustomShimmer({
-    super.key,
-    required this.height,
-    this.width = double.infinity,
-    this.borderRadius = 10.0,
-    this.margin,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: margin ?? EdgeInsets.zero,
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          height: height,
-          width: width,
-          decoration: BoxDecoration(
-            color: Colors.grey,
-            borderRadius: BorderRadius.circular(borderRadius),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class HomeTravelingPage extends StatefulWidget {
   const HomeTravelingPage({super.key});
