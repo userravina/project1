@@ -19,7 +19,196 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
 import 'package:flutter_bloc/flutter_bloc.dart';
+create table public.users (
+  id uuid references auth.users primary key,
+  email text not null,
+  username text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  is_online boolean default false,
+  last_seen timestamp with time zone default timezone('utc'::text, now()),
+  push_token text,
+  unread_count integer default 0,
+  profile_url text
+);
+create table public.invitations (
+    id uuid default gen_random_uuid() primary key,
+    inviter_id uuid references public.users(id) on delete cascade,
+    invitee_id uuid references public.users(id) on delete cascade,
+    message text not null,
+    status text default 'pending' check (status in ('pending', 'accepted', 'declined')),
+    invite_time timestamptz default now(),
+    
+    -- Prevent duplicate invitations between same users
+    unique(inviter_id, invitee_id)
+);
 
+-- Enable RLS
+alter table public.users enable row level security;
+alter table public.invitations enable row level security;
+
+-- RLS policies for users
+create policy "Users can view other users"
+on public.users for select
+to authenticated
+using (true);
+
+create policy "Users can update own record"
+on public.users for update
+to authenticated
+using (auth.uid() = id);
+
+-- RLS policies for invitations
+create policy "Users can create invitations"
+on public.invitations for insert
+to authenticated
+with check (auth.uid() = inviter_id);
+
+create policy "Users can view their invitations"
+on public.invitations for select
+to authenticated
+using (auth.uid() = inviter_id or auth.uid() = invitee_id);
+
+create policy "Invitees can update invitation status"
+on public.invitations for update
+to authenticated
+using (auth.uid() = invitee_id)
+with check (status in ('accepted', 'declined'));
+
+create policy "Inviters can delete pending invitations"
+on public.invitations for delete
+to authenticated
+using (auth.uid() = inviter_id and status = 'pending');
+
+-- Create indexes for better performance
+create index invitations_inviter_id_idx on public.invitations(inviter_id);
+create index invitations_invitee_id_idx on public.invitations(invitee_id);
+create index invitations_status_idx on public.invitations(status);
+
+
+-- Create chats table to store chat rooms between users
+create table public.chats (
+    id uuid default gen_random_uuid() primary key,
+    created_at timestamptz default now(),
+    updated_at timestamptz default now(),
+    last_message text,
+    last_message_time timestamptz,
+    -- References to the two users in the chat
+    user1_id uuid references public.users(id) on delete cascade,
+    user2_id uuid references public.users(id) on delete cascade,
+    -- Unread message counters for each user
+    user1_unread_count int default 0,
+    user2_unread_count int default 0,
+    -- Ensure unique chat rooms between users
+    unique(user1_id, user2_id),
+    -- Ensure user1_id is always less than user2_id to prevent duplicate rooms
+    constraint user_order check (user1_id < user2_id)
+);
+
+-- Create messages table to store individual messages
+create table public.messages (
+    id uuid default gen_random_uuid() primary key,
+    chat_id uuid references public.chats(id) on delete cascade,
+    sender_id uuid references public.users(id) on delete cascade,
+    content text not null,
+    created_at timestamptz default now(),
+    is_read boolean default false,
+    -- Optional: Add support for message types (text, image, etc)
+    message_type text default 'text',
+    -- Optional: Add support for message status
+    status text default 'sent' check (status in ('sent', 'delivered', 'read'))
+);
+
+-- Enable RLS
+alter table public.chats enable row level security;
+alter table public.messages enable row level security;
+
+-- RLS policies for chats
+create policy "Users can view their own chats"
+on public.chats for select
+to authenticated
+using (
+    auth.uid() = user1_id or 
+    auth.uid() = user2_id
+);
+
+create policy "Users can create chats if invitation is accepted"
+on public.chats for insert
+to authenticated
+with check (
+    exists (
+        select 1 from public.invitations
+        where status = 'accepted'
+        and (
+            (inviter_id = auth.uid() and invitee_id in (user1_id, user2_id))
+            or
+            (invitee_id = auth.uid() and inviter_id in (user1_id, user2_id))
+        )
+    )
+);
+
+-- RLS policies for messages
+create policy "Users can view messages in their chats"
+on public.messages for select
+to authenticated
+using (
+    exists (
+        select 1 from public.chats
+        where chats.id = messages.chat_id
+        and (
+            chats.user1_id = auth.uid() or 
+            chats.user2_id = auth.uid()
+        )
+    )
+);
+
+create policy "Users can send messages to their chats"
+on public.messages for insert
+to authenticated
+with check (
+    exists (
+        select 1 from public.chats
+        where chats.id = chat_id
+        and (
+            chats.user1_id = auth.uid() or 
+            chats.user2_id = auth.uid()
+        )
+    )
+);
+
+-- Function to update chat's last message and unread count
+create or replace function update_chat_last_message()
+returns trigger as $$
+begin
+    update public.chats
+    set 
+        last_message = NEW.content,
+        last_message_time = NEW.created_at,
+        user1_unread_count = case 
+            when NEW.sender_id = user1_id then user1_unread_count
+            else user1_unread_count + 1
+        end,
+        user2_unread_count = case 
+            when NEW.sender_id = user2_id then user2_unread_count
+            else user2_unread_count + 1
+        end,
+        updated_at = now()
+    where id = NEW.chat_id;
+    return NEW;
+end;
+$$ language plpgsql security definer;
+
+-- Trigger to update chat on new message
+create trigger on_message_created
+    after insert on public.messages
+    for each row
+    execute function update_chat_last_message();
+
+-- Create indexes for better performance
+create index chats_user1_id_idx on public.chats(user1_id);
+create index chats_user2_id_idx on public.chats(user2_id);
+create index messages_chat_id_idx on public.messages(chat_id);
+create index messages_sender_id_idx on public.messages(sender_id);
+create index messages_created_at_idx on public.messages(created_at);
 import '../../data/services/supabase_service.dart';
 import 'user_event.dart';
 import 'user_state.dart';
