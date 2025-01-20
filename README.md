@@ -19,7 +19,6 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
 
-
 import 'package:e_commerce/utils/app_strings.dart';
 import 'package:e_commerce/utils/text_style.dart';
 import 'package:flutter/material.dart';
@@ -34,39 +33,37 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: backgroundColor,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 16),
-        child: IconButton(
-          icon: Image.asset(
-            Assets.images.menu_png,
-            fit: BoxFit.contain,
-            height: 24,
-            width: 24,
-          ),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
+      leading: IconButton(
+        icon: Image.asset(
+          Assets.images.menu_png,
+          fit: BoxFit.contain,
         ),
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
+        },
       ),
-      title: Text(AppStrings(context).openFashion,style: FontManager.bodoniModaBoldItalic(16),),
+      title: Text(
+        AppStrings(context).openFashion,
+        style: FontManager.bodoniModaBoldItalic(16),
+      ),
       centerTitle: true,
       surfaceTintColor: backgroundColor,
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: Image.asset(
+        IconButton(
+          icon: Image.asset(
             Assets.images.search_png,
             height: 24,
             width: 24,
           ),
+          onPressed: () {},
         ),
-        Padding(
-          padding: const EdgeInsets.only(right: 23),
-          child: Image.asset(
+        IconButton(
+          icon: Image.asset(
             Assets.images.shopping_bag_png,
             height: 24,
             width: 24,
           ),
+          onPressed: () {},
         ),
       ],
       elevation: 0,
@@ -76,7 +73,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(60);
 }
-
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'common_view_end.dart';
@@ -133,7 +129,6 @@ class BasePageLayout extends StatelessWidget {
     );
   }
 } 
-
 import 'package:e_commerce/theme/app_color.dart';
 import 'package:e_commerce/utils/app_strings.dart';
 import 'package:e_commerce/utils/text_style.dart';
@@ -258,6 +253,7 @@ import '../assets.dart';
 import '../bloc/localization/localization_bloc.dart';
 import '../bloc/localization/localization_event.dart';
 import '../routes/app_route.dart';
+import '../screens/blog_flow/bloc/blog_bloc.dart';
 import '../theme/app_color.dart';
 import '../utils/app_strings.dart';
 import '../utils/text_style.dart';
@@ -304,214 +300,144 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         backgroundColor: AppColor.white,
         child: Column(
           children: [
-            _buildDrawerHeader(context),
-            _buildTabBar(),
+            Column(
+              children: [
+                SizedBox(height: 3.h),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 3.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: Image.asset(
+                          Assets.images.close_png,
+                          height: 24,
+                          width: 24,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            TabBar(
+              controller: _tabController,
+              labelColor: AppColor.black,
+              labelStyle: FontManager.tenorSansRegular(14,),
+              unselectedLabelColor: AppColor.greyText,
+              indicatorColor: AppColor.warning,
+              indicatorSize: TabBarIndicatorSize.tab,
+              tabs: [
+                Tab(text: 'Women',),
+                Tab(text: 'Men'),
+                Tab(text: 'Kids'),
+              ],
+            ),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: [
-                  _buildCategoryList('Women'),
-                  _buildCategoryList('Men'),
-                  _buildCategoryList('Kids'),
-                ],
+                children: List.generate(3, (index) {
+                  final section = ['Women', 'Men', 'Kids'][index];
+                  final categories = ['New', 'Apparel', 'Bag', 'Shoes', 'Beauty', 'Accessories'];
+                  return ListView.builder(
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              categories[index],
+                              style: FontManager.tenorSansRegular(16, color: AppColor.black),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 14,
+                              color: AppColor.black,
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.goNamed(
+                            AppRoutes.categoryPage,
+                            queryParameters: {'section': section, 'category': categories[index]},
+                          );
+                        },
+                      );
+                    },
+                  );
+                }),
               ),
             ),
-            _buildBottomSection(context),
-            SizedBox(height: 2.5.h,),
-            Image.asset(
-              Assets.images.n3_png,
-              width: 30.w,
+            Column(
+              children: [
+                const Divider(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      title: Text(
+                        AppStrings(context).changeLanguage,
+                        style: FontManager.tenorSansRegular(16),
+                      ),
+                    ),
+                    ...['English', 'Hindi', 'Arabic'].map((label) => ListTile(
+                      title: Text(label, style: FontManager.tenorSansRegular(14)),
+                      onTap: () {
+                        context.read<LocalizationBloc>().add(ChangeLanguageEvent(label.toLowerCase().substring(0, 2)));
+                        Navigator.pop(context);
+                      },
+                    )),
+                  ],
+                ),
+                if (widget.listSwitch)
+                  ListTile(
+                    title: Row(
+                      children: [
+                        Text("Change View", style: FontManager.tenorSansRegular(16)),
+                        const Spacer(),
+                        BlocBuilder<BlogViewBloc, BlogViewState>(
+                          builder: (context, state) {
+                            bool isListView = state is ListState;
+
+                            return Switch(
+                              value: isListView,
+                              onChanged: (value) {
+                                context.read<BlogViewBloc>().add(ToggleViewEvent());
+                              },
+                            );
+                          },
+                        ),
+
+                      ],
+                    ),
+                  ),
+              ],
             ),
-            SizedBox(
-              height: 2.5.h,
-            ),
+            SizedBox(height: 2.5.h),
+            Image.asset(Assets.images.n3_png, width: 30.w),
+            SizedBox(height: 2.5.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Spacer(),
-                Image.asset(
-                  Assets.images.twitter_png,
-                  height: 24,
-                  width: 24,
-                ),
-                SizedBox(
-                  width: 15.w,
-                ),
-                Image.asset(
-                  Assets.images.instagram_png,
-                  height: 24,
-                  width: 24,
-                ),
-                SizedBox(
-                  width: 15.w,
-                ),
-                Image.asset(
-                  Assets.images.youTube_png,
-                  height: 24,
-                  width: 24,
-                ),
+                Image.asset(Assets.images.twitter_png, height: 24, width: 24),
+                SizedBox(width: 15.w),
+                Image.asset(Assets.images.instagram_png, height: 24, width: 24),
+                SizedBox(width: 15.w),
+                Image.asset(Assets.images.youTube_png, height: 24, width: 24),
                 Spacer(),
               ],
             ),
-            SizedBox(
-              height: 2.5.h,
-            ),
-
+            SizedBox(height: 2.5.h),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildDrawerHeader(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(height: 3.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 3.w),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                icon: Image.asset(
-                  Assets.images.close_png,
-                  height: 24,
-                  width: 24,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        ),
-
-      ],
-    );
-  }
-
-  Widget _buildTabBar() {
-    return TabBar(
-      controller: _tabController,
-      labelColor: AppColor.black,
-      labelStyle: FontManager.tenorSansRegular(14,),
-      unselectedLabelColor: AppColor.greyText,
-      indicatorColor: AppColor.warning,
-      indicatorSize: TabBarIndicatorSize.tab,
-      tabs: [
-        Tab(text: 'Women',),
-        Tab(text: 'Men'),
-        Tab(text: 'Kids'),
-      ],
-    );
-  }
-
-  Widget _buildCategoryList(String section) {
-    final categories = [
-      'New',
-      'Apparel',
-      'Bag',
-      'Shoes',
-      'Beauty',
-      'Accessories',
-    ];
-
-    return ListView.builder(
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        return _buildCategoryItem(context, categories[index], section);
-      },
-    );
-  }
-
-  Widget _buildCategoryItem(BuildContext context, String category, String section) {
-    return ListTile(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            category,
-            style: FontManager.tenorSansRegular(16, color: AppColor.black),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: AppColor.black,
-          ),
-        ],
-      ),
-      onTap: () {
-        Navigator.pop(context);
-        context.goNamed(
-          AppRoutes.categoryPage,
-          queryParameters: {
-            'section': section,
-            'category': category,
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildBottomSection(BuildContext context) {
-    return Column(
-      children: [
-        const Divider(),
-        _buildLanguageSection(context),
-        if (widget.listSwitch) _buildViewToggle(context),
-      ],
-    );
-  }
-
-  Widget _buildLanguageSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          title: Text(
-            AppStrings(context).changeLanguage,
-            style: FontManager.tenorSansRegular(16),
-          ),
-        ),
-        _buildLanguageOption(context, "English", 'en'),
-        _buildLanguageOption(context, "Hindi", 'hi'),
-        _buildLanguageOption(context, "Arabic", 'ar'),
-      ],
-    );
-  }
-
-  Widget _buildLanguageOption(BuildContext context, String label, String code) {
-    return ListTile(
-      title: Text(
-        label,
-        style: FontManager.tenorSansRegular(14),
-      ),
-      onTap: () {
-        context.read<LocalizationBloc>().add(ChangeLanguageEvent(code));
-        Navigator.pop(context);
-      },
-    );
-  }
-
-  Widget _buildViewToggle(BuildContext context) {
-    return ListTile(
-      title: Row(
-        children: [
-          Text(
-            "Change View",
-            style: FontManager.tenorSansRegular(16),
-          ),
-          const Spacer(),
-          Switch(
-            value: false,
-            onChanged: (value) {
-              // Handle view toggle
-            },
-          ),
-        ],
-      ),
-    );
-  }
-} 
-
+}
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
@@ -522,24 +448,43 @@ class ProductCard extends StatelessWidget {
   final String imageUrl;
   final String productName;
   final String productPrice;
+  final bool category;
+  final String shortDesc;
 
   const ProductCard({
     super.key,
     required this.imageUrl,
     required this.productName,
     required this.productPrice,
+    this.category = false,
+    this.shortDesc = '',
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: category == true
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
       children: [
-        Image.asset(
-          imageUrl,
-          width: double.infinity,
+        Container(
           height: 25.h,
-          fit: BoxFit.contain,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage(imageUrl), fit: BoxFit.contain)),
+          child: category
+              ?  Align(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 2.w,bottom: 0.5.h),
+                    child: Icon(
+                      Icons.favorite_border,
+                      color: AppColor.warning,
+                    ),
+                  ),
+                )
+              : SizedBox.shrink(),
         ),
         SizedBox(height: 0.5.h),
         Text(
@@ -551,7 +496,21 @@ class ProductCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
         ),
-        SizedBox(height: 1.h),
+        if (category)
+          Column(
+            children: [
+              Text(
+                shortDesc,
+                style: FontManager.tenorSansRegular(
+                  12,
+                  color: AppColor.black,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              SizedBox(height: 1.h),
+            ],
+          ),
         Text(
           productPrice,
           style: FontManager.tenorSansRegular(
@@ -663,6 +622,7 @@ class AppRoutes {
   static const String categoryPage = "/category";
   static const String blogDetailsPage = "/blog/details";
 }
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/blog_flow/view/blog_details_page.dart';
@@ -751,6 +711,7 @@ class Routes {
     ],
   );
 }
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -905,12 +866,12 @@ class BlogDetailMobile extends StatelessWidget {
               ],
             ),
           ),
+          SizedBox(height: 4.h,),
         ],
       ),
     );
   }
 }
-
 import 'package:flutter/material.dart';
 
 class BlogDetailWeb extends StatelessWidget {
@@ -924,7 +885,6 @@ class BlogDetailWeb extends StatelessWidget {
     return const Column();
   }
 }
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';
@@ -1072,7 +1032,6 @@ class CategoryRowBlog extends StatelessWidget {
     );
   }
 }
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sizer/sizer.dart';
@@ -1089,7 +1048,7 @@ class GridViewBlog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 3.w),
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -1215,9 +1174,10 @@ class GridViewBlog extends StatelessWidget {
 }
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sizer/sizer.dart';
-
 import '../../../../assets.dart';
+import '../../../../routes/app_route.dart';
 import '../../../../theme/app_color.dart';
 import '../../../../utils/text_style.dart';
 
@@ -1231,61 +1191,66 @@ class ListViewBlog extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: 5,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 4.w),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 120,
-                height: 155,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(Assets.images.rectangle_433_png),
-                    fit: BoxFit.contain,
+        return InkWell(onTap: () {
+          context.pushNamed(
+            AppRoutes.blogDetailsPage,
+          );
+        },
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 4.w),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 155,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(Assets.images.rectangle_434_png),
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(width: 3.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "2021 Style Guide:  The Biggest Fall Trends",
-                      style: FontManager.tenorSansRegular(
-                          14,
-                          color: AppColor.black,
-                          letterSpacing: 2
+                SizedBox(width: 3.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "2021 Style Guide:  The Biggest Fall Trends",
+                        style: FontManager.tenorSansRegular(
+                            14,
+                            color: AppColor.black,
+                            letterSpacing: 2
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 1.h),
-                    Text(
-                      "The excitement of fall fashion is here and I’m already loving some of the trend forecasts",
-                      style: FontManager.tenorSansRegular(14,
-                          color: AppColor.blackGrey),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 1.h),
-                    Text(
-                      "4 days ago",
-                      style: FontManager.tenorSansRegular(12,
-                          color: AppColor.greyScale),
-                    ),
-                  ],
+                      SizedBox(height: 1.h),
+                      Text(
+                        "The excitement of fall fashion is here and I’m already loving some of the trend forecasts",
+                        style: FontManager.tenorSansRegular(14,
+                            color: AppColor.blackGrey),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 1.h),
+                      Text(
+                        "4 days ago",
+                        style: FontManager.tenorSansRegular(12,
+                            color: AppColor.greyScale),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
   }
 }
-
 import 'package:e_commerce/screens/blog_flow/view/responsive_view/blog_detail_mobile.dart';
 import 'package:e_commerce/screens/blog_flow/view/responsive_view/blog_detail_web.dart';
 import 'package:flutter/material.dart';
@@ -1308,7 +1273,6 @@ class BlogDetailsPage extends StatelessWidget {
     );
   }
 }
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../components/base_page_layout.dart';
@@ -1331,7 +1295,6 @@ class BlogPage extends StatelessWidget {
     );
   }
 }
-
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1365,20 +1328,134 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     });
   }
 }
-
+import 'package:e_commerce/screens/category_product_page/bloc/category_product_bloc.dart';
+import 'package:e_commerce/screens/category_product_page/view/widgets/gried_view_category.dart';
+import 'package:e_commerce/theme/app_color.dart';
+import 'package:e_commerce/utils/text_style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sizer/sizer.dart';
+import '../../../../assets.dart';
+import '../widgets/list_view_category.dart';
 
 class CategoryMobile extends StatelessWidget {
   const CategoryMobile({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Category Mobile View'),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 2.h,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "4500 APPAREL",
+                style:
+                    FontManager.tenorSansRegular(14, color: AppColor.blackGrey),
+              ),
+              Spacer(),
+              Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(33),
+                      color: AppColor.containerGreyBackground),
+                  child: Text(
+                    "New",
+                    style: FontManager.tenorSansRegular(13,
+                        color: AppColor.blackGreyText),
+                  )),
+              SizedBox(
+                width: 2.w,
+              ),
+              BlocBuilder<CategoryBloc, CategoryState>(
+                builder: (context, state) {
+                  bool isListView = state is ListState;
+
+                  return Container(
+                    padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(200),
+                        color: AppColor.containerGreyBackground),
+                    child: InkWell(onTap: () {
+                      context.read<CategoryBloc>().add(ToggleViewEvent());
+                    },
+                      child: Image.asset(
+                        isListView ? Assets.images.gridView_png :  Assets.images.listview_png,
+                      height: 20,
+                      width: 20,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                width: 2.w,
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(200),
+                    color: AppColor.containerGreyBackground),
+                child: Image.asset(
+                  Assets.images.filter_png,
+                  height: 20,
+                  width: 20,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 1.h,
+          ),
+          Container(
+              padding:
+              const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                color: AppColor.containerGreyBorder,
+                    width: 1
+                      
+              )),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "All",
+                    style: FontManager.tenorSansRegular(14,
+                        color: AppColor.blackGrey),
+                  ),SizedBox(width: 1.w,),
+                  Image.asset(
+                    Assets.images.close_png,
+                    height: 16,
+                    width: 16,
+                  )
+                ],
+              )),
+          SizedBox(height: 1.h,),
+          BlocBuilder<CategoryBloc, CategoryState>(
+            builder: (context, state) {
+              if (state is GridState) {
+                return const GridViewCategory();
+              } else {
+                return const ListViewCategory();
+              }
+            },
+          ),
+          SizedBox(height: 5.h,),
+        ],
+      ),
     );
   }
 }
-
 import 'package:flutter/material.dart';
 
 class CategoryWeb extends StatelessWidget {
@@ -1391,7 +1468,213 @@ class CategoryWeb extends StatelessWidget {
     ],);
   }
 }
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sizer/sizer.dart';
 
+import '../../../../assets.dart';
+import '../../../../components/product_card.dart';
+import '../../../../routes/app_route.dart';
+import '../../../../theme/app_color.dart';
+import '../../../../utils/app_strings.dart';
+import '../../../../utils/text_style.dart';
+
+class GridViewCategory extends StatelessWidget {
+  const GridViewCategory({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return  GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 4.w,
+        mainAxisSpacing: 1.h,
+        childAspectRatio: 0.55,
+      ),
+      itemCount: 4,
+      itemBuilder: (context, index) {
+        return ProductCard(
+          category: true,
+          imageUrl: Assets.images.top_png,
+          productName: 'Product Name $index',
+          shortDesc: 'reversible angora cardigan',
+          productPrice: '\$29.99',
+        );
+      },
+    );
+  }
+}
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+
+import '../../../../assets.dart';
+import '../../../../theme/app_color.dart';
+import '../../../../utils/text_style.dart';
+
+class ListViewCategory extends StatelessWidget {
+  const ListViewCategory({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 1.h),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 140,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(Assets.images.top_png),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "lamerei",
+                      style: FontManager.tenorSansRegular(
+                        14,
+                        color: AppColor.black,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                    Text(
+                      "Recycle Boucle Knit Cardigan Pink",
+                      style: FontManager.tenorSansRegular(
+                        12,
+                        color: AppColor.blackGreyText,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    SizedBox(height: 1.h),
+                    Text(
+                      "\$120",
+                      style: FontManager.tenorSansRegular(
+                        15,
+                        color: AppColor.warning,
+                      ),
+                    ),
+                    SizedBox(height: 1.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          color: AppColor.warning,
+                          size: 16,
+                        ),
+                        SizedBox(
+                          width: 1.w,
+                        ),
+                        Text(
+                          "4.8 Ratings",
+                          style: FontManager.tenorSansRegular(12,
+                              color: AppColor.blackGreyText),
+                        )
+                      ],
+                    ),
+                    SizedBox(height: 1.h),
+                    Row(
+                      children: [
+                        Text(
+                          "Size",
+                          style: FontManager.tenorSansRegular(12,
+                              color: AppColor.greyScale),
+                        ),
+                        SizedBox(
+                          width: 1.5.w,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 2, vertical: 2),
+                          height: 24,
+                          width: 24,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(200),
+                              border: Border.all(
+                                  color: AppColor.containerGreyBorder,
+                                  width: 1)),
+                          child: Center(
+                            child: Text(
+                              "S",
+                              style: FontManager.tenorSansRegular(10,
+                                  color: AppColor.black),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 1.5.w,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 2, vertical: 2),
+                          height: 24,
+                          width: 24,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(200),
+                              border: Border.all(
+                                  color: AppColor.containerGreyBorder,
+                                  width: 1)),
+                          child: Center(
+                            child: Text(
+                              "M",
+                              style: FontManager.tenorSansRegular(10,
+                                  color: AppColor.black),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 1.5.w,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 2, vertical: 2),
+                          height: 24,
+                          width: 24,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(200),
+                              border: Border.all(
+                                  color: AppColor.containerGreyBorder,
+                                  width: 1)),
+                          child: Center(
+                            child: Text(
+                              "L",
+                              style: FontManager.tenorSansRegular(10,
+                                  color: AppColor.black),
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Icon(
+                          Icons.favorite_border,
+                          color: AppColor.warning,
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../components/appbar.dart';
@@ -1406,10 +1689,9 @@ class CategoryProductPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
+    return BlocProvider<CategoryBloc>(
       create: (context) => CategoryBloc(),
       child: BasePageLayout(
-        listSwitch: true,
         customAppBar: const CustomAppBar(
           backgroundColor: AppColor.white,
         ),
@@ -2095,7 +2377,9 @@ class AppColor {
   static const Color blackGrey = Color(0xFF333333);
   static const Color greyText = Color(0xFF9f9f9f);
   static const Color blackGreyText = Color(0xFF555555);
-  static const Color primary500 = Color(0xFF8576DA);
+  static const Color containerGreyBackground = Color(0xFFf9f9f9);
+  static const Color containerGreyBorder = Color(0xFFdedede);
+
 
 }
 import 'package:flutter/material.dart';
@@ -2207,5 +2491,11 @@ final class _Images {
   final String twitter_png = 'assets/images/Twitter.png';
   final String youTube_png = 'assets/images/YouTube.png';
   final String instagram_png = 'assets/images/Instagram.png';
+  final String filter_png = 'assets/images/Filter.png';
+  final String listview_png = 'assets/images/Listview.png';
+  final String top_png = 'assets/images/top.png';
+  final String gridView_png = 'assets/images/gridView.png';
 
 }
+
+
