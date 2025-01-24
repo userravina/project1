@@ -19,6 +19,119 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
 
+class ProfileCardPainter extends CustomPainter {
+  ProfileCardPainter({required this.color, required this.avatarRadius});
+
+  final Color color;
+  final double avatarRadius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final shapeBounds =
+    Rect.fromLTWH(0, 0, size.width, size.height - avatarRadius);
+    _drawBackground(canvas, shapeBounds, size);
+  }
+
+  void _drawBackground(Canvas canvas, Rect shapeBounds, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.fill
+      ..strokeWidth = 15;
+
+    final backgroundPath = Path();
+    final halfWidth = size.width / 2;
+    const halfSpace = 100 / 2;
+    backgroundPath.lineTo(halfWidth - halfSpace, 0);
+    backgroundPath.quadraticBezierTo(
+        size.width * 0.40, 0, shapeBounds.width * 0.40, 5);
+    backgroundPath.arcToPoint(Offset(size.width * 0.60, 5),
+        radius: const Radius.circular(38), clockwise: false);
+    backgroundPath.quadraticBezierTo(
+        size.width * 0.60, 0, shapeBounds.width * 0.65, 0);
+    backgroundPath.lineTo(shapeBounds.topRight.dx, shapeBounds.topRight.dy);
+    backgroundPath.lineTo(size.width, size.height);
+
+    backgroundPath.lineTo(0, size.height);
+    backgroundPath.close();
+    canvas.drawPath(backgroundPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(ProfileCardPainter oldDelegate) {
+    return color != oldDelegate.color;
+  }
+}
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text('Home Page'),
+      ),
+      bottomNavigationBar: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            height: 170,
+            width: 400,
+            padding: const EdgeInsets.only(top: 80.0),
+            margin: const EdgeInsets.all(10),
+            child: CustomPaint(
+              size: Size(double.infinity, 170),
+              painter:
+                  ProfileCardPainter(color: Colors.black, avatarRadius: 10),
+            ),
+          ),
+          Positioned(
+            bottom: 80,
+            child: Container(
+              width: 60.0,
+              height: 60.0,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black,
+                    blurRadius: 2,
+                    spreadRadius: 1,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                icon: Icon(Icons.home, color: Colors.white),
+                onPressed: () {},
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class AppRoutes {
   static const String splashPage = "/";
   static const String homePage = "/home";
