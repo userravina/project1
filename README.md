@@ -18,6 +18,361 @@ samples, guidance on mobile development, and a full API reference.
 <img src="https://user-images.githubusercontent.com/120082785/220397599-f5b30425-689b-459b-a885-142f62cde580.png" height="50%" width="30%">
 <img src="https://user-images.githubusercontent.com/120082785/220398046-f935dcc0-6bfe-453e-8990-c8b968a9abf0.png" height="100%" width="30%">
 </p>
+import 'package:e_commerce/common_components/base_page_layout.dart';
+import 'package:e_commerce/screens/check_out/view/responsive_view/check_out_mobile.dart';
+import 'package:e_commerce/screens/check_out/view/responsive_view/check_out_web.dart';
+import 'package:flutter/material.dart';
+import '../../../common_components/custom_appbar.dart';
+import '../../../theme/app_color.dart';
+
+class CheckOutPage extends StatelessWidget {
+  const CheckOutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BasePageLayout(
+      backgroundColor: AppColor.backgroundColor,
+      customAppBar: CustomAppBar(
+        backgroundColor: AppColor.lightBlue,
+      ),
+      mobileBody: CheckOutMobile(),
+      webBody: CheckOutWeb(),
+      bottomShow: true,
+      commonViewEnd: false,
+    );
+  }
+}
+import 'package:e_commerce/theme/app_color.dart';
+import 'package:e_commerce/utils/app_strings.dart';
+import 'package:e_commerce/utils/text_style.dart';
+import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
+
+import '../../../../assets.dart';
+
+class CheckOutMobile extends StatelessWidget {
+  const CheckOutMobile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 4.w),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 4.h,
+          ),
+          Text(
+            AppStrings(context).checkOut,
+            style: FontManager.tenorSansRegular(18,
+                color: AppColor.black, letterSpacing: 1.5),
+          ),
+          Image.asset(
+            Assets.images.n3_png,
+            width: 30.w,
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 1,
+            itemBuilder: (context, index) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 155,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(Assets.images.rectangle434_png),
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    // today's update :
+                       -
+                  ),
+                  SizedBox(width: 3.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppStrings(context).lamerei,
+                          style: FontManager.tenorSansRegular(14,
+                              color: AppColor.black, letterSpacing: 2),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 1.h),
+                        Text(
+                          AppStrings(context).recycleBoucleKnitCardiganPink,
+                          style: FontManager.tenorSansRegular(12,
+                              color: AppColor.blackGrey),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 1.h),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 2, vertical: 2),
+                              height: 24,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(200),
+                                border: Border.all(
+                                    color: AppColor.containerGreyBorder,
+                                    width: 1),
+                              ),
+                              child: Center(
+                                child: Image.asset(
+                                  Assets.images.decrease_png,
+                                  height: 16,
+                                  width: 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 2.w,
+                            ),
+                            Center(
+                              child: Text(
+                                "1",
+                                style: FontManager.tenorSansRegular(14,
+                                    color: AppColor.black),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 2.w,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 2, vertical: 2),
+                              height: 24,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(200),
+                                  border: Border.all(
+                                      color: AppColor.containerGreyBorder,
+                                      width: 1)),
+                              child: Center(
+                                child: Image.asset(
+                                  Assets.images.plus_png,
+                                  height: 16,
+                                  width: 16,
+                                  color: AppColor.black,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 1.h),
+                        Text(
+                          AppStrings(context).rupeesCheckOut,
+                          style: FontManager.tenorSansRegular(15,
+                              color: AppColor.warning),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          SizedBox(
+            height: 0.5.h,
+          ),
+          Divider(
+            color: AppColor.dividerColor,
+            thickness: 1.5,
+          ),
+          SizedBox(
+            height: 1.h,
+          ),
+          Row(
+            children: [
+              Image.asset(
+                Assets.images.temperature_png,
+                height: 24,
+                width: 24,
+              ),
+              SizedBox(
+                width: 2.w,
+              ),
+              Text(
+                AppStrings(context).addPromoCode,
+                style:
+                    FontManager.tenorSansRegular(14,color: AppColor.blackGrey),
+              )
+            ],
+          ),
+          SizedBox(
+            height: 1.h,
+          ),
+          Divider(
+            color: AppColor.dividerColor,
+            thickness: 1.5,
+          ),
+          SizedBox(
+            height: 1.h,
+          ),
+          Row(
+            children: [
+              Image.asset(
+                Assets.images.temperature_png,
+                height: 24,
+                width: 24,
+              ),
+              SizedBox(
+                width: 2.w,
+              ),
+              Text(
+                AppStrings(context).delivery,
+                style:
+                    FontManager.tenorSansRegular(14, color: AppColor.blackGrey),
+              ),
+              Spacer(),
+              Text(
+                AppStrings(context).free,
+                style: FontManager.tenorSansRegular(14,
+                    color: AppColor.blackGreyText),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 1.h,
+          ),
+          Divider(
+            color: AppColor.dividerColor,
+            thickness: 1.5,
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  AppStrings(context).totalEst,
+                  style: FontManager.tenorSansRegular(14,
+                      color: AppColor.blackGrey),
+                ),
+                Text(
+                  AppStrings(context).rupeesCheckOut,
+                  style:
+                      FontManager.tenorSansRegular(14, color: AppColor.warning),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 1.5.h,
+          ),
+        ],
+      ),
+    );
+  }
+}
+import 'package:flutter/widgets.dart';
+
+class CheckOutWeb extends StatelessWidget {
+  const CheckOutWeb({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+import 'package:e_commerce/common_components/common_view_end.dart';
+import 'package:e_commerce/common_components/custom_drawer.dart';
+import 'package:e_commerce/utils/app_strings.dart';
+import 'package:e_commerce/utils/text_style.dart';
+import 'package:flutter/material.dart';
+import 'package:responsive_builder/responsive_builder.dart';
+import 'package:sizer/sizer.dart';
+import '../assets.dart';
+import '../theme/app_color.dart';
+
+class BasePageLayout extends StatelessWidget {
+  final Widget mobileBody;
+  final Widget webBody;
+  final bool showDrawer;
+  final bool listSwitch;
+  final Color backgroundColor;
+  final PreferredSizeWidget? customAppBar;
+  final bool bottomShow;
+  final bool commonViewEnd;
+
+  const BasePageLayout({
+    super.key,
+    required this.mobileBody,
+    required this.webBody,
+    this.showDrawer = true,
+    this.listSwitch = false,
+    this.backgroundColor = AppColor.white,
+    this.customAppBar,
+    this.bottomShow = false,
+    this.commonViewEnd = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: customAppBar,
+      drawer: showDrawer ? CustomDrawer(listSwitch: listSwitch) : null,
+      body: SafeArea(
+        child: ResponsiveBuilder(
+          builder: (context, sizingInformation) {
+            if (sizingInformation.deviceScreenType ==
+                DeviceScreenType.desktop) {
+              return Column(
+                children: [
+                  Expanded(child: webBody),
+             commonViewEnd ? const CommonViewEnd() : SizedBox.shrink(),
+                ],
+              );
+            }
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  mobileBody,
+                   commonViewEnd ? const CommonViewEnd() : SizedBox.shrink(),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+      bottomNavigationBar: bottomShow
+          ? Container(
+              height: 6.h,
+              width: double.infinity,
+              color: AppColor.black,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    Assets.images.shopping_bag_png,
+                    height: 20,
+                    width: 20,
+                    color: AppColor.white,
+                  ),
+                  SizedBox(
+                    width: 4.w,
+                  ),
+                  Text(
+                    AppStrings(context).checkOut,
+                    style: FontManager.tenorSansRegular(16,
+                        color: AppColor.backgroundColor),
+                  ),
+                ],
+              ),
+            )
+          : null,
+    );
+  }
+}
 
 class ProfileCardPainter extends CustomPainter {
   ProfileCardPainter({required this.color, required this.avatarRadius});
